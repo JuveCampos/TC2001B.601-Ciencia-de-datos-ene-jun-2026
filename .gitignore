@@ -1,0 +1,5 @@
+# Keynote
+*.key
+
+# macOS
+.DS_Store
