@@ -1,0 +1,54 @@
+
+library(tidyverse)
+library(gapminder)
+
+## Filtrar algunos países de América Latina
+paises_latam <- c("Mexico", "Brazil", "Argentina",
+                  "Colombia", "Chile", "Peru")
+
+datos <- gapminder %>%
+  filter(country %in% paises_latam)
+
+## Gráfica de espagueti
+ggplot(datos,
+       aes(x = year, y = gdpPercap,
+           color = country)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 1.5) +
+  scale_color_brewer(palette = "Set2") +
+  labs(
+    title = "PIB per cápita en América Latina",
+    subtitle = "Evolución 1952–2007",
+    x = "Año",
+    y = "PIB per cápita (USD)",
+    color = "País"
+  ) +
+  theme_minimal(base_size = 13)
+
+
+
+
+## Misma gráfica, ahora con un panel por país
+ggplot(datos,
+       aes(x = year, y = gdpPercap,
+           color = country)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 1.5) +
+  scale_color_brewer(palette = "Set2") +
+  facet_wrap(~country, ncol = 3, scales = "free_y") +
+  labs(
+    title = "PIB per cápita en América Latina",
+    subtitle = "Evolución 1952–2007 | Un panel por país",
+    x = "Año",
+    y = "PIB per cápita (USD)"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 0.5),
+    legend.position = "none",
+    strip.text = element_text(face = "bold")
+  )
+
+
+
+
