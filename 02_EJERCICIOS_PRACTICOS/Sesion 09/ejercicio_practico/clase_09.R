@@ -123,6 +123,7 @@ for(estado in nombres_estados){
   generar_grafica_estado(edo_sel = estado)
   ggsave(filename = str_c("grafica_", estado, ".jpeg"), 
          height = 8, width = 10)
+  print(str_c("Ya esta lista la gráfica de: ", estado))
 }
 
 
