@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clase 11 - Causalidad en Ciencias Sociales</title>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Ubuntu', sans-serif;
+      background: #888;
+      color: #000;
+    }
+
+    .slide {
+      width: 1024px;
+      height: 768px;
+      background: #fff;
+      margin: 30px auto;
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      page-break-after: always;
+    }
+
+    .slide-content {
+      padding: 40px 50px;
+      height: 100%;
+    }
+
+    /* Title banner - blue strip */
+    .banner {
+      background: #1e4c7d;
+      color: #fff;
+      font-weight: 700;
+      font-size: 28px;
+      padding: 14px 30px;
+      display: inline-block;
+      min-width: 280px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 25px;
+      margin-left: -50px;
+      padding-left: 50px;
+    }
+
+    .banner-full {
+      background: #1e4c7d;
+      color: #fff;
+      font-weight: 700;
+      font-size: 28px;
+      padding: 14px 30px;
+      width: calc(100% + 100px);
+      margin-left: -50px;
+      margin-bottom: 25px;
+    }
+
+    .banner-section {
+      background: #2c3e50;
+      color: #fff;
+      font-weight: 700;
+      font-size: 22px;
+      padding: 10px 30px;
+      display: inline-block;
+      min-width: 220px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 20px;
+      margin-left: -50px;
+      padding-left: 50px;
+    }
+
+    /* Title slide */
+    .title-slide {
+      padding: 0;
+    }
+
+    .title-top {
+      background: #f0f0f0;
+      padding: 20px 40px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+    }
+
+    .title-top .tec-logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1e4c7d;
+    }
+
+    .title-main {
+      background: #dde5ed;
+      padding: 60px 50px 40px;
+      height: 340px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .title-main h1 {
+      font-size: 62px;
+      font-weight: 700;
+      color: #1e4c7d;
+      line-height: 1.05;
+      margin-bottom: 15px;
+    }
+
+    .title-main h2 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #1e4c7d;
+    }
+
+    .title-bottom {
+      background: #fff;
+      padding: 40px 50px;
+      height: 328px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+    }
+
+    .author-info {
+      text-align: right;
+      border-left: 4px solid #ccc;
+      padding-left: 20px;
+    }
+
+    .author-info .name {
+      font-size: 24px;
+      font-weight: 700;
+      color: #000;
+      line-height: 1.3;
+    }
+
+    .author-info .email {
+      font-size: 14px;
+      color: #c0392b;
+      margin-top: 10px;
+    }
+
+    /* Body text */
+    .body-text {
+      font-size: 20px;
+      line-height: 1.6;
+      color: #000;
+      margin-bottom: 18px;
+    }
+
+    .body-text-sm {
+      font-size: 17px;
+      line-height: 1.55;
+      color: #000;
+      margin-bottom: 14px;
+    }
+
+    b, strong {
+      font-weight: 700;
+    }
+
+    /* Table styles */
+    table.styled {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 15px 0;
+      font-size: 16px;
+    }
+
+    table.styled thead th {
+      background: #1e4c7d;
+      color: #fff;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 700;
+    }
+
+    table.styled tbody td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    table.styled tbody tr:nth-child(even) {
+      background: #f5f7fa;
+    }
+
+    table.styled code {
+      background: #eef2f7;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 15px;
+      color: #1e4c7d;
+    }
+
+    /* Bullet list */
+    ul.bullets {
+      margin-left: 30px;
+      margin-bottom: 15px;
+    }
+
+    ul.bullets li {
+      font-size: 20px;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+
+    ul.bullets-sm li {
+      font-size: 17px;
+      line-height: 1.5;
+      margin-bottom: 6px;
+    }
+
+    /* Two columns */
+    .two-cols {
+      display: flex;
+      gap: 30px;
+    }
+
+    .col {
+      flex: 1;
+    }
+
+    /* Code block */
+    .code-block {
+      background: #1e2a3a;
+      color: #e0e0e0;
+      padding: 18px 22px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.7;
+      margin: 15px 0;
+      overflow-x: auto;
+    }
+
+    .code-block .keyword { color: #61afef; }
+    .code-block .string { color: #98c379; }
+    .code-block .comment { color: #7f8c8d; }
+    .code-block .operator { color: #c678dd; }
+    .code-block .number { color: #d19a66; }
+    .code-block .func { color: #61afef; }
+
+    /* Highlight boxes */
+    .highlight-box {
+      background: #eaf2fa;
+      border-left: 5px solid #1e4c7d;
+      padding: 15px 20px;
+      margin: 15px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .highlight-red {
+      background: #fdf2f2;
+      border-left: 5px solid #c0392b;
+      padding: 15px 20px;
+      margin: 15px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .highlight-green {
+      background: #f0faf0;
+      border-left: 5px solid #27ae60;
+      padding: 15px 20px;
+      margin: 15px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .note {
+      font-size: 14px;
+      color: #555;
+      font-style: italic;
+      margin-top: 10px;
+    }
+
+    /* Section divider slide */
+    .section-slide {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+    }
+
+    .section-slide h2 {
+      font-size: 48px;
+      color: #1e4c7d;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .section-slide .section-num {
+      font-size: 120px;
+      color: #dde5ed;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .section-slide .section-sub {
+      font-size: 22px;
+      color: #555;
+      margin-top: 15px;
+    }
+
+    /* Diagram boxes */
+    .diagram-box {
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      color: #fff;
+      text-align: center;
+      margin: 6px 0;
+    }
+
+    .arrow-down {
+      text-align: center;
+      font-size: 28px;
+      color: #1e4c7d;
+      margin: 4px 0;
+    }
+
+    /* Counterfactual boxes */
+    .cf-box {
+      border-radius: 10px;
+      padding: 18px 22px;
+      flex: 1;
+    }
+
+    /* Print styles */
+    @media print {
+      body { background: #fff; }
+      .slide {
+        box-shadow: none;
+        margin: 0;
+        page-break-after: always;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ==================== SLIDE 1: TITLE ==================== -->
+<div class="slide title-slide">
+  <div class="title-top">
+    <div class="tec-logo">
+      Tecnologico<br>de Monterrey
+    </div>
+  </div>
+  <div class="title-main">
+    <h1>11. Causalidad en<br>Ciencias Sociales</h1>
+    <h2>Modulo 1: Introduccion y fundamentos</h2>
+  </div>
+  <div class="title-bottom">
+    <div class="author-info">
+      <div class="name">Jorge<br>Juvenal<br>Campos Ferreira</div>
+      <div class="email">juvenal.campos@tec.mx</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 2: CONTENIDO ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Contenido</div>
+
+    <div class="two-cols" style="margin-top: 10px;">
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:15px 20px; margin-bottom:12px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:18px; margin-bottom:8px;">Conceptos fundamentales</p>
+          <p style="font-size:16px; line-height:1.6;">
+            1. Correlacion y causalidad<br>
+            2. Correlacion &#8800; causacion<br>
+            3. Condiciones para la causalidad<br>
+            4. Contrafactuales y potential outcomes
+          </p>
+        </div>
+        <div style="background:#eaf2fa; border-radius:10px; padding:15px 20px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:18px; margin-bottom:8px;">Metodos</p>
+          <p style="font-size:16px; line-height:1.6;">
+            5. Experimentos (RCT)<br>
+            6. Metodos cuasiexperimentales<br>
+            7. DiD, RD, IV, PSM
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:15px 20px; margin-bottom:12px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:18px; margin-bottom:8px;">Aplicaciones</p>
+          <p style="font-size:16px; line-height:1.6;">
+            8. Politicas publicas en Mexico<br>
+            9. Papers y referencias clave<br>
+            10. Implementacion en R
+          </p>
+        </div>
+        <div style="background:#f0faf0; border-radius:10px; padding:15px 20px;">
+          <p style="font-weight:700; color:#27ae60; font-size:18px; margin-bottom:8px;">Mensaje central</p>
+          <p style="font-size:16px; line-height:1.6;">
+            Correlacion NO implica causalidad...<br>
+            pero es una <strong>condicion necesaria</strong>.<br>
+            Necesitamos metodos rigurosos para<br>
+            ir de correlacion a causalidad.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 3: MOTIVACION ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">El dilema de la evaluacion</div>
+
+    <p class="body-text">
+      Imagina que eres jef@ de la <strong>Secretaria de Educacion</strong> de un estado mexicano. Tu gobernador implemento un <strong>programa de becas</strong> hace dos anos. Ahora quiere saber: <strong>&iquest;funciono?</strong>
+    </p>
+
+    <div class="two-cols" style="margin-top: 10px;">
+      <div class="col">
+        <div style="background:#d5f5e3; border-radius:10px; padding:18px; margin-bottom:12px;">
+          <p style="font-weight:700; color:#1a7a3a; font-size:18px; margin-bottom:6px;">Lo que ves en los datos:</p>
+          <p style="font-size:17px;">Municipios con becas tienen <strong>15% mas</strong> tasa de graduacion que municipios sin becas.</p>
+        </div>
+        <div style="background:#fadbd8; border-radius:10px; padding:18px;">
+          <p style="font-weight:700; color:#c0392b; font-size:18px; margin-bottom:6px;">Pero tambien observas:</p>
+          <p style="font-size:16px; line-height:1.5;">
+            &bull; Ingreso familiar mas alto<br>
+            &bull; Mejor infraestructura escolar<br>
+            &bull; Maestros con mas experiencia
+          </p>
+        </div>
+      </div>
+      <div class="col" style="display:flex; align-items:center; justify-content:center;">
+        <div style="background:#fff3cd; border:3px solid #f0ad4e; border-radius:12px; padding:25px; text-align:center;">
+          <p style="font-size:42px; margin-bottom:10px;">&#9888;&#65039;</p>
+          <p style="font-size:20px; font-weight:700; color:#856404; line-height:1.4;">
+            &iquest;Las becas causaron<br>el aumento?<br><br>&iquest;O se habrian<br>graduado igual?
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top:10px; text-align:center;">Este es el problema fundamental: la <strong>correlacion no implica causacion</strong>, pero tampoco podemos ignorar correlaciones.</p>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 4: DOS GRANDES PREGUNTAS ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Las dos grandes preguntas</div>
+
+    <div class="two-cols" style="margin-top: 15px;">
+      <div class="col">
+        <div style="border:3px solid #2471a3; border-radius:12px; padding:20px; height:280px;">
+          <div style="background:#2471a3; color:#fff; padding:10px 18px; border-radius:8px; font-weight:700; font-size:20px; text-align:center; margin-bottom:15px;">
+            PREDICCION
+          </div>
+          <p style="font-size:17px; line-height:1.6;">
+            <strong>&iquest;Que va a pasar?</strong><br><br>
+            Dado lo que observo de esta persona/municipio, &iquest;cual es la <em>probabilidad</em> de que Y ocurra?<br><br>
+            <span style="color:#555; font-size:15px;">Ejemplo: &iquest;Quien va a desertar de la preparatoria?</span>
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="border:3px solid #c0392b; border-radius:12px; padding:20px; height:280px;">
+          <div style="background:#c0392b; color:#fff; padding:10px 18px; border-radius:8px; font-weight:700; font-size:20px; text-align:center; margin-bottom:15px;">
+            CAUSALIDAD
+          </div>
+          <p style="font-size:17px; line-height:1.6;">
+            <strong>&iquest;Por que pasa?</strong><br><br>
+            Si <em>cambio</em> X, &iquest;cambia Y? &iquest;Cuanto?<br><br>
+            <span style="color:#555; font-size:15px;">Ejemplo: &iquest;Las becas <em>causan</em> que se graduen mas estudiantes?</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:20px;">
+      <p style="font-size:17px;"><strong>Prediccion buena</strong> necesita causalidad para tomar decisiones. <strong>Causalidad buena</strong> mejora predicciones cuando el mundo cambia. En politica publica, casi siempre necesitas <strong>ambas</strong>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 5: QUE ES CORRELACION ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">&iquest;Que es la correlacion?</div>
+
+    <p class="body-text">
+      La <strong>correlacion</strong> mide el grado en que dos variables se mueven juntas. Si una sube cuando la otra sube, estan <em>positivamente correlacionadas</em>; si una sube cuando la otra baja, <em>negativamente</em>.
+    </p>
+
+    <div class="two-cols" style="margin-top:10px;">
+      <div class="col">
+        <div style="background:#f8f9fa; border-radius:10px; padding:18px; text-align:center;">
+          <p style="font-size:16px; font-weight:700; color:#1e4c7d; margin-bottom:10px;">Coeficiente de Pearson (r)</p>
+          <p style="font-size:22px; font-family:'Courier New',monospace; color:#1e4c7d; margin-bottom:12px;">
+            r = &Sigma;(x&#x0302; &minus; x&#x0304;)(y&#x0302; &minus; y&#x0304;) / (n &middot; s<sub>x</sub> &middot; s<sub>y</sub>)
+          </p>
+          <p style="font-size:15px; color:#555;">Rango: &minus;1 a +1</p>
+        </div>
+
+        <div style="margin-top:15px;">
+          <p style="font-size:17px; line-height:1.6;">
+            <strong>r = +1:</strong> correlacion positiva perfecta<br>
+            <strong>r = 0:</strong> sin correlacion lineal<br>
+            <strong>r = &minus;1:</strong> correlacion negativa perfecta
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="background:#d5f5e3; border-radius:8px; padding:12px 16px;">
+            <p style="font-weight:700; color:#1a7a3a; font-size:16px;">r &approx; +0.8</p>
+            <p style="font-size:15px;">Ingreso familiar &harr; Gasto en educacion</p>
+          </div>
+          <div style="background:#fadbd8; border-radius:8px; padding:12px 16px;">
+            <p style="font-weight:700; color:#c0392b; font-size:16px;">r &approx; &minus;0.6</p>
+            <p style="font-size:15px;">Pobreza &harr; Esperanza de vida</p>
+          </div>
+          <div style="background:#fef9e7; border-radius:8px; padding:12px 16px;">
+            <p style="font-weight:700; color:#856404; font-size:16px;">r &approx; +0.9 (espuria)</p>
+            <p style="font-size:15px;">Ventas de helado &harr; Ahogamientos</p>
+          </div>
+        </div>
+
+        <p class="note" style="margin-top:10px;">La correlacion describe <em>asociacion</em>, no explica <em>por que</em>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 6: QUE ES CAUSALIDAD ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">&iquest;Que es la causalidad?</div>
+
+    <p class="body-text">
+      <strong>Causalidad</strong> significa que un cambio en X <em>produce</em> un cambio en Y. No solo se mueven juntas: <strong>X genera Y</strong>. Si manipulamos X, observamos un cambio real en Y.
+    </p>
+
+    <div class="two-cols" style="margin-top:10px;">
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:18px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:18px; margin-bottom:10px;">Definicion formal:</p>
+          <p style="font-size:17px; line-height:1.6;">
+            X <strong>causa</strong> Y si, al intervenir y cambiar X (manteniendo todo lo demas constante), Y cambia.<br><br>
+            <strong>Efecto causal</strong> = Y(con X) &minus; Y(sin X)
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="background:#f8f9fa; border-radius:10px; padding:18px;">
+          <p style="font-weight:700; color:#333; font-size:18px; margin-bottom:10px;">La idea del contrafactico:</p>
+          <p style="font-size:17px; line-height:1.6;">
+            Si un estudiante recibio beca y se graduo, <strong>&iquest;se habria graduado sin la beca?</strong><br><br>
+            Nunca lo sabremos con certeza: solo observamos <em>una</em> realidad.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:18px;">
+      <p style="font-size:18px; font-weight:700; color:#1e4c7d;">Correlacion = &ldquo;X e Y se mueven juntas&rdquo;</p>
+      <p style="font-size:18px; font-weight:700; color:#c0392b;">Causalidad = &ldquo;X hace que Y cambie&rdquo;</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 7: CORRELACION != CAUSALIDAD ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Correlacion &#8800; Causalidad</div>
+
+    <p class="body-text">
+      Que dos variables esten correlacionadas <strong>no significa</strong> que una cause a la otra. Hay muchas razones por las que dos cosas pueden moverse juntas sin relacion causal:
+    </p>
+
+    <div style="display:flex; gap:15px; margin-top:10px;">
+      <div style="flex:1; background:#fadbd8; border-radius:10px; padding:16px;">
+        <p style="font-weight:700; color:#c0392b; font-size:17px; margin-bottom:8px;">Helados y ahogamientos</p>
+        <p style="font-size:15px; line-height:1.5;">Las ventas de helado correlacionan con muertes por ahogamiento. &iquest;El helado mata?<br><br><strong>No.</strong> Ambos aumentan en verano (calor = causa comun).</p>
+      </div>
+      <div style="flex:1; background:#fef9e7; border-radius:10px; padding:16px;">
+        <p style="font-weight:700; color:#856404; font-size:17px; margin-bottom:8px;">Zapatos e inteligencia</p>
+        <p style="font-size:15px; line-height:1.5;">En ninos, tamano de zapato correlaciona con puntaje en examenes.<br><br><strong>Causa comun:</strong> la edad. Ninos mayores tienen pies mas grandes Y saben mas.</p>
+      </div>
+      <div style="flex:1; background:#eaf2fa; border-radius:10px; padding:16px;">
+        <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:8px;">Nicolas Cage y piscinas</p>
+        <p style="font-size:15px; line-height:1.5;">Las peliculas de Nicolas Cage correlacionan con ahogamientos en piscinas (r=0.67).<br><br><strong>Coincidencia:</strong> correlacion espuria sin mecanismo alguno.</p>
+      </div>
+    </div>
+
+    <div class="highlight-red" style="margin-top:15px;">
+      <p style="font-size:18px; font-weight:700;">&iexcl;Cuidado! En politica publica, confundir correlacion con causalidad puede llevar a decisiones que desperdician millones de pesos o, peor, dannan a poblaciones vulnerables.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 8: CORRELACION ES NECESARIA ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Pero la correlacion es necesaria</div>
+
+    <p class="body-text">
+      Aunque correlacion no implica causalidad, la relacion inversa si se cumple: <strong>si X causa Y, entonces X e Y deben estar correlacionadas</strong>. La correlacion es una <em>condicion necesaria</em> (pero no suficiente) para la causalidad.
+    </p>
+
+    <div style="display:flex; align-items:center; justify-content:center; margin:25px 0;">
+      <div style="text-align:center;">
+        <div style="display:flex; align-items:center; gap:20px; justify-content:center;">
+          <div style="background:#27ae60; color:#fff; padding:18px 30px; border-radius:10px; font-weight:700; font-size:20px;">CAUSALIDAD</div>
+          <div style="font-size:36px; color:#1e4c7d;">&rArr;</div>
+          <div style="background:#2471a3; color:#fff; padding:18px 30px; border-radius:10px; font-weight:700; font-size:20px;">CORRELACION</div>
+        </div>
+        <p style="font-size:17px; margin-top:15px; color:#27ae60; font-weight:700;">Si hay causalidad, SIEMPRE hay correlacion</p>
+
+        <div style="display:flex; align-items:center; gap:20px; justify-content:center; margin-top:25px;">
+          <div style="background:#2471a3; color:#fff; padding:18px 30px; border-radius:10px; font-weight:700; font-size:20px;">CORRELACION</div>
+          <div style="font-size:36px; color:#c0392b;">&#8655;</div>
+          <div style="background:#95a5a6; color:#fff; padding:18px 30px; border-radius:10px; font-weight:700; font-size:20px;">CAUSALIDAD</div>
+        </div>
+        <p style="font-size:17px; margin-top:15px; color:#c0392b; font-weight:700;">Si hay correlacion, NO necesariamente hay causalidad</p>
+      </div>
+    </div>
+
+    <div class="highlight-green" style="margin-top:10px;">
+      <p style="font-size:17px;"><strong>Implicacion practica:</strong> Si no encuentras correlacion entre tu programa y el resultado, puedes descartar causalidad. Pero si encuentras correlacion, necesitas <strong>metodos adicionales</strong> para confirmar causalidad.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 9: TRES CAMINOS DEL SESGO ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Los tres caminos del sesgo</div>
+
+    <p class="body-text" style="margin-bottom:12px;">
+      &iquest;Por que la correlacion puede mentir? Porque hay <strong>tres caminos</strong> por los que dos variables pueden estar correlacionadas sin relacion causal directa:
+    </p>
+
+    <div style="display:flex; gap:15px;">
+      <!-- Camino 1 -->
+      <div style="flex:1; border:2px solid #27ae60; border-radius:10px; padding:15px;">
+        <div style="background:#27ae60; color:#fff; padding:8px 14px; border-radius:6px; font-weight:700; font-size:16px; text-align:center; margin-bottom:10px;">1. Causalidad real</div>
+        <p style="font-size:15px; text-align:center; margin-bottom:8px;">X &rarr; Y</p>
+        <p style="font-size:14px; line-height:1.5; color:#333;">
+          X realmente causa Y.<br><br>
+          <strong>Ejemplo:</strong> Mas horas de estudio &rarr; mejores calificaciones.
+        </p>
+      </div>
+      <!-- Camino 2 -->
+      <div style="flex:1; border:2px solid #e67e22; border-radius:10px; padding:15px;">
+        <div style="background:#e67e22; color:#fff; padding:8px 14px; border-radius:6px; font-weight:700; font-size:16px; text-align:center; margin-bottom:10px;">2. Causa comun (confusion)</div>
+        <p style="font-size:15px; text-align:center; margin-bottom:8px;">X &larr; Z &rarr; Y</p>
+        <p style="font-size:14px; line-height:1.5; color:#333;">
+          Una tercera variable Z causa ambas.<br><br>
+          <strong>Ejemplo:</strong> Educacion de padres (Z) causa horas de estudio (X) y calificaciones (Y).
+        </p>
+      </div>
+      <!-- Camino 3 -->
+      <div style="flex:1; border:2px solid #c0392b; border-radius:10px; padding:15px;">
+        <div style="background:#c0392b; color:#fff; padding:8px 14px; border-radius:6px; font-weight:700; font-size:16px; text-align:center; margin-bottom:10px;">3. Causalidad invertida</div>
+        <p style="font-size:15px; text-align:center; margin-bottom:8px;">X &larr; Y</p>
+        <p style="font-size:14px; line-height:1.5; color:#333;">
+          Y causa X, no al reves.<br><br>
+          <strong>Ejemplo:</strong> &iquest;Actividad &rarr; felicidad? &iquest;O felicidad &rarr; actividad?
+        </p>
+      </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:15px;">
+      <p style="font-size:16px;"><strong>Los metodos causales</strong> buscan distinguir el camino 1 de los caminos 2 y 3. Esa es su razon de ser.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 10: EJEMPLOS ENGANOSOS ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Ejemplos enganosos en la realidad</div>
+
+    <div style="display:flex; flex-direction:column; gap:14px; margin-top:5px;">
+      <!-- Ejemplo 1 -->
+      <div style="display:flex; gap:15px; align-items:stretch;">
+        <div style="flex:1; background:#fadbd8; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#c0392b; font-size:16px; margin-bottom:4px;">Policia y crimen</p>
+          <p style="font-size:14px; line-height:1.4;"><strong>Obs:</strong> Barrios con mas policias tienen mas crimenes.</p>
+          <p style="font-size:14px; line-height:1.4;"><strong>Error:</strong> &ldquo;Mas policia causa mas crimen.&rdquo;</p>
+        </div>
+        <div style="flex:1; background:#d5f5e3; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#1a7a3a; font-size:16px; margin-bottom:4px;">Realidad: causalidad invertida</p>
+          <p style="font-size:14px; line-height:1.4;">Mas crimen causa que se envie mas policia. La direccion causal es <strong>al reves</strong>.</p>
+        </div>
+      </div>
+      <!-- Ejemplo 2 -->
+      <div style="display:flex; gap:15px; align-items:stretch;">
+        <div style="flex:1; background:#fadbd8; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#c0392b; font-size:16px; margin-bottom:4px;">Educacion sexual y embarazo</p>
+          <p style="font-size:14px; line-height:1.4;"><strong>Obs:</strong> Paises con mas educacion sexual tienen mas embarazo adolescente.</p>
+          <p style="font-size:14px; line-height:1.4;"><strong>Error:</strong> &ldquo;La educacion sexual causa embarazos.&rdquo;</p>
+        </div>
+        <div style="flex:1; background:#d5f5e3; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#1a7a3a; font-size:16px; margin-bottom:4px;">Realidad: causa comun</p>
+          <p style="font-size:14px; line-height:1.4;">Urbanizacion y desarrollo economico causan <strong>ambas cosas</strong>. Sin controlar por esos factores, la correlacion miente.</p>
+        </div>
+      </div>
+      <!-- Ejemplo 3 -->
+      <div style="display:flex; gap:15px; align-items:stretch;">
+        <div style="flex:1; background:#fadbd8; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#c0392b; font-size:16px; margin-bottom:4px;">Gasto educativo y aprendizaje</p>
+          <p style="font-size:14px; line-height:1.4;"><strong>Obs:</strong> Relacion debil entre gasto por alumno y resultados PISA.</p>
+          <p style="font-size:14px; line-height:1.4;"><strong>Error:</strong> &ldquo;El gasto educativo no importa.&rdquo;</p>
+        </div>
+        <div style="flex:1; background:#d5f5e3; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#1a7a3a; font-size:16px; margin-bottom:4px;">Realidad: confusores multiples</p>
+          <p style="font-size:14px; line-height:1.4;">Estudios causales (DiD, IV) que aislan el efecto puro del gasto encuentran <strong>efectos positivos y reales</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 11: CONDICIONES PARA CAUSALIDAD ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Condiciones para determinar causalidad</div>
+
+    <p class="body-text" style="margin-bottom:10px;">
+      Para que un analista pueda afirmar que <strong>X causa Y</strong>, se deben cumplir estas cuatro condiciones:
+    </p>
+
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:15px;">
+        <div style="background:#1e4c7d; color:#fff; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:24px; flex-shrink:0;">1</div>
+        <div style="flex:1; background:#eaf2fa; border-radius:8px; padding:14px 18px;">
+          <p style="font-weight:700; font-size:18px; color:#1e4c7d;">Correlacion (asociacion)</p>
+          <p style="font-size:16px;">X e Y deben estar estadisticamente asociadas. Sin correlacion, no hay causalidad posible.</p>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:15px;">
+        <div style="background:#1e4c7d; color:#fff; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:24px; flex-shrink:0;">2</div>
+        <div style="flex:1; background:#eaf2fa; border-radius:8px; padding:14px 18px;">
+          <p style="font-weight:700; font-size:18px; color:#1e4c7d;">Temporalidad</p>
+          <p style="font-size:16px;">X debe ocurrir <strong>antes</strong> que Y. La causa precede al efecto.</p>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:15px;">
+        <div style="background:#1e4c7d; color:#fff; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:24px; flex-shrink:0;">3</div>
+        <div style="flex:1; background:#eaf2fa; border-radius:8px; padding:14px 18px;">
+          <p style="font-weight:700; font-size:18px; color:#1e4c7d;">Mecanismo causal plausible</p>
+          <p style="font-size:16px;">Debe existir una <strong>explicacion teorica</strong> de por que X produce Y. No basta la estadistica; se necesita teoria.</p>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:15px;">
+        <div style="background:#1e4c7d; color:#fff; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:24px; flex-shrink:0;">4</div>
+        <div style="flex:1; background:#eaf2fa; border-radius:8px; padding:14px 18px;">
+          <p style="font-weight:700; font-size:18px; color:#1e4c7d;">Eliminacion de explicaciones alternativas</p>
+          <p style="font-size:16px;">Debemos descartar que la asociacion sea por <strong>confusores, causalidad inversa o coincidencia</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 12: CONTRAFACTICOS ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Contrafacticos y potential outcomes</div>
+
+    <p class="body-text" style="margin-bottom:15px;">
+      El nucleo de la inferencia causal es el <strong>contrafactico</strong>: &iquest;que habria pasado si las cosas fueran diferentes?
+    </p>
+
+    <div class="two-cols">
+      <div class="col">
+        <div class="cf-box" style="background:#d5f5e3; border:2px solid #27ae60;">
+          <p style="font-weight:700; color:#1a7a3a; font-size:18px; margin-bottom:8px;">Mundo factual (observado)</p>
+          <p style="font-size:16px; line-height:1.5;">
+            El municipio <strong>recibe becas</strong><br>
+            Tasa de graduacion: <strong>70%</strong><br><br>
+            <span style="font-size:14px; color:#555;">Esto es lo que observamos (Y<sup>1</sup>)</span>
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cf-box" style="background:#fadbd8; border:2px solid #c0392b;">
+          <p style="font-weight:700; color:#c0392b; font-size:18px; margin-bottom:8px;">Mundo contrafactico (no observado)</p>
+          <p style="font-size:16px; line-height:1.5;">
+            El municipio <strong>NO recibe becas</strong><br>
+            Tasa de graduacion: <strong>&iquest;?%</strong><br><br>
+            <span style="font-size:14px; color:#555;">Nunca lo observamos (Y<sup>0</sup>)</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin:18px 0;">
+      <div style="display:inline-block; background:#1e4c7d; color:#fff; padding:14px 30px; border-radius:10px;">
+        <p style="font-size:20px; font-weight:700;">Efecto causal = Y<sup>1</sup> &minus; Y<sup>0</sup> = 70% &minus; &iquest;?%</p>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <p style="font-size:17px;"><strong>Notacion formal:</strong> Para cada unidad i, Y<sub>i</sub>(1) = resultado con tratamiento, Y<sub>i</sub>(0) = resultado sin tratamiento. El efecto individual es &tau;<sub>i</sub> = Y<sub>i</sub>(1) &minus; Y<sub>i</sub>(0). Pero solo observamos <em>uno</em> de los dos.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 13: PROBLEMA FUNDAMENTAL ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">El problema fundamental</div>
+
+    <p class="body-text">
+      El <strong>Problema Fundamental de Inferencia Causal</strong> (Holland, 1986): para cada unidad, solo podemos observar <em>un</em> resultado &mdash; el factual. El contrafactico es siempre un dato <strong>faltante</strong>.
+    </p>
+
+    <table class="styled" style="margin-top:15px;">
+      <thead>
+        <tr>
+          <th>Estudiante</th>
+          <th>Beca (T)</th>
+          <th>Y(1) con beca</th>
+          <th>Y(0) sin beca</th>
+          <th>Efecto &tau;</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Ana</td>
+          <td>Si</td>
+          <td><strong>Graduada</strong></td>
+          <td style="color:#999;">&iquest;?</td>
+          <td style="color:#999;">&iquest;?</td>
+        </tr>
+        <tr>
+          <td>Beto</td>
+          <td>Si</td>
+          <td><strong>Graduado</strong></td>
+          <td style="color:#999;">&iquest;?</td>
+          <td style="color:#999;">&iquest;?</td>
+        </tr>
+        <tr>
+          <td>Carla</td>
+          <td>No</td>
+          <td style="color:#999;">&iquest;?</td>
+          <td><strong>No graduada</strong></td>
+          <td style="color:#999;">&iquest;?</td>
+        </tr>
+        <tr>
+          <td>Diego</td>
+          <td>No</td>
+          <td style="color:#999;">&iquest;?</td>
+          <td><strong>Graduado</strong></td>
+          <td style="color:#999;">&iquest;?</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="highlight-box" style="margin-top:15px;">
+      <p style="font-size:17px;"><strong>Solucion:</strong> Los metodos causales no eliminan este problema, sino que usan <em>estrategias</em> para estimarlo:</p>
+      <p style="font-size:16px; margin-top:6px;">
+        &bull; <strong>RCT:</strong> Aleatorizar para que los grupos sean comparables en promedio<br>
+        &bull; <strong>Cuasiexperimentos:</strong> Encontrar &ldquo;seudo-aleatorizacion&rdquo; natural en los datos<br>
+        &bull; <strong>Controles estadisticos:</strong> Asumir que controlamos por todas las confundidoras
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 14: SUPUESTOS CLAVE ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Supuestos clave de inferencia causal</div>
+
+    <div style="display:flex; flex-direction:column; gap:14px; margin-top:10px;">
+      <div style="display:flex; gap:15px;">
+        <div style="flex:1; border:2px solid #1e4c7d; border-radius:10px; padding:16px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:6px;">1. SUTVA</p>
+          <p style="font-size:15px; line-height:1.5;">El tratamiento de una unidad <strong>no afecta</strong> los resultados de otra. (No hay &ldquo;contagio&rdquo; entre grupos.)</p>
+        </div>
+        <div style="flex:1; border:2px solid #1e4c7d; border-radius:10px; padding:16px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:6px;">2. Consistencia</p>
+          <p style="font-size:15px; line-height:1.5;">Si recibes tratamiento, tu resultado observado es Y(1). El tratamiento esta <strong>bien definido</strong>.</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:15px;">
+        <div style="flex:1; border:2px solid #1e4c7d; border-radius:10px; padding:16px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:6px;">3. Positividad</p>
+          <p style="font-size:15px; line-height:1.5;">Todas las unidades tienen <strong>probabilidad &gt; 0</strong> de recibir (o no) el tratamiento. Nadie esta determinado.</p>
+        </div>
+        <div style="flex:1; border:2px solid #1e4c7d; border-radius:10px; padding:16px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:6px;">4. Ignorabilidad</p>
+          <p style="font-size:15px; line-height:1.5;">Dado un conjunto de covariables observadas, la asignacion al tratamiento es <strong>independiente</strong> de los resultados potenciales.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight-red" style="margin-top:18px;">
+      <p style="font-size:17px;"><strong>&iexcl;Atencion!</strong> Si alguno de estos supuestos se viola, la estimacion causal puede ser <strong>sesgada</strong>. Siempre hay que evaluar que tan creibles son en cada contexto.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 15: QUE ES UN RCT ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">&iquest;Que es un experimento (RCT)?</div>
+
+    <p class="body-text">
+      Un <strong>Randomized Controlled Trial (RCT)</strong> es un experimento donde los participantes se asignan <em>aleatoriamente</em> a un grupo de tratamiento o control. Es el <strong>gold standard</strong> para establecer causalidad.
+    </p>
+
+    <div style="display:flex; align-items:center; justify-content:center; margin:15px 0;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="background:#eaf2fa; border-radius:10px; padding:18px; text-align:center; width:160px;">
+          <p style="font-size:36px;">&#128101;</p>
+          <p style="font-weight:700; font-size:15px; color:#1e4c7d;">Poblacion</p>
+        </div>
+        <div style="font-size:30px; color:#1e4c7d;">&rarr;</div>
+        <div style="background:#fef9e7; border-radius:10px; padding:18px; text-align:center; width:160px;">
+          <p style="font-size:36px;">&#127922;</p>
+          <p style="font-weight:700; font-size:15px; color:#856404;">Aleatorizacion</p>
+        </div>
+        <div style="font-size:30px; color:#1e4c7d;">&rarr;</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="background:#d5f5e3; border-radius:8px; padding:12px 20px; text-align:center;">
+            <p style="font-weight:700; color:#1a7a3a; font-size:15px;">Grupo Tratamiento</p>
+            <p style="font-size:13px;">Recibe programa</p>
+          </div>
+          <div style="background:#fadbd8; border-radius:8px; padding:12px 20px; text-align:center;">
+            <p style="font-weight:700; color:#c0392b; font-size:15px;">Grupo Control</p>
+            <p style="font-size:13px;">No recibe programa</p>
+          </div>
+        </div>
+        <div style="font-size:30px; color:#1e4c7d;">&rarr;</div>
+        <div style="background:#1e4c7d; color:#fff; border-radius:10px; padding:18px; text-align:center; width:160px;">
+          <p style="font-size:36px;">&#128200;</p>
+          <p style="font-weight:700; font-size:15px;">Comparar resultados</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <p style="font-size:17px;"><strong>&iquest;Por que funciona?</strong> La aleatorizacion garantiza que ambos grupos son <em>estadisticamente identicos</em> en todas las caracteristicas (observadas y no observadas). La unica diferencia es el tratamiento. Por tanto:</p>
+      <p style="font-size:18px; font-weight:700; color:#1e4c7d; margin-top:8px; text-align:center;">
+        E[Y | T=1] &minus; E[Y | T=0] = Efecto causal promedio (ATE)
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 16: POR QUE FUNCIONA ALEATORIZACION ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Por que funciona la aleatorizacion</div>
+
+    <p class="body-text" style="margin-bottom:12px;">
+      La aleatorizacion resuelve el problema de las <strong>variables confusoras</strong> porque, por la ley de grandes numeros, los grupos son comparables en <em>todo</em>:
+    </p>
+
+    <table class="styled">
+      <thead>
+        <tr>
+          <th>Caracteristica</th>
+          <th>Grupo Tratamiento</th>
+          <th>Grupo Control</th>
+          <th>Diferencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Ingreso promedio</td>
+          <td>$8,200</td>
+          <td>$8,350</td>
+          <td style="color:#27ae60; font-weight:700;">&asymp; 0</td>
+        </tr>
+        <tr>
+          <td>% madres con prepa</td>
+          <td>42%</td>
+          <td>41%</td>
+          <td style="color:#27ae60; font-weight:700;">&asymp; 0</td>
+        </tr>
+        <tr>
+          <td>% zona urbana</td>
+          <td>55%</td>
+          <td>54%</td>
+          <td style="color:#27ae60; font-weight:700;">&asymp; 0</td>
+        </tr>
+        <tr>
+          <td><strong>Tasa graduacion</strong></td>
+          <td><strong>72%</strong></td>
+          <td><strong>67%</strong></td>
+          <td style="color:#1e4c7d; font-weight:700;"><strong>5% = efecto causal</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="highlight-green" style="margin-top:15px;">
+      <p style="font-size:17px;"><strong>Ventaja clave:</strong> No necesitas medir ni controlar por confusores. La aleatorizacion los &ldquo;balancea&rdquo; automaticamente. Por eso el RCT es el <strong>gold standard</strong>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 17: PROGRESA ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Caso: Progresa/Oportunidades (Mexico)</div>
+
+    <p class="body-text" style="margin-bottom:10px;">
+      El <strong>RCT mas importante en politica social</strong> de America Latina. En 1998, el gobierno de Mexico asigno <em>aleatoriamente</em> 506 comunidades rurales al programa Progresa.
+    </p>
+
+    <div class="two-cols">
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:15px; margin-bottom:10px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:16px; margin-bottom:6px;">Diseno experimental</p>
+          <p style="font-size:15px; line-height:1.5;">
+            &bull; 320 comunidades: <strong>tratamiento</strong> (reciben transferencias)<br>
+            &bull; 186 comunidades: <strong>control</strong> (reciben despues)<br>
+            &bull; Asignacion <strong>aleatoria</strong> a nivel comunidad
+          </p>
+        </div>
+        <div style="background:#d5f5e3; border-radius:10px; padding:15px;">
+          <p style="font-weight:700; color:#1a7a3a; font-size:16px; margin-bottom:6px;">Resultados causales</p>
+          <p style="font-size:15px; line-height:1.5;">
+            &bull; +3.4% inscripcion primaria<br>
+            &bull; +7.2% inscripcion secundaria (ninas)<br>
+            &bull; Reduccion significativa en desnutricion<br>
+            &bull; Mayor uso de servicios de salud
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="background:#fff3cd; border-radius:10px; padding:15px; margin-bottom:10px;">
+          <p style="font-weight:700; color:#856404; font-size:16px; margin-bottom:6px;">&iquest;Por que es tan importante?</p>
+          <p style="font-size:15px; line-height:1.5;">
+            Estudios <strong>observacionales previos</strong> exageraban los efectos. Las familias que se inscribian voluntariamente ya tenian mayor motivacion educativa (sesgo de seleccion). El RCT midio el <strong>efecto real</strong>.
+          </p>
+        </div>
+        <div style="background:#f8f9fa; border-radius:10px; padding:15px;">
+          <p style="font-weight:700; font-size:15px; margin-bottom:4px;">Papers fundamentales:</p>
+          <p style="font-size:14px; line-height:1.5; color:#555;">
+            &bull; Schultz (2004) &mdash; <em>J. of Development Economics</em><br>
+            &bull; Parker &amp; Todd (2017) &mdash; <em>J. of Political Economy</em><br>
+            &bull; Gertler et al. (2012) &mdash; <em>American Economic Review</em>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 18: LIMITACIONES RCT ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Limitaciones de los RCT</div>
+
+    <p class="body-text" style="margin-bottom:12px;">
+      Aunque los RCT son el gold standard, <strong>no siempre son posibles o deseables</strong>:
+    </p>
+
+    <div style="display:flex; gap:15px;">
+      <div style="flex:1; border:2px solid #c0392b; border-radius:10px; padding:15px;">
+        <p style="font-weight:700; color:#c0392b; font-size:17px; margin-bottom:6px;">Eticas</p>
+        <p style="font-size:15px; line-height:1.5;">No puedes asignar aleatoriamente una <em>mala</em> politica. &iquest;Negar vacunas a un grupo de control? &iquest;Asignar pobreza?</p>
+      </div>
+      <div style="flex:1; border:2px solid #e67e22; border-radius:10px; padding:15px;">
+        <p style="font-weight:700; color:#e67e22; font-size:17px; margin-bottom:6px;">Practicas</p>
+        <p style="font-size:15px; line-height:1.5;">Costosos, lentos, y dificiles de escalar. No puedes aleatorizar politica monetaria, guerras o desastres naturales.</p>
+      </div>
+      <div style="flex:1; border:2px solid #8e44ad; border-radius:10px; padding:15px;">
+        <p style="font-weight:700; color:#8e44ad; font-size:17px; margin-bottom:6px;">Validez externa</p>
+        <p style="font-size:15px; line-height:1.5;">Funciona en el contexto del experimento, pero &iquest;se generaliza? Un programa en Oaxaca &iquest;funciona igual en Nuevo Leon?</p>
+      </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:18px;">
+      <p style="font-size:18px; font-weight:700; color:#1e4c7d; margin-bottom:6px;">Cuando no puedes hacer RCT, necesitas metodos cuasiexperimentales</p>
+      <p style="font-size:16px;">Estos metodos buscan &ldquo;imitar&rdquo; la aleatorizacion explotando situaciones naturales o estadisticas en los datos.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 19: EVALUACION DE IMPACTO MEXICO ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Evaluacion de impacto en Mexico</div>
+
+    <p class="body-text" style="margin-bottom:10px;">
+      Mexico es <strong>pionero en America Latina</strong> en evaluacion rigurosa de programas sociales. El marco institucional exige evidencia causal:
+    </p>
+
+    <div class="two-cols">
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:15px; margin-bottom:12px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:6px;">CONEVAL</p>
+          <p style="font-size:15px; line-height:1.5;">
+            Consejo Nacional de Evaluacion de la Politica de Desarrollo Social. Evalua todos los programas sociales federales con metodologia de <strong>impacto causal</strong>.
+          </p>
+        </div>
+        <div style="background:#eaf2fa; border-radius:10px; padding:15px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:6px;">Ley General de Desarrollo Social</p>
+          <p style="font-size:15px; line-height:1.5;">
+            Obliga a que programas sociales tengan <strong>evaluacion de impacto</strong> periodica. No basta con medir actividades: se miden <strong>resultados causales</strong>.
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="background:#f8f9fa; border-radius:10px; padding:15px;">
+          <p style="font-weight:700; font-size:17px; margin-bottom:8px;">Programas evaluados con metodos causales:</p>
+          <p style="font-size:15px; line-height:1.8;">
+            &bull; <strong>Progresa/Oportunidades/Prospera</strong> &mdash; RCT<br>
+            &bull; <strong>Seguro Popular</strong> &mdash; RCT por clusters<br>
+            &bull; <strong>Programa de Estancias Infantiles</strong> &mdash; DiD<br>
+            &bull; <strong>Salario minimo</strong> &mdash; DiD, IV<br>
+            &bull; <strong>Becas CONACYT</strong> &mdash; RD<br>
+            &bull; <strong>Programas de empleo temporal</strong> &mdash; PSM<br>
+            &bull; <strong>Jovenes Construyendo el Futuro</strong> &mdash; DiD
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 20: CASO PROGRESA DETALLE ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Caso: Progresa &mdash; Parker &amp; Todd (2017)</div>
+
+    <p class="body-text" style="margin-bottom:10px;">
+      <em>Journal of Political Economy</em>. Evaluaron los <strong>efectos de largo plazo</strong> del programa Progresa usando el diseno experimental original.
+    </p>
+
+    <div class="two-cols">
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:16px; margin-bottom:10px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:16px; margin-bottom:6px;">Pregunta causal</p>
+          <p style="font-size:15px; line-height:1.5;">&iquest;Las transferencias condicionadas en educacion durante la infancia <strong>aumentan</strong> escolaridad, empleo e ingresos en la adultez?</p>
+        </div>
+        <div style="background:#d5f5e3; border-radius:10px; padding:16px;">
+          <p style="font-weight:700; color:#1a7a3a; font-size:16px; margin-bottom:6px;">Hallazgos</p>
+          <p style="font-size:15px; line-height:1.5;">
+            &bull; +0.8 anos de escolaridad<br>
+            &bull; Mayor probabilidad de empleo formal<br>
+            &bull; Efectos mas fuertes en <strong>mujeres</strong><br>
+            &bull; Retorno: cada peso invertido genero ~$1.60
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="background:#f8f9fa; border-radius:10px; padding:16px; margin-bottom:10px;">
+          <p style="font-weight:700; font-size:16px; margin-bottom:6px;">Metodo</p>
+          <p style="font-size:15px; line-height:1.5;">
+            <strong>RCT</strong> con seguimiento longitudinal (17 anos). Compararon adultos que recibieron Progresa de ninos vs. los que entraron despues al programa (grupo control original).
+          </p>
+        </div>
+        <div style="background:#fff3cd; border-radius:10px; padding:16px;">
+          <p style="font-weight:700; color:#856404; font-size:16px; margin-bottom:6px;">Leccion para politica publica</p>
+          <p style="font-size:15px; line-height:1.5;">
+            Invertir en educacion temprana tiene <strong>retornos a largo plazo medibles</strong>. Sin el RCT, no podriamos distinguir el efecto del programa de la seleccion.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 21: CASO SEGURO POPULAR ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Caso: Seguro Popular &mdash; King et al. (2009)</div>
+
+    <p class="body-text" style="margin-bottom:10px;">
+      <em>The Lancet</em>. Evaluacion aleatorizada del programa de aseguramiento universal de salud en Mexico.
+    </p>
+
+    <div class="two-cols">
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:16px; margin-bottom:10px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:16px; margin-bottom:6px;">Diseno</p>
+          <p style="font-size:15px; line-height:1.5;">
+            <strong>RCT por clusters:</strong> 100 pares de &ldquo;health clusters&rdquo; en 7 estados. Un cluster de cada par fue aleatorizado a recibir promocion activa del Seguro Popular.
+          </p>
+        </div>
+        <div style="background:#d5f5e3; border-radius:10px; padding:16px;">
+          <p style="font-weight:700; color:#1a7a3a; font-size:16px; margin-bottom:6px;">Resultados causales</p>
+          <p style="font-size:15px; line-height:1.5;">
+            &bull; +23% afiliacion efectiva<br>
+            &bull; Reduccion de <strong>gastos catastroficos</strong> en salud<br>
+            &bull; Mayor uso de servicios preventivos<br>
+            &bull; Sin efecto significativo en salud general medida
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="background:#fff3cd; border-radius:10px; padding:16px; margin-bottom:10px;">
+          <p style="font-weight:700; color:#856404; font-size:16px; margin-bottom:6px;">&iquest;Que habria pasado sin RCT?</p>
+          <p style="font-size:15px; line-height:1.5;">
+            Estudios observacionales sugerian efectos <strong>mucho mayores</strong> en salud. El RCT mostro que el efecto principal fue <strong>proteccion financiera</strong>, no mejora directa en salud.
+          </p>
+        </div>
+        <div style="background:#f8f9fa; border-radius:10px; padding:16px;">
+          <p style="font-weight:700; font-size:15px; margin-bottom:4px;">Referencia:</p>
+          <p style="font-size:14px; color:#555; line-height:1.5;">King, G., et al. (2009). &ldquo;Public health insurance and health care: evidence from a randomized experiment in Mexico.&rdquo; <em>The Lancet</em>, 373(9673).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 22: CASO SALARIO MINIMO ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Caso: Salario minimo en Mexico</div>
+
+    <p class="body-text" style="margin-bottom:10px;">
+      &iquest;Aumentar el salario minimo destruye empleos? Una pregunta clasica donde la correlacion ha generado respuestas contradictorias.
+    </p>
+
+    <table class="styled">
+      <thead>
+        <tr>
+          <th>Metodo</th>
+          <th>Resultado</th>
+          <th>Confiabilidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Correlacion simple</strong></td>
+          <td>Parece que destruye empleo</td>
+          <td style="color:#c0392b; font-weight:700;">Baja &mdash; confusores multiples</td>
+        </tr>
+        <tr>
+          <td><strong>Regresion con controles</strong></td>
+          <td>Efecto pequeno, p=0.08</td>
+          <td style="color:#e67e22; font-weight:700;">Media &mdash; depende de controles</td>
+        </tr>
+        <tr>
+          <td><strong>DiD</strong> (Card &amp; Krueger, 1994)</td>
+          <td>Efecto nulo o ligeramente positivo</td>
+          <td style="color:#27ae60; font-weight:700;">Alta &mdash; diseno cuasiexperimental</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="two-cols" style="margin-top:15px;">
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:14px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:16px; margin-bottom:6px;">Mexico (2019-2024)</p>
+          <p style="font-size:15px; line-height:1.5;">Mexico incremento el salario minimo &gt;100% en terminos reales. Estudios de <strong>Campos-Vazquez (2020)</strong> y <strong>Esquivel (2021)</strong> usando DiD encontraron <strong>efectos positivos</strong> en ingreso sin destruccion significativa de empleo.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="background:#f8f9fa; border-radius:10px; padding:14px;">
+          <p style="font-weight:700; font-size:15px; margin-bottom:4px;">Papers:</p>
+          <p style="font-size:14px; color:#555; line-height:1.5;">
+            &bull; Card &amp; Krueger (1994) &mdash; <em>AER</em><br>
+            &bull; Campos-Vazquez, R. (2020) &mdash; <em>World Development</em><br>
+            &bull; Esquivel, G. (2021) &mdash; Documento CONEVAL<br>
+            &bull; Bosch &amp; Manacorda (2010) &mdash; <em>AEJ: Applied</em>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 23: POR QUE CUASIEXPERIMENTOS ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">&iquest;Por que metodos cuasiexperimentales?</div>
+
+    <p class="body-text" style="margin-bottom:12px;">
+      En la mayoria de contextos de politica publica, <strong>no es posible realizar un RCT</strong>. Los metodos cuasiexperimentales buscan <em>imitar</em> la logica experimental aprovechando variacion &ldquo;como si fuera aleatoria&rdquo; que ya existe en los datos.
+    </p>
+
+    <div style="display:flex; gap:15px; margin-bottom:15px;">
+      <div style="flex:1; background:#eaf2fa; border-radius:10px; padding:16px; text-align:center;">
+        <p style="font-size:36px; margin-bottom:6px;">&#9878;&#65039;</p>
+        <p style="font-weight:700; color:#1e4c7d; font-size:16px; margin-bottom:4px;">Etica</p>
+        <p style="font-size:14px;">No puedes negar tratamiento medico a un grupo control</p>
+      </div>
+      <div style="flex:1; background:#eaf2fa; border-radius:10px; padding:16px; text-align:center;">
+        <p style="font-size:36px; margin-bottom:6px;">&#128176;</p>
+        <p style="font-weight:700; color:#1e4c7d; font-size:16px; margin-bottom:4px;">Costo</p>
+        <p style="font-size:14px;">RCTs son caros y lentos de implementar</p>
+      </div>
+      <div style="flex:1; background:#eaf2fa; border-radius:10px; padding:16px; text-align:center;">
+        <p style="font-size:36px; margin-bottom:6px;">&#128205;</p>
+        <p style="font-weight:700; color:#1e4c7d; font-size:16px; margin-bottom:4px;">Escala</p>
+        <p style="font-size:14px;">Politicas ya implementadas no se pueden &ldquo;des-implementar&rdquo;</p>
+      </div>
+      <div style="flex:1; background:#eaf2fa; border-radius:10px; padding:16px; text-align:center;">
+        <p style="font-size:36px; margin-bottom:6px;">&#128338;</p>
+        <p style="font-weight:700; color:#1e4c7d; font-size:16px; margin-bottom:4px;">Retrospectiva</p>
+        <p style="font-size:14px;">Quieres evaluar algo que ya paso</p>
+      </div>
+    </div>
+
+    <div class="highlight-green">
+      <p style="font-size:17px;"><strong>La idea central:</strong> Si no puedes aleatorizar, busca una situacion donde la naturaleza, la politica o las reglas burocraticas hayan creado una asignacion que <em>se parece</em> a aleatoria. A esto se le llama <strong>experimento natural</strong>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 24: DID CONCEPTO ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Diferencias en Diferencias (DiD)</div>
+
+    <p class="body-text" style="margin-bottom:8px;">
+      Compara el <strong>cambio</strong> en el resultado entre un grupo tratado y un grupo control, antes y despues de la intervencion.
+    </p>
+
+    <div style="display:flex; gap:20px; margin:10px 0;">
+      <div style="flex:1;">
+        <table class="styled" style="font-size:15px;">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Antes</th>
+              <th>Despues</th>
+              <th>Cambio</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Tratados</strong></td>
+              <td>60%</td>
+              <td>75%</td>
+              <td><strong>+15%</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Control</strong></td>
+              <td>58%</td>
+              <td>68%</td>
+              <td><strong>+10%</strong></td>
+            </tr>
+            <tr style="background:#eaf2fa;">
+              <td><strong>DiD</strong></td>
+              <td></td>
+              <td></td>
+              <td style="color:#1e4c7d; font-weight:700; font-size:17px;"><strong>+5%</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="flex:1;">
+        <div style="background:#eaf2fa; border-radius:10px; padding:16px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:16px; margin-bottom:6px;">Formula:</p>
+          <p style="font-size:16px; font-family:'Courier New',monospace; margin-bottom:10px;">
+            DiD = (Y<sub>T,post</sub> &minus; Y<sub>T,pre</sub>) &minus; (Y<sub>C,post</sub> &minus; Y<sub>C,pre</sub>)
+          </p>
+          <p style="font-weight:700; color:#c0392b; font-size:15px; margin-bottom:4px;">Supuesto critico:</p>
+          <p style="font-size:15px;">Tendencias paralelas &mdash; sin el tratamiento, ambos grupos habrian seguido la <strong>misma tendencia</strong>.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:8px;">
+      <p style="font-size:16px;"><strong>Intuicion:</strong> El grupo control nos dice &ldquo;que habria pasado&rdquo; al grupo tratado sin la intervencion. El efecto causal es la diferencia entre lo que paso y lo que &ldquo;habria pasado&rdquo;.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 25: DID EJEMPLO MEXICO ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">DiD en Mexico: Ejemplos</div>
+
+    <div style="display:flex; gap:15px; margin-top:5px;">
+      <div style="flex:1; border:2px solid #1e4c7d; border-radius:10px; padding:16px;">
+        <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:8px;">Estancias Infantiles</p>
+        <p style="font-size:15px; line-height:1.5;">
+          <strong>Pregunta:</strong> &iquest;El programa de estancias infantiles aumento la participacion laboral femenina?<br><br>
+          <strong>DiD:</strong> Comparan municipios con vs. sin estancias, antes y despues de su implementacion.<br><br>
+          <strong>Resultado:</strong> +5 pp en participacion laboral de madres.
+        </p>
+        <p style="font-size:13px; color:#555; margin-top:8px;">Angeles et al. (2014) &mdash; <em>World Development</em></p>
+      </div>
+      <div style="flex:1; border:2px solid #1e4c7d; border-radius:10px; padding:16px;">
+        <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:8px;">Reforma fiscal (IEPS)</p>
+        <p style="font-size:15px; line-height:1.5;">
+          <strong>Pregunta:</strong> &iquest;El impuesto a bebidas azucaradas redujo su consumo?<br><br>
+          <strong>DiD:</strong> Comparan consumo antes y despues del impuesto (2014), usando paises sin impuesto como control.<br><br>
+          <strong>Resultado:</strong> &minus;6% en consumo de bebidas azucaradas.
+        </p>
+        <p style="font-size:13px; color:#555; margin-top:8px;">Colchero et al. (2016) &mdash; <em>BMJ</em></p>
+      </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:12px;">
+      <p style="font-size:16px;"><strong>Clave:</strong> En ambos casos, era imposible hacer RCT (no puedes aleatorizar impuestos o estancias). DiD aprovecho la <strong>implementacion escalonada</strong> como variacion cuasiexperimental.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 26: REGRESION DISCONTINUA ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Regresion Discontinua (RD)</div>
+
+    <p class="body-text" style="margin-bottom:8px;">
+      Cuando hay un <strong>corte (cutoff)</strong> que determina quien recibe tratamiento, podemos comparar unidades <em>justo arriba</em> y <em>justo abajo</em> del corte. Son practicamente identicas, excepto por el tratamiento.
+    </p>
+
+    <div class="two-cols" style="margin-top:8px;">
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:16px; margin-bottom:10px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:16px; margin-bottom:6px;">Ejemplo clasico: becas</p>
+          <p style="font-size:15px; line-height:1.5;">
+            Puntaje de pobreza: cutoff = 0.6<br>
+            &bull; Indice &gt; 0.6: <strong>recibe beca</strong><br>
+            &bull; Indice &le; 0.6: <strong>no recibe beca</strong><br><br>
+            Un estudiante con 0.61 es <em>practicamente identico</em> a uno con 0.59. La unica diferencia relevante es la beca.
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="background:#f8f9fa; border-radius:10px; padding:16px; margin-bottom:10px;">
+          <p style="font-weight:700; font-size:16px; margin-bottom:6px;">Formula conceptual:</p>
+          <p style="font-size:15px; font-family:'Courier New',monospace; margin-bottom:10px;">
+            Efecto = lim<sub>x&rarr;c+</sub> E[Y|X=x] &minus; lim<sub>x&rarr;c&minus;</sub> E[Y|X=x]
+          </p>
+          <p style="font-size:15px; line-height:1.5;">
+            El efecto causal es el <strong>&ldquo;salto&rdquo;</strong> en Y justo en el punto de corte c.
+          </p>
+        </div>
+        <div style="background:#fff3cd; border-radius:8px; padding:12px;">
+          <p style="font-weight:700; color:#856404; font-size:15px; margin-bottom:4px;">Supuesto clave:</p>
+          <p style="font-size:14px;">No hay manipulacion del puntaje alrededor del corte (nadie puede &ldquo;moverse&rdquo; estrategicamente al otro lado).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 27: RD EJEMPLO MEXICO ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">RD en Mexico: Ejemplos</div>
+
+    <div style="display:flex; gap:15px; margin-top:5px;">
+      <div style="flex:1; border:2px solid #1e4c7d; border-radius:10px; padding:16px;">
+        <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:8px;">Becas CONACYT (posgrado)</p>
+        <p style="font-size:15px; line-height:1.5;">
+          <strong>Cutoff:</strong> Puntaje de evaluacion del comite.<br><br>
+          <strong>RD:</strong> Comparan solicitantes justo arriba vs. justo abajo del corte de aceptacion.<br><br>
+          <strong>Resultado:</strong> La beca incrementa +15% la probabilidad de completar posgrado y +12% el ingreso posterior.
+        </p>
+        <p style="font-size:13px; color:#555; margin-top:8px;">De Hoyos et al. (2016)</p>
+      </div>
+      <div style="flex:1; border:2px solid #1e4c7d; border-radius:10px; padding:16px;">
+        <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:8px;">Progresa (RD + RCT)</p>
+        <p style="font-size:15px; line-height:1.5;">
+          <strong>Cutoff:</strong> Indice de marginacion del municipio.<br><br>
+          <strong>RD:</strong> Ademas del RCT, Buddelmeyer &amp; Skoufias (2004) usaron RD en el indice de pobreza para estimar efectos locales.<br><br>
+          <strong>Resultado:</strong> Efecto de ~2% en graduacion justo en el corte (vs. 5% del RCT general).
+        </p>
+        <p style="font-size:13px; color:#555; margin-top:8px;">Buddelmeyer &amp; Skoufias (2004)</p>
+      </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:12px;">
+      <p style="font-size:16px;"><strong>Nota:</strong> RD da un efecto <strong>local</strong> (solo valido cerca del corte). El efecto puede ser diferente para personas lejos del cutoff. Esta es la principal limitacion del metodo.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 28: VARIABLES INSTRUMENTALES ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Variables Instrumentales (IV)</div>
+
+    <p class="body-text" style="margin-bottom:8px;">
+      Cuando hay <strong>confusion</strong> (una variable no observada afecta tanto X como Y), buscamos un <strong>instrumento Z</strong> que afecte X pero que <em>no</em> afecte Y excepto a traves de X.
+    </p>
+
+    <div style="display:flex; align-items:center; justify-content:center; margin:15px 0;">
+      <div style="text-align:center;">
+        <div style="display:flex; align-items:center; gap:20px; justify-content:center;">
+          <div style="background:#27ae60; color:#fff; padding:14px 22px; border-radius:10px; font-weight:700; font-size:18px;">Z (instrumento)</div>
+          <div style="font-size:28px; color:#27ae60;">&rarr;</div>
+          <div style="background:#2471a3; color:#fff; padding:14px 22px; border-radius:10px; font-weight:700; font-size:18px;">X (tratamiento)</div>
+          <div style="font-size:28px; color:#2471a3;">&rarr;</div>
+          <div style="background:#c0392b; color:#fff; padding:14px 22px; border-radius:10px; font-weight:700; font-size:18px;">Y (resultado)</div>
+        </div>
+        <div style="margin-top:10px;">
+          <span style="font-size:15px; color:#e67e22; font-weight:700;">U (no observada) afecta X e Y, pero Z NO se relaciona con U</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-cols" style="margin-top:10px;">
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:15px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:16px; margin-bottom:6px;">Ejemplo clasico: educacion &rarr; salarios</p>
+          <p style="font-size:15px; line-height:1.5;">
+            <strong>Problema:</strong> Habilidad innata (U) causa mas educacion Y mas salario.<br>
+            <strong>Instrumento:</strong> Cambios en leyes de escolaridad obligatoria (Z). Afectan educacion pero no habilidad innata.
+          </p>
+          <p style="font-size:13px; color:#555; margin-top:6px;">Angrist &amp; Krueger (1991) &mdash; <em>QJE</em></p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:15px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:16px; margin-bottom:6px;">Ejemplo Mexico: lluvia &rarr; ingreso agricola</p>
+          <p style="font-size:15px; line-height:1.5;">
+            <strong>Problema:</strong> Inversion en tecnologia (U) correlaciona con ingreso y con tipo de cultivo.<br>
+            <strong>Instrumento:</strong> Variacion pluviometrica exogena (Z).
+          </p>
+          <p style="font-size:13px; color:#555; margin-top:6px;">Benson Todd (2018)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 29: PSM ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Propensity Score Matching (PSM)</div>
+
+    <p class="body-text" style="margin-bottom:10px;">
+      Cuando no tienes aleatorización, corte ni instrumento, puedes <strong>emparejar</strong> unidades tratadas con unidades de control que sean lo más parecidas posible en sus características observables.
+    </p>
+
+    <div style="display:flex; align-items:center; justify-content:center; margin:12px 0;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="background:#2471a3; color:#fff; padding:14px; border-radius:10px; text-align:center; width:200px;">
+          <p style="font-weight:700; font-size:16px;">Paso 1</p>
+          <p style="font-size:14px;">Estimar probabilidad de recibir tratamiento: <strong>propensity score</strong> p(X)</p>
+        </div>
+        <div style="font-size:24px; color:#1e4c7d;">&rarr;</div>
+        <div style="background:#27ae60; color:#fff; padding:14px; border-radius:10px; text-align:center; width:200px;">
+          <p style="font-weight:700; font-size:16px;">Paso 2</p>
+          <p style="font-size:14px;">Emparejar cada tratado con control que tenga <strong>p(X) similar</strong></p>
+        </div>
+        <div style="font-size:24px; color:#1e4c7d;">&rarr;</div>
+        <div style="background:#c0392b; color:#fff; padding:14px; border-radius:10px; text-align:center; width:200px;">
+          <p style="font-weight:700; font-size:16px;">Paso 3</p>
+          <p style="font-size:14px;">Comparar resultados entre <strong>pares emparejados</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-cols" style="margin-top:12px;">
+      <div class="col">
+        <div class="highlight-green">
+          <p style="font-size:15px;"><strong>Ventaja:</strong> No requiere instrumento, corte ni datos antes/despues. Solo necesitas buenas covariables.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="highlight-red">
+          <p style="font-size:15px;"><strong>Limitacion:</strong> Solo controla por variables <em>observadas</em>. Si hay confusores no medidos, el sesgo persiste.</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#f8f9fa; border-radius:8px; padding:12px; margin-top:8px;">
+      <p style="font-size:14px; color:#555;"><strong>Paper Mexico:</strong> Behrman, Parker &amp; Todd (2011) usan PSM para evaluar efectos de Oportunidades en zonas donde el RCT no aplico. <em>J. of Human Resources</em>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 30: TABLA COMPARATIVA ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Comparativa de metodos</div>
+
+    <table class="styled" style="font-size:14px;">
+      <thead>
+        <tr>
+          <th style="width:14%;">Metodo</th>
+          <th style="width:18%;">Idea central</th>
+          <th style="width:18%;">Supuesto clave</th>
+          <th style="width:18%;">Cuando usarlo</th>
+          <th style="width:18%;">Limitacion</th>
+          <th style="width:14%;">Paquete R</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>RCT</strong></td>
+          <td>Asignacion aleatoria</td>
+          <td>Aleatorizacion fue exitosa</td>
+          <td>Puedes disenar experimento</td>
+          <td>Costoso, etico, validez externa</td>
+          <td><code>estimatr</code></td>
+        </tr>
+        <tr>
+          <td><strong>DiD</strong></td>
+          <td>Diferencia de cambios</td>
+          <td>Tendencias paralelas</td>
+          <td>Datos antes/despues + grupo control</td>
+          <td>Tendencias pueden divergir</td>
+          <td><code>fixest</code>, <code>did</code></td>
+        </tr>
+        <tr>
+          <td><strong>RD</strong></td>
+          <td>Comparar en el corte</td>
+          <td>No manipulacion del corte</td>
+          <td>Asignacion por puntaje con cutoff</td>
+          <td>Efecto local (solo cerca del corte)</td>
+          <td><code>rdrobust</code></td>
+        </tr>
+        <tr>
+          <td><strong>IV</strong></td>
+          <td>Variable exogena</td>
+          <td>Exclusion (Z&rarr;Y solo via X)</td>
+          <td>Tienes un instrumento valido</td>
+          <td>Instrumentos debiles, dificil encontrar</td>
+          <td><code>ivreg</code></td>
+        </tr>
+        <tr>
+          <td><strong>PSM</strong></td>
+          <td>Emparejar similares</td>
+          <td>No hay confusores no observados</td>
+          <td>Muchas covariables, no hay RCT/corte</td>
+          <td>Sesgo por no observables</td>
+          <td><code>MatchIt</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="highlight-box" style="margin-top:15px;">
+      <p style="font-size:17px;"><strong>Jerarquia de credibilidad causal (de mayor a menor):</strong></p>
+      <p style="font-size:16px; margin-top:6px;">
+        <span style="color:#27ae60; font-weight:700;">RCT</span> &gt;
+        <span style="color:#2471a3; font-weight:700;">RD</span> &gt;
+        <span style="color:#1e4c7d; font-weight:700;">DiD</span> &gt;
+        <span style="color:#e67e22; font-weight:700;">IV</span> &gt;
+        <span style="color:#c0392b; font-weight:700;">PSM</span> &gt;
+        <span style="color:#999;">Regresion con controles</span> &gt;
+        <span style="color:#ccc;">Correlacion</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 31: PAPERS FUNDAMENTALES ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Papers fundamentales</div>
+
+    <div style="display:flex; flex-direction:column; gap:10px; margin-top:5px;">
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1; background:#eaf2fa; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:15px; margin-bottom:4px;">Angrist &amp; Pischke (2008)</p>
+          <p style="font-size:13px; line-height:1.4;"><em>Mostly Harmless Econometrics</em>. Princeton UP. El clasico moderno de metodos causales en economia. Cubre IV, DiD, RD con ejemplos practicos.</p>
+        </div>
+        <div style="flex:1; background:#eaf2fa; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:15px; margin-bottom:4px;">Rubin (1974)</p>
+          <p style="font-size:13px; line-height:1.4;"><em>J. of Educational Psychology</em>. Formaliza el &ldquo;potential outcomes framework&rdquo;: Y(1), Y(0), y el problema fundamental de inferencia causal.</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1; background:#eaf2fa; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:15px; margin-bottom:4px;">Pearl (2000)</p>
+          <p style="font-size:13px; line-height:1.4;"><em>Causality: Models, Reasoning, and Inference</em>. Cambridge UP. Perspectiva de graficos causales (DAGs), complementaria a Rubin.</p>
+        </div>
+        <div style="flex:1; background:#eaf2fa; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:15px; margin-bottom:4px;">Holland (1986)</p>
+          <p style="font-size:13px; line-height:1.4;"><em>JASA</em>. &ldquo;Statistics and Causal Inference&rdquo;. Define formalmente el problema fundamental y acuna la frase &ldquo;no causation without manipulation&rdquo;.</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1; background:#eaf2fa; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:15px; margin-bottom:4px;">Athey &amp; Wager (2019)</p>
+          <p style="font-size:13px; line-height:1.4;"><em>Annals of Statistics</em>. Causal forests: random forests para estimar efectos causales heterogeneos. Puente entre ML y causalidad.</p>
+        </div>
+        <div style="flex:1; background:#eaf2fa; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:15px; margin-bottom:4px;">Cunningham (2021)</p>
+          <p style="font-size:13px; line-height:1.4;"><em>Causal Inference: The Mixtape</em>. Muy accesible, enfoque practico con codigo en R y Stata. <strong>Disponible gratis online.</strong></p>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1; background:#eaf2fa; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:15px; margin-bottom:4px;">Card &amp; Krueger (1994)</p>
+          <p style="font-size:13px; line-height:1.4;"><em>AER</em>. El estudio que revoluciono el debate de salario minimo usando DiD. Fast food en NJ vs. PA.</p>
+        </div>
+        <div style="flex:1; background:#eaf2fa; border-radius:8px; padding:14px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:15px; margin-bottom:4px;">Chernozhukov et al. (2018)</p>
+          <p style="font-size:13px; line-height:1.4;"><em>Econometric Journal</em>. Double/Debiased ML: formaliza la integracion de machine learning con inferencia causal.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 32: PAPERS DE MEXICO ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Papers de Mexico</div>
+
+    <table class="styled" style="font-size:14px;">
+      <thead>
+        <tr>
+          <th style="width:15%;">Metodo</th>
+          <th style="width:30%;">Paper</th>
+          <th style="width:25%;">Tema</th>
+          <th style="width:30%;">Hallazgo clave</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>RCT</strong></td>
+          <td>Parker &amp; Todd (2017), <em>JPE</em></td>
+          <td>Progresa: efectos largo plazo</td>
+          <td>+0.8 anos escolaridad, mayor empleo formal</td>
+        </tr>
+        <tr>
+          <td><strong>RCT</strong></td>
+          <td>King et al. (2009), <em>Lancet</em></td>
+          <td>Seguro Popular</td>
+          <td>Proteccion financiera, no mejora directa en salud</td>
+        </tr>
+        <tr>
+          <td><strong>RCT</strong></td>
+          <td>Gertler et al. (2012), <em>AER</em></td>
+          <td>Progresa: inversion productiva</td>
+          <td>Familias invierten transferencias en activos</td>
+        </tr>
+        <tr>
+          <td><strong>DiD</strong></td>
+          <td>Campos-Vazquez (2020), <em>World Dev.</em></td>
+          <td>Salario minimo Mexico</td>
+          <td>Aumento sin destruccion significativa de empleo</td>
+        </tr>
+        <tr>
+          <td><strong>DiD</strong></td>
+          <td>Colchero et al. (2016), <em>BMJ</em></td>
+          <td>Impuesto bebidas azucaradas</td>
+          <td>&minus;6% consumo tras impuesto</td>
+        </tr>
+        <tr>
+          <td><strong>DiD</strong></td>
+          <td>Angeles et al. (2014), <em>World Dev.</em></td>
+          <td>Estancias Infantiles</td>
+          <td>+5 pp participacion laboral mujeres</td>
+        </tr>
+        <tr>
+          <td><strong>RD</strong></td>
+          <td>De Hoyos et al. (2016)</td>
+          <td>Becas CONACYT</td>
+          <td>+15% completar posgrado</td>
+        </tr>
+        <tr>
+          <td><strong>IV</strong></td>
+          <td>Bosch &amp; Manacorda (2010), <em>AEJ</em></td>
+          <td>Salario minimo y desigualdad</td>
+          <td>Salario minimo reduce desigualdad salarial</td>
+        </tr>
+        <tr>
+          <td><strong>PSM</strong></td>
+          <td>Behrman et al. (2011), <em>J. Hum. Res.</em></td>
+          <td>Oportunidades (no experimental)</td>
+          <td>Efectos similares al RCT con buen matching</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 33: RECURSOS ADICIONALES ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Recursos adicionales</div>
+
+    <div class="two-cols" style="margin-top:10px;">
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:16px; margin-bottom:12px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:8px;">Libros gratuitos online</p>
+          <p style="font-size:15px; line-height:1.7;">
+            &bull; <strong>Cunningham</strong> &mdash; <em>Causal Inference: The Mixtape</em> (mixtape.scunning.com)<br>
+            &bull; <strong>Huntington-Klein</strong> &mdash; <em>The Effect</em> (theeffectbook.net)<br>
+            &bull; <strong>Angrist &amp; Pischke</strong> &mdash; <em>Mastering Metrics</em> (version accesible)
+          </p>
+        </div>
+        <div style="background:#eaf2fa; border-radius:10px; padding:16px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:8px;">Instituciones (Mexico)</p>
+          <p style="font-size:15px; line-height:1.7;">
+            &bull; <strong>CONEVAL</strong> &mdash; Evaluaciones de impacto<br>
+            &bull; <strong>J-PAL LAC</strong> &mdash; RCTs en America Latina<br>
+            &bull; <strong>BID</strong> &mdash; Guias de evaluacion de impacto
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="background:#eaf2fa; border-radius:10px; padding:16px; margin-bottom:12px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:8px;">Cursos online</p>
+          <p style="font-size:15px; line-height:1.7;">
+            &bull; <strong>MIT OpenCourseWare</strong> &mdash; Econometrics (Angrist)<br>
+            &bull; <strong>Coursera</strong> &mdash; &ldquo;Causal Inference&rdquo; (UPenn)<br>
+            &bull; <strong>edX</strong> &mdash; &ldquo;Evaluating Social Programs&rdquo; (MIT/J-PAL)
+          </p>
+        </div>
+        <div style="background:#eaf2fa; border-radius:10px; padding:16px;">
+          <p style="font-weight:700; color:#1e4c7d; font-size:17px; margin-bottom:8px;">En espanol</p>
+          <p style="font-size:15px; line-height:1.7;">
+            &bull; <strong>CEPAL</strong> &mdash; Documentos tecnicos de evaluacion<br>
+            &bull; <strong>BID</strong> &mdash; &ldquo;Guia de evaluacion de impacto de programas sociales&rdquo;<br>
+            &bull; <strong>CLEAR LAC</strong> &mdash; Recursos de evaluacion
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 34: R - SIMULACION ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">R: Simulacion de datos causales</div>
+
+    <p class="body-text-sm" style="margin-bottom:8px;">
+      Simulamos un escenario donde <strong>conocemos</strong> el efecto causal real (5%) para comparar metodos:
+    </p>
+
+    <div class="code-block">
+<span class="comment"># Simulacion de datos con efecto causal conocido</span>
+<span class="keyword">library</span>(tidyverse)
+
+<span class="keyword">set.seed</span>(<span class="number">42</span>)
+n <span class="operator">&lt;-</span> <span class="number">1000</span>
+
+datos <span class="operator">&lt;-</span> <span class="keyword">tibble</span>(
+  ingreso   <span class="operator">=</span> <span class="keyword">rnorm</span>(n, <span class="number">50000</span>, <span class="number">15000</span>),
+  edu_madre <span class="operator">=</span> <span class="keyword">sample</span>(<span class="number">1</span>:<span class="number">16</span>, n, <span class="keyword">replace</span> <span class="operator">=</span> <span class="keyword">TRUE</span>),
+  <span class="comment"># Tratamiento correlacionado con ingreso (sesgo de seleccion)</span>
+  prob_trat <span class="operator">=</span> <span class="keyword">plogis</span>(<span class="number">-2</span> <span class="operator">+</span> <span class="number">0.00003</span> <span class="operator">*</span> ingreso <span class="operator">+</span> <span class="number">0.1</span> <span class="operator">*</span> edu_madre),
+  beca      <span class="operator">=</span> <span class="keyword">rbinom</span>(n, <span class="number">1</span>, prob_trat),
+  <span class="comment"># Efecto causal REAL = 5 puntos porcentuales</span>
+  graduacion <span class="operator">=</span> <span class="keyword">rbinom</span>(n, <span class="number">1</span>,
+    <span class="keyword">plogis</span>(<span class="number">-1</span> <span class="operator">+</span> <span class="number">0.00002</span> <span class="operator">*</span> ingreso <span class="operator">+</span> <span class="number">0.08</span> <span class="operator">*</span> edu_madre <span class="operator">+</span> <span class="number">0.2</span> <span class="operator">*</span> beca))
+)
+
+<span class="comment"># Correlacion simple (sesgada!)</span>
+datos <span class="operator">%&gt;%</span>
+  <span class="keyword">group_by</span>(beca) <span class="operator">%&gt;%</span>
+  <span class="keyword">summarise</span>(tasa_grad <span class="operator">=</span> <span class="keyword">mean</span>(graduacion))
+    </div>
+
+    <p class="note">La diferencia simple sobreestima el efecto real (5%) porque los becados ya tenian ventajas previas.</p>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 35: R - CORRELACION VS REGRESION ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">R: Correlacional vs. con controles</div>
+
+    <div class="code-block">
+<span class="comment"># Modelo 1: Correlacion simple (sesgado)</span>
+modelo_simple <span class="operator">&lt;-</span> <span class="keyword">glm</span>(graduacion <span class="operator">~</span> beca,
+                      <span class="keyword">data</span> <span class="operator">=</span> datos,
+                      <span class="keyword">family</span> <span class="operator">=</span> <span class="keyword">binomial</span>)
+
+<span class="comment"># Modelo 2: Con controles (mejor, no perfecto)</span>
+modelo_controles <span class="operator">&lt;-</span> <span class="keyword">glm</span>(graduacion <span class="operator">~</span> beca <span class="operator">+</span> ingreso <span class="operator">+</span> edu_madre,
+                        <span class="keyword">data</span> <span class="operator">=</span> datos,
+                        <span class="keyword">family</span> <span class="operator">=</span> <span class="keyword">binomial</span>)
+
+<span class="comment"># Comparar coeficientes marginales</span>
+<span class="keyword">library</span>(marginaleffects)
+<span class="keyword">avg_slopes</span>(modelo_simple, <span class="keyword">variables</span> <span class="operator">=</span> <span class="string">"beca"</span>)    <span class="comment"># ~12% (sesgado)</span>
+<span class="keyword">avg_slopes</span>(modelo_controles, <span class="keyword">variables</span> <span class="operator">=</span> <span class="string">"beca"</span>) <span class="comment"># ~6% (mas cerca del 5% real)</span>
+    </div>
+
+    <div class="highlight-box" style="margin-top:12px;">
+      <p style="font-size:17px;"><strong>Leccion:</strong> Controlar por variables observadas reduce sesgo, pero <strong>no lo elimina</strong> si hay confusores no medidos. Para el efecto causal verdadero, necesitamos disenos mas robustos.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 36: R - DID ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">R: Diferencias en Diferencias</div>
+
+    <p class="body-text-sm" style="margin-bottom:6px;">
+      Usando <code style="background:#eef2f7; padding:2px 6px; border-radius:3px; font-family:monospace; color:#1e4c7d;">fixest</code>, el paquete mas eficiente para DiD en R:
+    </p>
+
+    <div class="code-block">
+<span class="keyword">library</span>(fixest)
+
+<span class="comment"># Datos panel: municipios antes y despues de politica</span>
+<span class="comment"># tratado = 1 si municipio recibio programa</span>
+<span class="comment"># post    = 1 si periodo es posterior a la politica</span>
+
+<span class="comment"># DiD clasico con efectos fijos</span>
+modelo_did <span class="operator">&lt;-</span> <span class="keyword">feols</span>(
+  graduacion <span class="operator">~</span> tratado <span class="operator">*</span> post <span class="operator">|</span> municipio <span class="operator">+</span> anio,
+  <span class="keyword">data</span> <span class="operator">=</span> datos_panel,
+  <span class="keyword">cluster</span> <span class="operator">=</span> <span class="operator">~</span>municipio  <span class="comment"># errores agrupados</span>
+)
+
+<span class="keyword">summary</span>(modelo_did)
+<span class="comment"># El coeficiente de tratado:post = efecto causal DiD</span>
+
+<span class="comment"># Verificar supuesto de tendencias paralelas</span>
+modelo_event <span class="operator">&lt;-</span> <span class="keyword">feols</span>(
+  graduacion <span class="operator">~</span> <span class="keyword">i</span>(anio_rel, tratado, <span class="keyword">ref</span> <span class="operator">=</span> <span class="number">-1</span>) <span class="operator">|</span>
+    municipio <span class="operator">+</span> anio,
+  <span class="keyword">data</span> <span class="operator">=</span> datos_panel
+)
+<span class="keyword">iplot</span>(modelo_event)  <span class="comment"># Event study plot</span>
+    </div>
+
+    <p class="note">El event study verifica que no habia diferencias pre-tratamiento (tendencias paralelas).</p>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 37: R - RD ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">R: Regresion Discontinua</div>
+
+    <p class="body-text-sm" style="margin-bottom:6px;">
+      Usando <code style="background:#eef2f7; padding:2px 6px; border-radius:3px; font-family:monospace; color:#1e4c7d;">rdrobust</code>, el paquete estandar para RD:
+    </p>
+
+    <div class="code-block">
+<span class="keyword">library</span>(rdrobust)
+
+<span class="comment"># puntaje = variable de asignacion (running variable)</span>
+<span class="comment"># cutoff = 60 (arriba recibe beca, abajo no)</span>
+<span class="comment"># resultado = graduacion</span>
+
+<span class="comment"># Estimacion RD con bandwidth optimo</span>
+rd_resultado <span class="operator">&lt;-</span> <span class="keyword">rdrobust</span>(
+  <span class="keyword">y</span> <span class="operator">=</span> datos<span class="operator">$</span>graduacion,
+  <span class="keyword">x</span> <span class="operator">=</span> datos<span class="operator">$</span>puntaje,
+  <span class="keyword">c</span> <span class="operator">=</span> <span class="number">60</span>
+)
+<span class="keyword">summary</span>(rd_resultado)
+
+<span class="comment"># Grafica de la discontinuidad</span>
+<span class="keyword">rdplot</span>(
+  <span class="keyword">y</span> <span class="operator">=</span> datos<span class="operator">$</span>graduacion,
+  <span class="keyword">x</span> <span class="operator">=</span> datos<span class="operator">$</span>puntaje,
+  <span class="keyword">c</span> <span class="operator">=</span> <span class="number">60</span>,
+  <span class="keyword">title</span> <span class="operator">=</span> <span class="string">"Regresion Discontinua: efecto de beca"</span>,
+  <span class="keyword">x.label</span> <span class="operator">=</span> <span class="string">"Puntaje de pobreza"</span>,
+  <span class="keyword">y.label</span> <span class="operator">=</span> <span class="string">"Tasa de graduacion"</span>
+)
+    </div>
+
+    <div class="highlight-box" style="margin-top:8px;">
+      <p style="font-size:16px;"><strong>Tip:</strong> <code style="background:#dce6f0; padding:2px 4px; border-radius:3px; font-family:monospace;">rdrobust</code> calcula automaticamente el ancho de banda optimo y los intervalos de confianza robustos.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 38: R - IV ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">R: Variables Instrumentales</div>
+
+    <p class="body-text-sm" style="margin-bottom:6px;">
+      Usando <code style="background:#eef2f7; padding:2px 6px; border-radius:3px; font-family:monospace; color:#1e4c7d;">ivreg</code> del paquete AER:
+    </p>
+
+    <div class="code-block">
+<span class="keyword">library</span>(ivreg)  <span class="comment"># o library(AER)</span>
+
+<span class="comment"># Ejemplo: efecto de educacion en salarios</span>
+<span class="comment"># Instrumento: distancia a universidad mas cercana</span>
+<span class="comment"># (afecta educacion pero no salario directamente)</span>
+
+<span class="comment"># OLS (sesgado por habilidad no observada)</span>
+ols <span class="operator">&lt;-</span> <span class="keyword">lm</span>(log_salario <span class="operator">~</span> anios_edu <span class="operator">+</span> experiencia,
+         <span class="keyword">data</span> <span class="operator">=</span> datos)
+
+<span class="comment"># IV: instrumentamos anios_edu con distancia_uni</span>
+iv <span class="operator">&lt;-</span> <span class="keyword">ivreg</span>(
+  log_salario <span class="operator">~</span> anios_edu <span class="operator">+</span> experiencia <span class="operator">|</span>
+    distancia_uni <span class="operator">+</span> experiencia,
+  <span class="keyword">data</span> <span class="operator">=</span> datos
+)
+
+<span class="comment"># Comparar: OLS vs IV</span>
+<span class="keyword">summary</span>(iv, <span class="keyword">diagnostics</span> <span class="operator">=</span> <span class="keyword">TRUE</span>)
+<span class="comment"># Verificar: estadistico F de primera etapa &gt; 10</span>
+<span class="comment"># Test de Sargan si tienes mas de un instrumento</span>
+    </div>
+
+    <p class="note">Si el estadistico F de primera etapa es &lt; 10, el instrumento es &ldquo;debil&rdquo; y la estimacion no es confiable.</p>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 39: R - VISUALIZACION ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">R: Visualizacion causal con ggplot2</div>
+
+    <div class="two-cols">
+      <div class="col">
+        <div class="code-block" style="font-size:12px;">
+<span class="comment"># Grafica DiD</span>
+datos_panel <span class="operator">%&gt;%</span>
+  <span class="keyword">group_by</span>(tratado, anio) <span class="operator">%&gt;%</span>
+  <span class="keyword">summarise</span>(
+    media <span class="operator">=</span> <span class="keyword">mean</span>(resultado)
+  ) <span class="operator">%&gt;%</span>
+  <span class="keyword">ggplot</span>(<span class="keyword">aes</span>(
+    <span class="keyword">x</span> <span class="operator">=</span> anio,
+    <span class="keyword">y</span> <span class="operator">=</span> media,
+    <span class="keyword">color</span> <span class="operator">=</span> <span class="keyword">factor</span>(tratado)
+  )) <span class="operator">+</span>
+  <span class="keyword">geom_line</span>(<span class="keyword">size</span> <span class="operator">=</span> <span class="number">1.2</span>) <span class="operator">+</span>
+  <span class="keyword">geom_point</span>(<span class="keyword">size</span> <span class="operator">=</span> <span class="number">3</span>) <span class="operator">+</span>
+  <span class="keyword">geom_vline</span>(
+    <span class="keyword">xintercept</span> <span class="operator">=</span> <span class="number">2015</span>,
+    <span class="keyword">linetype</span> <span class="operator">=</span> <span class="string">"dashed"</span>
+  ) <span class="operator">+</span>
+  <span class="keyword">labs</span>(
+    <span class="keyword">title</span> <span class="operator">=</span> <span class="string">"Diferencias en Diferencias"</span>,
+    <span class="keyword">color</span> <span class="operator">=</span> <span class="string">"Grupo"</span>
+  ) <span class="operator">+</span>
+  <span class="keyword">theme_minimal</span>()
+        </div>
+      </div>
+      <div class="col">
+        <div class="code-block" style="font-size:12px;">
+<span class="comment"># Grafica RD</span>
+datos <span class="operator">%&gt;%</span>
+  <span class="keyword">mutate</span>(
+    tratado <span class="operator">=</span> puntaje <span class="operator">&gt;</span> <span class="number">60</span>
+  ) <span class="operator">%&gt;%</span>
+  <span class="keyword">ggplot</span>(<span class="keyword">aes</span>(
+    <span class="keyword">x</span> <span class="operator">=</span> puntaje,
+    <span class="keyword">y</span> <span class="operator">=</span> graduacion,
+    <span class="keyword">color</span> <span class="operator">=</span> tratado
+  )) <span class="operator">+</span>
+  <span class="keyword">geom_point</span>(
+    <span class="keyword">alpha</span> <span class="operator">=</span> <span class="number">0.3</span>
+  ) <span class="operator">+</span>
+  <span class="keyword">geom_smooth</span>(
+    <span class="keyword">method</span> <span class="operator">=</span> <span class="string">"loess"</span>
+  ) <span class="operator">+</span>
+  <span class="keyword">geom_vline</span>(
+    <span class="keyword">xintercept</span> <span class="operator">=</span> <span class="number">60</span>,
+    <span class="keyword">linetype</span> <span class="operator">=</span> <span class="string">"dashed"</span>,
+    <span class="keyword">color</span> <span class="operator">=</span> <span class="string">"red"</span>
+  ) <span class="operator">+</span>
+  <span class="keyword">labs</span>(
+    <span class="keyword">title</span> <span class="operator">=</span> <span class="string">"Regresion Discontinua"</span>
+  ) <span class="operator">+</span>
+  <span class="keyword">theme_minimal</span>()
+        </div>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top:6px;">Ambas graficas son herramientas esenciales para <strong>comunicar</strong> resultados causales de forma visual e intuitiva.</p>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 40: CAUSAL ML PREVIEW ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Preview: Causal Machine Learning</div>
+
+    <p class="body-text" style="margin-bottom:10px;">
+      Los metodos modernos integran <strong>machine learning</strong> con <strong>inferencia causal</strong>. En el Tema 1.2 profundizaremos. Aqui un adelanto:
+    </p>
+
+    <div class="two-cols">
+      <div class="col">
+        <div style="border:2px solid #2471a3; border-radius:10px; padding:16px; height:320px;">
+          <div style="background:#2471a3; color:#fff; padding:8px 14px; border-radius:6px; font-weight:700; text-align:center; margin-bottom:10px;">
+            Causal Forests
+          </div>
+          <p style="font-size:15px; line-height:1.5;">
+            Extension de random forests para estimar <strong>efectos causales heterogeneos</strong>.<br><br>
+            En lugar de predecir Y, predice el <strong>efecto &tau;(X)</strong> = Y(1) &minus; Y(0) para cada persona.<br><br>
+            <strong>Resultado:</strong> No un numero unico, sino una funcion que dice <em>a quien le funciona mas el programa</em>.
+          </p>
+          <p style="font-size:13px; color:#555; margin-top:10px;">Athey &amp; Wager (2019). Paquete: <code style="background:#eef2f7; padding:2px 4px; border-radius:3px; font-family:monospace;">grf</code></p>
+        </div>
+      </div>
+      <div class="col">
+        <div style="border:2px solid #27ae60; border-radius:10px; padding:16px; height:320px;">
+          <div style="background:#27ae60; color:#fff; padding:8px 14px; border-radius:6px; font-weight:700; text-align:center; margin-bottom:10px;">
+            Double/Debiased ML
+          </div>
+          <p style="font-size:15px; line-height:1.5;">
+            Usa ML para predecir tanto Y como X dado Z (controles), luego estima causalidad en los <strong>residuos</strong>.<br><br>
+            <strong>Ventaja:</strong> Control flexible de confusores (sin asumir linealidad). Permite muchas variables (p &gt;&gt; n).<br><br>
+            Mantiene <strong>estimador causal insesgado</strong>.
+          </p>
+          <p style="font-size:13px; color:#555; margin-top:10px;">Chernozhukov et al. (2018). Paquete: <code style="background:#eef2f7; padding:2px 4px; border-radius:3px; font-family:monospace;">DoubleML</code></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 41: RESUMEN ==================== -->
+<div class="slide">
+  <div class="slide-content">
+    <div class="banner">Resumen: 10 puntos clave</div>
+
+    <div style="display:flex; flex-direction:column; gap:7px; margin-top:5px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="background:#1e4c7d; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">1</div>
+        <p style="font-size:16px;"><strong>Correlacion</strong> mide asociacion; <strong>causalidad</strong> mide efecto de intervenir.</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="background:#1e4c7d; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">2</div>
+        <p style="font-size:16px;">Correlacion <strong>NO implica</strong> causalidad, pero es <strong>condicion necesaria</strong> para ella.</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="background:#1e4c7d; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">3</div>
+        <p style="font-size:16px;">Causalidad requiere: correlacion + temporalidad + mecanismo + eliminacion de alternativas.</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="background:#1e4c7d; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">4</div>
+        <p style="font-size:16px;">El <strong>contrafactico</strong> es la base: &iquest;que habria pasado sin la intervencion?</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="background:#1e4c7d; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">5</div>
+        <p style="font-size:16px;">El <strong>RCT</strong> es el gold standard: la aleatorizacion elimina sesgos de seleccion.</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="background:#1e4c7d; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">6</div>
+        <p style="font-size:16px;">Cuando no hay RCT, usamos <strong>metodos cuasiexperimentales</strong> (DiD, RD, IV, PSM).</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="background:#1e4c7d; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">7</div>
+        <p style="font-size:16px;">Cada metodo tiene <strong>supuestos</strong> que deben evaluarse en cada contexto.</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="background:#1e4c7d; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">8</div>
+        <p style="font-size:16px;">Mexico es <strong>pionero</strong>: Progresa, Seguro Popular, salario minimo &mdash; evaluados causalmente.</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="background:#1e4c7d; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">9</div>
+        <p style="font-size:16px;">En R: <code style="background:#eef2f7; padding:1px 4px; border-radius:3px; font-family:monospace; font-size:14px;">fixest</code>, <code style="background:#eef2f7; padding:1px 4px; border-radius:3px; font-family:monospace; font-size:14px;">rdrobust</code>, <code style="background:#eef2f7; padding:1px 4px; border-radius:3px; font-family:monospace; font-size:14px;">ivreg</code>, <code style="background:#eef2f7; padding:1px 4px; border-radius:3px; font-family:monospace; font-size:14px;">MatchIt</code> son las herramientas clave.</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="background:#27ae60; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">10</div>
+        <p style="font-size:16px;"><strong>Causal ML</strong> (causal forests, Double ML) es el futuro: efectos heterogeneos a escala.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 42: PREGUNTAS ==================== -->
+<div class="slide">
+  <div class="slide-content" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+
+    <p style="font-size:72px; color:#1e4c7d; font-weight:700; margin-bottom:30px;">&iquest;Preguntas?</p>
+
+    <div style="display:flex; gap:20px; margin-bottom:40px;">
+      <div style="background:#eaf2fa; border-radius:10px; padding:18px 25px; text-align:center;">
+        <p style="font-size:16px; font-weight:700; color:#1e4c7d;">Actividad propuesta</p>
+        <p style="font-size:14px; margin-top:6px; line-height:1.5;">
+          1. Identifica una politica publica<br>
+          2. Dibuja un DAG con relaciones causales<br>
+          3. &iquest;Que metodo causal usarias?
+        </p>
+      </div>
+      <div style="background:#eaf2fa; border-radius:10px; padding:18px 25px; text-align:center;">
+        <p style="font-size:16px; font-weight:700; color:#1e4c7d;">Recursos clave</p>
+        <p style="font-size:14px; margin-top:6px; line-height:1.5;">
+          Cunningham &mdash; <em>The Mixtape</em> (gratis)<br>
+          Huntington-Klein &mdash; <em>The Effect</em> (gratis)<br>
+          J-PAL LAC &mdash; evaluaciones Mexico
+        </p>
+      </div>
+    </div>
+
+    <div style="border-top:3px solid #dde5ed; padding-top:20px;">
+      <p style="font-size:20px; font-weight:700; color:#333;">Jorge Juvenal Campos Ferreira</p>
+      <p style="font-size:16px; color:#c0392b; margin-top:6px;">juvenal.campos@tec.mx</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
