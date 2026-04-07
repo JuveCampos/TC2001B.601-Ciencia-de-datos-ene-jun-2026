@@ -1,0 +1,37 @@
+cve_ent,entidad,entidad_abr_m
+00,Nacional,Nacional
+01,Aguascalientes,AGS
+02,Baja California,BC
+03,Baja California Sur,BCS
+04,Campeche,CAMP
+05,Coahuila,COAH
+06,Colima,COL
+07,Chiapas,CHPS
+08,Chihuahua,CHIH
+09,Ciudad de México,CDMX
+10,Durango,DGO
+11,Guanajuato,GTO
+12,Guerrero,GRO
+13,Hidalgo,HGO
+14,Jalisco,JAL
+15,México,MEX
+16,Michoacán,MICH
+17,Morelos,MOR
+18,Nayarit,NAY
+19,Nuevo León,NL
+20,Oaxaca,OAX
+21,Puebla,PUE
+22,Querétaro,QRO
+23,Quintana Roo,QROO
+24,San Luis Potosí,SLP
+25,Sinaloa,SIN
+26,Sonora,SON
+27,Tabasco,TAB
+28,Tamaulipas,TAM
+29,Tlaxcala,TLAX
+30,Veracruz,VER
+31,Yucatán,YUC
+32,Zacatecas,ZAC
+33,Federal,FED
+34,Promedio estatal,PROM_EDOS
+99,Otras entidades,OTROS_EDOS

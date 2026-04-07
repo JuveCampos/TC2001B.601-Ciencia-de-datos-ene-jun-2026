@@ -1,0 +1,801 @@
+restaurante_id,estado,cadena,periodo,tratamiento,post,tratamiento_post,salario_minimo,empleo
+1,Nueva Jersey,Burger King,Antes,1,0,0,4.25,16.5
+1,Nueva Jersey,Burger King,Despues,1,1,1,5.05,23.2
+2,Nueva Jersey,KFC,Antes,1,0,0,4.25,28.9
+2,Nueva Jersey,KFC,Despues,1,1,1,5.05,16.6
+3,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,20.6
+3,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,22.9
+4,Nueva Jersey,Burger King,Antes,1,0,0,4.25,24.5
+4,Nueva Jersey,Burger King,Despues,1,1,1,5.05,21.1
+5,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,30.9
+5,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,21.6
+6,Nueva Jersey,Burger King,Antes,1,0,0,4.25,23.1
+6,Nueva Jersey,Burger King,Despues,1,1,1,5.05,27.2
+7,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,19
+7,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,17.1
+8,Nueva Jersey,Burger King,Antes,1,0,0,4.25,29.9
+8,Nueva Jersey,Burger King,Despues,1,1,1,5.05,10.7
+9,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,25.4
+9,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,22.4
+10,Nueva Jersey,Burger King,Antes,1,0,0,4.25,26.1
+10,Nueva Jersey,Burger King,Despues,1,1,1,5.05,24.4
+11,Nueva Jersey,KFC,Antes,1,0,0,4.25,31.5
+11,Nueva Jersey,KFC,Despues,1,1,1,5.05,16.3
+12,Nueva Jersey,Burger King,Antes,1,0,0,4.25,28.9
+12,Nueva Jersey,Burger King,Despues,1,1,1,5.05,32
+13,Nueva Jersey,KFC,Antes,1,0,0,4.25,21
+13,Nueva Jersey,KFC,Despues,1,1,1,5.05,10
+14,Nueva Jersey,KFC,Antes,1,0,0,4.25,23.4
+14,Nueva Jersey,KFC,Despues,1,1,1,5.05,19.3
+15,Nueva Jersey,KFC,Antes,1,0,0,4.25,25
+15,Nueva Jersey,KFC,Despues,1,1,1,5.05,23.7
+16,Nueva Jersey,Wendys,Antes,1,0,0,4.25,24.7
+16,Nueva Jersey,Wendys,Despues,1,1,1,5.05,23.8
+17,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,26.4
+17,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,20.8
+18,Nueva Jersey,Wendys,Antes,1,0,0,4.25,17.1
+18,Nueva Jersey,Wendys,Despues,1,1,1,5.05,19.3
+19,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,12.4
+19,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,17.7
+20,Nueva Jersey,Wendys,Antes,1,0,0,4.25,18.2
+20,Nueva Jersey,Wendys,Despues,1,1,1,5.05,21
+21,Nueva Jersey,Burger King,Antes,1,0,0,4.25,19.1
+21,Nueva Jersey,Burger King,Despues,1,1,1,5.05,12.5
+22,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,16.8
+22,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,31.8
+23,Nueva Jersey,Burger King,Antes,1,0,0,4.25,24.1
+23,Nueva Jersey,Burger King,Despues,1,1,1,5.05,32.2
+24,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,19.5
+24,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,21.8
+25,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,20.1
+25,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,16.3
+26,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,16.8
+26,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,32.6
+27,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,18.2
+27,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,28.6
+28,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,15.8
+28,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,12.4
+29,Nueva Jersey,Burger King,Antes,1,0,0,4.25,19.4
+29,Nueva Jersey,Burger King,Despues,1,1,1,5.05,26.9
+30,Nueva Jersey,KFC,Antes,1,0,0,4.25,26.7
+30,Nueva Jersey,KFC,Despues,1,1,1,5.05,30.6
+31,Nueva Jersey,Wendys,Antes,1,0,0,4.25,12.1
+31,Nueva Jersey,Wendys,Despues,1,1,1,5.05,32.4
+32,Nueva Jersey,Wendys,Antes,1,0,0,4.25,17.5
+32,Nueva Jersey,Wendys,Despues,1,1,1,5.05,23
+33,Nueva Jersey,Burger King,Antes,1,0,0,4.25,23.5
+33,Nueva Jersey,Burger King,Despues,1,1,1,5.05,18.2
+34,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,11
+34,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,19.9
+35,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,21.4
+35,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,17.8
+36,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,16.4
+36,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,23.9
+37,Nueva Jersey,KFC,Antes,1,0,0,4.25,20.3
+37,Nueva Jersey,KFC,Despues,1,1,1,5.05,24.4
+38,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,20.7
+38,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,17.7
+39,Nueva Jersey,Burger King,Antes,1,0,0,4.25,27.5
+39,Nueva Jersey,Burger King,Despues,1,1,1,5.05,26.1
+40,Nueva Jersey,KFC,Antes,1,0,0,4.25,26.3
+40,Nueva Jersey,KFC,Despues,1,1,1,5.05,15.2
+41,Nueva Jersey,KFC,Antes,1,0,0,4.25,26
+41,Nueva Jersey,KFC,Despues,1,1,1,5.05,13.8
+42,Nueva Jersey,Wendys,Antes,1,0,0,4.25,18.3
+42,Nueva Jersey,Wendys,Despues,1,1,1,5.05,15.4
+43,Nueva Jersey,KFC,Antes,1,0,0,4.25,10
+43,Nueva Jersey,KFC,Despues,1,1,1,5.05,31.4
+44,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,17.7
+44,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,20.8
+45,Nueva Jersey,KFC,Antes,1,0,0,4.25,19.1
+45,Nueva Jersey,KFC,Despues,1,1,1,5.05,24.2
+46,Nueva Jersey,Wendys,Antes,1,0,0,4.25,29
+46,Nueva Jersey,Wendys,Despues,1,1,1,5.05,30.7
+47,Nueva Jersey,Burger King,Antes,1,0,0,4.25,15.1
+47,Nueva Jersey,Burger King,Despues,1,1,1,5.05,15.5
+48,Nueva Jersey,Wendys,Antes,1,0,0,4.25,13.4
+48,Nueva Jersey,Wendys,Despues,1,1,1,5.05,16
+49,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,30.8
+49,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,22.3
+50,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,16.8
+50,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,19.2
+51,Nueva Jersey,Wendys,Antes,1,0,0,4.25,26.4
+51,Nueva Jersey,Wendys,Despues,1,1,1,5.05,23.6
+52,Nueva Jersey,Burger King,Antes,1,0,0,4.25,19.4
+52,Nueva Jersey,Burger King,Despues,1,1,1,5.05,18.5
+53,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,16.7
+53,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,32.5
+54,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,25.7
+54,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,32.3
+55,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,18.9
+55,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,20.5
+56,Nueva Jersey,Wendys,Antes,1,0,0,4.25,15.9
+56,Nueva Jersey,Wendys,Despues,1,1,1,5.05,21
+57,Nueva Jersey,Burger King,Antes,1,0,0,4.25,23.4
+57,Nueva Jersey,Burger King,Despues,1,1,1,5.05,29
+58,Nueva Jersey,Burger King,Antes,1,0,0,4.25,23.8
+58,Nueva Jersey,Burger King,Despues,1,1,1,5.05,24.5
+59,Nueva Jersey,KFC,Antes,1,0,0,4.25,27.2
+59,Nueva Jersey,KFC,Despues,1,1,1,5.05,28
+60,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,21.5
+60,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,18.3
+61,Nueva Jersey,Burger King,Antes,1,0,0,4.25,27.2
+61,Nueva Jersey,Burger King,Despues,1,1,1,5.05,22.9
+62,Nueva Jersey,KFC,Antes,1,0,0,4.25,29.6
+62,Nueva Jersey,KFC,Despues,1,1,1,5.05,20.1
+63,Nueva Jersey,Wendys,Antes,1,0,0,4.25,15.8
+63,Nueva Jersey,Wendys,Despues,1,1,1,5.05,24.9
+64,Nueva Jersey,KFC,Antes,1,0,0,4.25,17.7
+64,Nueva Jersey,KFC,Despues,1,1,1,5.05,25.4
+65,Nueva Jersey,Wendys,Antes,1,0,0,4.25,12.4
+65,Nueva Jersey,Wendys,Despues,1,1,1,5.05,13.5
+66,Nueva Jersey,KFC,Antes,1,0,0,4.25,24.4
+66,Nueva Jersey,KFC,Despues,1,1,1,5.05,23.9
+67,Nueva Jersey,KFC,Antes,1,0,0,4.25,25.4
+67,Nueva Jersey,KFC,Despues,1,1,1,5.05,12.2
+68,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,27.1
+68,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,28.3
+69,Nueva Jersey,KFC,Antes,1,0,0,4.25,26.2
+69,Nueva Jersey,KFC,Despues,1,1,1,5.05,26.2
+70,Nueva Jersey,KFC,Antes,1,0,0,4.25,31.6
+70,Nueva Jersey,KFC,Despues,1,1,1,5.05,15
+71,Nueva Jersey,KFC,Antes,1,0,0,4.25,18.1
+71,Nueva Jersey,KFC,Despues,1,1,1,5.05,24.3
+72,Nueva Jersey,Burger King,Antes,1,0,0,4.25,17
+72,Nueva Jersey,Burger King,Despues,1,1,1,5.05,22.7
+73,Nueva Jersey,Burger King,Antes,1,0,0,4.25,24.7
+73,Nueva Jersey,Burger King,Despues,1,1,1,5.05,19
+74,Nueva Jersey,Burger King,Antes,1,0,0,4.25,24.3
+74,Nueva Jersey,Burger King,Despues,1,1,1,5.05,25
+75,Nueva Jersey,Wendys,Antes,1,0,0,4.25,17
+75,Nueva Jersey,Wendys,Despues,1,1,1,5.05,17.3
+76,Nueva Jersey,Wendys,Antes,1,0,0,4.25,25.9
+76,Nueva Jersey,Wendys,Despues,1,1,1,5.05,21.4
+77,Nueva Jersey,Burger King,Antes,1,0,0,4.25,24.6
+77,Nueva Jersey,Burger King,Despues,1,1,1,5.05,18
+78,Nueva Jersey,KFC,Antes,1,0,0,4.25,27.4
+78,Nueva Jersey,KFC,Despues,1,1,1,5.05,15.5
+79,Nueva Jersey,Burger King,Antes,1,0,0,4.25,24.8
+79,Nueva Jersey,Burger King,Despues,1,1,1,5.05,24.6
+80,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,22.3
+80,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,25.6
+81,Nueva Jersey,Wendys,Antes,1,0,0,4.25,23
+81,Nueva Jersey,Wendys,Despues,1,1,1,5.05,19.1
+82,Nueva Jersey,KFC,Antes,1,0,0,4.25,19.7
+82,Nueva Jersey,KFC,Despues,1,1,1,5.05,24
+83,Nueva Jersey,KFC,Antes,1,0,0,4.25,14.4
+83,Nueva Jersey,KFC,Despues,1,1,1,5.05,17.8
+84,Nueva Jersey,KFC,Antes,1,0,0,4.25,31.4
+84,Nueva Jersey,KFC,Despues,1,1,1,5.05,11.8
+85,Nueva Jersey,KFC,Antes,1,0,0,4.25,14.8
+85,Nueva Jersey,KFC,Despues,1,1,1,5.05,27.2
+86,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,26.4
+86,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,26.4
+87,Nueva Jersey,Wendys,Antes,1,0,0,4.25,21.3
+87,Nueva Jersey,Wendys,Despues,1,1,1,5.05,23.9
+88,Nueva Jersey,KFC,Antes,1,0,0,4.25,16.5
+88,Nueva Jersey,KFC,Despues,1,1,1,5.05,19
+89,Nueva Jersey,Burger King,Antes,1,0,0,4.25,19.7
+89,Nueva Jersey,Burger King,Despues,1,1,1,5.05,17.6
+90,Nueva Jersey,Wendys,Antes,1,0,0,4.25,25.1
+90,Nueva Jersey,Wendys,Despues,1,1,1,5.05,14.1
+91,Nueva Jersey,KFC,Antes,1,0,0,4.25,15.8
+91,Nueva Jersey,KFC,Despues,1,1,1,5.05,15.9
+92,Nueva Jersey,Burger King,Antes,1,0,0,4.25,23
+92,Nueva Jersey,Burger King,Despues,1,1,1,5.05,16.6
+93,Nueva Jersey,KFC,Antes,1,0,0,4.25,23.7
+93,Nueva Jersey,KFC,Despues,1,1,1,5.05,28.1
+94,Nueva Jersey,Burger King,Antes,1,0,0,4.25,21.1
+94,Nueva Jersey,Burger King,Despues,1,1,1,5.05,24.8
+95,Nueva Jersey,KFC,Antes,1,0,0,4.25,17.7
+95,Nueva Jersey,KFC,Despues,1,1,1,5.05,24.8
+96,Nueva Jersey,KFC,Antes,1,0,0,4.25,14.6
+96,Nueva Jersey,KFC,Despues,1,1,1,5.05,21.9
+97,Nueva Jersey,Wendys,Antes,1,0,0,4.25,14.3
+97,Nueva Jersey,Wendys,Despues,1,1,1,5.05,20.9
+98,Nueva Jersey,Burger King,Antes,1,0,0,4.25,26.4
+98,Nueva Jersey,Burger King,Despues,1,1,1,5.05,25.8
+99,Nueva Jersey,Wendys,Antes,1,0,0,4.25,18.8
+99,Nueva Jersey,Wendys,Despues,1,1,1,5.05,18.3
+100,Nueva Jersey,Wendys,Antes,1,0,0,4.25,16.7
+100,Nueva Jersey,Wendys,Despues,1,1,1,5.05,18.5
+101,Nueva Jersey,Burger King,Antes,1,0,0,4.25,22.5
+101,Nueva Jersey,Burger King,Despues,1,1,1,5.05,17.2
+102,Nueva Jersey,Burger King,Antes,1,0,0,4.25,35.4
+102,Nueva Jersey,Burger King,Despues,1,1,1,5.05,23.3
+103,Nueva Jersey,KFC,Antes,1,0,0,4.25,16.2
+103,Nueva Jersey,KFC,Despues,1,1,1,5.05,24.2
+104,Nueva Jersey,KFC,Antes,1,0,0,4.25,20.4
+104,Nueva Jersey,KFC,Despues,1,1,1,5.05,20.5
+105,Nueva Jersey,Burger King,Antes,1,0,0,4.25,24
+105,Nueva Jersey,Burger King,Despues,1,1,1,5.05,23.4
+106,Nueva Jersey,KFC,Antes,1,0,0,4.25,26.1
+106,Nueva Jersey,KFC,Despues,1,1,1,5.05,19.6
+107,Nueva Jersey,Wendys,Antes,1,0,0,4.25,30
+107,Nueva Jersey,Wendys,Despues,1,1,1,5.05,15.1
+108,Nueva Jersey,Wendys,Antes,1,0,0,4.25,21.7
+108,Nueva Jersey,Wendys,Despues,1,1,1,5.05,24.5
+109,Nueva Jersey,Burger King,Antes,1,0,0,4.25,27.1
+109,Nueva Jersey,Burger King,Despues,1,1,1,5.05,15.6
+110,Nueva Jersey,KFC,Antes,1,0,0,4.25,15.3
+110,Nueva Jersey,KFC,Despues,1,1,1,5.05,30.6
+111,Nueva Jersey,Wendys,Antes,1,0,0,4.25,23
+111,Nueva Jersey,Wendys,Despues,1,1,1,5.05,25.8
+112,Nueva Jersey,KFC,Antes,1,0,0,4.25,17
+112,Nueva Jersey,KFC,Despues,1,1,1,5.05,31.9
+113,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,21.4
+113,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,24.6
+114,Nueva Jersey,Burger King,Antes,1,0,0,4.25,20.6
+114,Nueva Jersey,Burger King,Despues,1,1,1,5.05,26.7
+115,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,19.1
+115,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,33.5
+116,Nueva Jersey,Wendys,Antes,1,0,0,4.25,28.9
+116,Nueva Jersey,Wendys,Despues,1,1,1,5.05,12.5
+117,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,17.9
+117,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,22.1
+118,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,12.4
+118,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,17
+119,Nueva Jersey,KFC,Antes,1,0,0,4.25,18.1
+119,Nueva Jersey,KFC,Despues,1,1,1,5.05,24.7
+120,Nueva Jersey,Burger King,Antes,1,0,0,4.25,21.5
+120,Nueva Jersey,Burger King,Despues,1,1,1,5.05,19.3
+121,Nueva Jersey,KFC,Antes,1,0,0,4.25,20.6
+121,Nueva Jersey,KFC,Despues,1,1,1,5.05,36.7
+122,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,26.9
+122,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,25
+123,Nueva Jersey,Wendys,Antes,1,0,0,4.25,24.9
+123,Nueva Jersey,Wendys,Despues,1,1,1,5.05,19.4
+124,Nueva Jersey,Wendys,Antes,1,0,0,4.25,21.5
+124,Nueva Jersey,Wendys,Despues,1,1,1,5.05,23.7
+125,Nueva Jersey,Burger King,Antes,1,0,0,4.25,18.6
+125,Nueva Jersey,Burger King,Despues,1,1,1,5.05,20
+126,Nueva Jersey,Wendys,Antes,1,0,0,4.25,23.5
+126,Nueva Jersey,Wendys,Despues,1,1,1,5.05,20.2
+127,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,20.1
+127,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,20.7
+128,Nueva Jersey,Burger King,Antes,1,0,0,4.25,25.2
+128,Nueva Jersey,Burger King,Despues,1,1,1,5.05,24.7
+129,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,19.5
+129,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,20.8
+130,Nueva Jersey,KFC,Antes,1,0,0,4.25,25.9
+130,Nueva Jersey,KFC,Despues,1,1,1,5.05,21.4
+131,Nueva Jersey,KFC,Antes,1,0,0,4.25,27.7
+131,Nueva Jersey,KFC,Despues,1,1,1,5.05,21.8
+132,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,19.4
+132,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,12.7
+133,Nueva Jersey,KFC,Antes,1,0,0,4.25,17.8
+133,Nueva Jersey,KFC,Despues,1,1,1,5.05,15.3
+134,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,30.7
+134,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,24.6
+135,Nueva Jersey,Burger King,Antes,1,0,0,4.25,23.6
+135,Nueva Jersey,Burger King,Despues,1,1,1,5.05,22.1
+136,Nueva Jersey,KFC,Antes,1,0,0,4.25,7.4
+136,Nueva Jersey,KFC,Despues,1,1,1,5.05,22
+137,Nueva Jersey,KFC,Antes,1,0,0,4.25,21
+137,Nueva Jersey,KFC,Despues,1,1,1,5.05,16.1
+138,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,22.3
+138,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,30.3
+139,Nueva Jersey,Burger King,Antes,1,0,0,4.25,20.8
+139,Nueva Jersey,Burger King,Despues,1,1,1,5.05,27.4
+140,Nueva Jersey,Burger King,Antes,1,0,0,4.25,19
+140,Nueva Jersey,Burger King,Despues,1,1,1,5.05,22.6
+141,Nueva Jersey,Wendys,Antes,1,0,0,4.25,31.2
+141,Nueva Jersey,Wendys,Despues,1,1,1,5.05,25.5
+142,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,27.4
+142,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,19.1
+143,Nueva Jersey,Wendys,Antes,1,0,0,4.25,27.8
+143,Nueva Jersey,Wendys,Despues,1,1,1,5.05,30.6
+144,Nueva Jersey,Burger King,Antes,1,0,0,4.25,26.9
+144,Nueva Jersey,Burger King,Despues,1,1,1,5.05,22.3
+145,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,27.5
+145,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,21.8
+146,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,15.4
+146,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,25.2
+147,Nueva Jersey,KFC,Antes,1,0,0,4.25,21.4
+147,Nueva Jersey,KFC,Despues,1,1,1,5.05,21.1
+148,Nueva Jersey,Wendys,Antes,1,0,0,4.25,28.4
+148,Nueva Jersey,Wendys,Despues,1,1,1,5.05,20.5
+149,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,23.1
+149,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,11.8
+150,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,14.1
+150,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,18.8
+151,Nueva Jersey,Burger King,Antes,1,0,0,4.25,19.4
+151,Nueva Jersey,Burger King,Despues,1,1,1,5.05,20.7
+152,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,25.4
+152,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,12.8
+153,Nueva Jersey,Burger King,Antes,1,0,0,4.25,24.7
+153,Nueva Jersey,Burger King,Despues,1,1,1,5.05,26.2
+154,Nueva Jersey,Wendys,Antes,1,0,0,4.25,22
+154,Nueva Jersey,Wendys,Despues,1,1,1,5.05,26.9
+155,Nueva Jersey,KFC,Antes,1,0,0,4.25,27.2
+155,Nueva Jersey,KFC,Despues,1,1,1,5.05,18.8
+156,Nueva Jersey,Wendys,Antes,1,0,0,4.25,23.6
+156,Nueva Jersey,Wendys,Despues,1,1,1,5.05,19.9
+157,Nueva Jersey,Wendys,Antes,1,0,0,4.25,18.5
+157,Nueva Jersey,Wendys,Despues,1,1,1,5.05,12.4
+158,Nueva Jersey,KFC,Antes,1,0,0,4.25,18.2
+158,Nueva Jersey,KFC,Despues,1,1,1,5.05,24.6
+159,Nueva Jersey,KFC,Antes,1,0,0,4.25,27.1
+159,Nueva Jersey,KFC,Despues,1,1,1,5.05,22.8
+160,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,21.4
+160,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,21.2
+161,Nueva Jersey,KFC,Antes,1,0,0,4.25,18.5
+161,Nueva Jersey,KFC,Despues,1,1,1,5.05,27.7
+162,Nueva Jersey,Burger King,Antes,1,0,0,4.25,25.6
+162,Nueva Jersey,Burger King,Despues,1,1,1,5.05,24.1
+163,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,22.5
+163,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,24.9
+164,Nueva Jersey,Burger King,Antes,1,0,0,4.25,25.8
+164,Nueva Jersey,Burger King,Despues,1,1,1,5.05,31.8
+165,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,28.5
+165,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,20.7
+166,Nueva Jersey,Wendys,Antes,1,0,0,4.25,25.7
+166,Nueva Jersey,Wendys,Despues,1,1,1,5.05,21.8
+167,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,20
+167,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,25.9
+168,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,26.1
+168,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,20.7
+169,Nueva Jersey,KFC,Antes,1,0,0,4.25,24.8
+169,Nueva Jersey,KFC,Despues,1,1,1,5.05,22.1
+170,Nueva Jersey,Wendys,Antes,1,0,0,4.25,28.5
+170,Nueva Jersey,Wendys,Despues,1,1,1,5.05,24.5
+171,Nueva Jersey,Burger King,Antes,1,0,0,4.25,21.9
+171,Nueva Jersey,Burger King,Despues,1,1,1,5.05,24.2
+172,Nueva Jersey,KFC,Antes,1,0,0,4.25,14.6
+172,Nueva Jersey,KFC,Despues,1,1,1,5.05,23.4
+173,Nueva Jersey,Wendys,Antes,1,0,0,4.25,24.6
+173,Nueva Jersey,Wendys,Despues,1,1,1,5.05,21
+174,Nueva Jersey,Wendys,Antes,1,0,0,4.25,19.4
+174,Nueva Jersey,Wendys,Despues,1,1,1,5.05,27.2
+175,Nueva Jersey,Wendys,Antes,1,0,0,4.25,25.1
+175,Nueva Jersey,Wendys,Despues,1,1,1,5.05,24.2
+176,Nueva Jersey,KFC,Antes,1,0,0,4.25,28.3
+176,Nueva Jersey,KFC,Despues,1,1,1,5.05,25.6
+177,Nueva Jersey,KFC,Antes,1,0,0,4.25,19.1
+177,Nueva Jersey,KFC,Despues,1,1,1,5.05,30
+178,Nueva Jersey,Burger King,Antes,1,0,0,4.25,32.6
+178,Nueva Jersey,Burger King,Despues,1,1,1,5.05,29.2
+179,Nueva Jersey,Burger King,Antes,1,0,0,4.25,16.3
+179,Nueva Jersey,Burger King,Despues,1,1,1,5.05,26.4
+180,Nueva Jersey,KFC,Antes,1,0,0,4.25,24.7
+180,Nueva Jersey,KFC,Despues,1,1,1,5.05,22.9
+181,Nueva Jersey,Wendys,Antes,1,0,0,4.25,28.8
+181,Nueva Jersey,Wendys,Despues,1,1,1,5.05,29.4
+182,Nueva Jersey,Wendys,Antes,1,0,0,4.25,19.2
+182,Nueva Jersey,Wendys,Despues,1,1,1,5.05,19.8
+183,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,11.6
+183,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,16.6
+184,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,18.7
+184,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,28.1
+185,Nueva Jersey,KFC,Antes,1,0,0,4.25,19.4
+185,Nueva Jersey,KFC,Despues,1,1,1,5.05,22.5
+186,Nueva Jersey,Burger King,Antes,1,0,0,4.25,20.1
+186,Nueva Jersey,Burger King,Despues,1,1,1,5.05,33.7
+187,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,17
+187,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,28.4
+188,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,20.8
+188,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,18.9
+189,Nueva Jersey,Burger King,Antes,1,0,0,4.25,19.8
+189,Nueva Jersey,Burger King,Despues,1,1,1,5.05,34.9
+190,Nueva Jersey,Burger King,Antes,1,0,0,4.25,21.8
+190,Nueva Jersey,Burger King,Despues,1,1,1,5.05,26
+191,Nueva Jersey,Wendys,Antes,1,0,0,4.25,18.9
+191,Nueva Jersey,Wendys,Despues,1,1,1,5.05,18.6
+192,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,21.7
+192,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,18.7
+193,Nueva Jersey,Burger King,Antes,1,0,0,4.25,27.6
+193,Nueva Jersey,Burger King,Despues,1,1,1,5.05,14.4
+194,Nueva Jersey,Burger King,Antes,1,0,0,4.25,21.2
+194,Nueva Jersey,Burger King,Despues,1,1,1,5.05,22.1
+195,Nueva Jersey,KFC,Antes,1,0,0,4.25,28.1
+195,Nueva Jersey,KFC,Despues,1,1,1,5.05,26.4
+196,Nueva Jersey,Wendys,Antes,1,0,0,4.25,21.9
+196,Nueva Jersey,Wendys,Despues,1,1,1,5.05,28.9
+197,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,27
+197,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,26.6
+198,Nueva Jersey,Burger King,Antes,1,0,0,4.25,20.4
+198,Nueva Jersey,Burger King,Despues,1,1,1,5.05,24
+199,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,16.1
+199,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,27.9
+200,Nueva Jersey,Roy Rogers,Antes,1,0,0,4.25,22.1
+200,Nueva Jersey,Roy Rogers,Despues,1,1,1,5.05,26.8
+201,Pensilvania,KFC,Antes,0,0,0,4.25,21.9
+201,Pensilvania,KFC,Despues,0,1,0,4.25,7.9
+202,Pensilvania,Burger King,Antes,0,0,0,4.25,17.9
+202,Pensilvania,Burger King,Despues,0,1,0,4.25,17.4
+203,Pensilvania,KFC,Antes,0,0,0,4.25,27.3
+203,Pensilvania,KFC,Despues,0,1,0,4.25,20.3
+204,Pensilvania,Burger King,Antes,0,0,0,4.25,19.5
+204,Pensilvania,Burger King,Despues,0,1,0,4.25,9.2
+205,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,28.7
+205,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,21.5
+206,Pensilvania,KFC,Antes,0,0,0,4.25,23.3
+206,Pensilvania,KFC,Despues,0,1,0,4.25,16
+207,Pensilvania,Burger King,Antes,0,0,0,4.25,24
+207,Pensilvania,Burger King,Despues,0,1,0,4.25,15.3
+208,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,22.4
+208,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,14.9
+209,Pensilvania,Wendys,Antes,0,0,0,4.25,28.5
+209,Pensilvania,Wendys,Despues,0,1,0,4.25,16.5
+210,Pensilvania,KFC,Antes,0,0,0,4.25,30.9
+210,Pensilvania,KFC,Despues,0,1,0,4.25,23
+211,Pensilvania,Wendys,Antes,0,0,0,4.25,26.7
+211,Pensilvania,Wendys,Despues,0,1,0,4.25,15.2
+212,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,30.1
+212,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,25.2
+213,Pensilvania,Burger King,Antes,0,0,0,4.25,29.4
+213,Pensilvania,Burger King,Despues,0,1,0,4.25,26
+214,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,25.7
+214,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,25.4
+215,Pensilvania,Wendys,Antes,0,0,0,4.25,17.1
+215,Pensilvania,Wendys,Despues,0,1,0,4.25,23.2
+216,Pensilvania,KFC,Antes,0,0,0,4.25,17.1
+216,Pensilvania,KFC,Despues,0,1,0,4.25,19.8
+217,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,17.9
+217,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,28.1
+218,Pensilvania,Wendys,Antes,0,0,0,4.25,23.2
+218,Pensilvania,Wendys,Despues,0,1,0,4.25,21.1
+219,Pensilvania,KFC,Antes,0,0,0,4.25,20.8
+219,Pensilvania,KFC,Despues,0,1,0,4.25,22.6
+220,Pensilvania,KFC,Antes,0,0,0,4.25,22.9
+220,Pensilvania,KFC,Despues,0,1,0,4.25,19.2
+221,Pensilvania,Burger King,Antes,0,0,0,4.25,12.5
+221,Pensilvania,Burger King,Despues,0,1,0,4.25,20.1
+222,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,15.1
+222,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,23
+223,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,24.2
+223,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,20.8
+224,Pensilvania,KFC,Antes,0,0,0,4.25,19.4
+224,Pensilvania,KFC,Despues,0,1,0,4.25,26.8
+225,Pensilvania,KFC,Antes,0,0,0,4.25,12.9
+225,Pensilvania,KFC,Despues,0,1,0,4.25,24
+226,Pensilvania,KFC,Antes,0,0,0,4.25,19.9
+226,Pensilvania,KFC,Despues,0,1,0,4.25,21.6
+227,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,21.7
+227,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,16.6
+228,Pensilvania,KFC,Antes,0,0,0,4.25,30.9
+228,Pensilvania,KFC,Despues,0,1,0,4.25,20.2
+229,Pensilvania,Burger King,Antes,0,0,0,4.25,20.5
+229,Pensilvania,Burger King,Despues,0,1,0,4.25,31.9
+230,Pensilvania,Burger King,Antes,0,0,0,4.25,26.3
+230,Pensilvania,Burger King,Despues,0,1,0,4.25,22.5
+231,Pensilvania,Wendys,Antes,0,0,0,4.25,22.8
+231,Pensilvania,Wendys,Despues,0,1,0,4.25,22.1
+232,Pensilvania,KFC,Antes,0,0,0,4.25,21.7
+232,Pensilvania,KFC,Despues,0,1,0,4.25,18.1
+233,Pensilvania,Burger King,Antes,0,0,0,4.25,27.7
+233,Pensilvania,Burger King,Despues,0,1,0,4.25,24
+234,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,25.2
+234,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,21.2
+235,Pensilvania,Burger King,Antes,0,0,0,4.25,29.5
+235,Pensilvania,Burger King,Despues,0,1,0,4.25,14.7
+236,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,30.8
+236,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,28.7
+237,Pensilvania,KFC,Antes,0,0,0,4.25,27.6
+237,Pensilvania,KFC,Despues,0,1,0,4.25,15
+238,Pensilvania,Wendys,Antes,0,0,0,4.25,24.4
+238,Pensilvania,Wendys,Despues,0,1,0,4.25,17.5
+239,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,21.1
+239,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,18.5
+240,Pensilvania,Burger King,Antes,0,0,0,4.25,10.9
+240,Pensilvania,Burger King,Despues,0,1,0,4.25,18.9
+241,Pensilvania,KFC,Antes,0,0,0,4.25,17.6
+241,Pensilvania,KFC,Despues,0,1,0,4.25,22.2
+242,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,18.5
+242,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,21.1
+243,Pensilvania,Burger King,Antes,0,0,0,4.25,31
+243,Pensilvania,Burger King,Despues,0,1,0,4.25,15.5
+244,Pensilvania,Burger King,Antes,0,0,0,4.25,14.7
+244,Pensilvania,Burger King,Despues,0,1,0,4.25,21.8
+245,Pensilvania,Burger King,Antes,0,0,0,4.25,18.3
+245,Pensilvania,Burger King,Despues,0,1,0,4.25,16.7
+246,Pensilvania,Burger King,Antes,0,0,0,4.25,27.3
+246,Pensilvania,Burger King,Despues,0,1,0,4.25,22.3
+247,Pensilvania,Wendys,Antes,0,0,0,4.25,29.5
+247,Pensilvania,Wendys,Despues,0,1,0,4.25,16.1
+248,Pensilvania,Burger King,Antes,0,0,0,4.25,25
+248,Pensilvania,Burger King,Despues,0,1,0,4.25,21.4
+249,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,16.7
+249,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,16.8
+250,Pensilvania,KFC,Antes,0,0,0,4.25,22
+250,Pensilvania,KFC,Despues,0,1,0,4.25,22.2
+251,Pensilvania,Wendys,Antes,0,0,0,4.25,20.7
+251,Pensilvania,Wendys,Despues,0,1,0,4.25,24.6
+252,Pensilvania,Burger King,Antes,0,0,0,4.25,19.4
+252,Pensilvania,Burger King,Despues,0,1,0,4.25,18.6
+253,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,24.1
+253,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,27.7
+254,Pensilvania,Burger King,Antes,0,0,0,4.25,19.2
+254,Pensilvania,Burger King,Despues,0,1,0,4.25,27.6
+255,Pensilvania,Burger King,Antes,0,0,0,4.25,17.3
+255,Pensilvania,Burger King,Despues,0,1,0,4.25,28.9
+256,Pensilvania,KFC,Antes,0,0,0,4.25,15.5
+256,Pensilvania,KFC,Despues,0,1,0,4.25,22.2
+257,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,15.2
+257,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,32.4
+258,Pensilvania,Wendys,Antes,0,0,0,4.25,24.5
+258,Pensilvania,Wendys,Despues,0,1,0,4.25,23.7
+259,Pensilvania,KFC,Antes,0,0,0,4.25,32.1
+259,Pensilvania,KFC,Despues,0,1,0,4.25,24.7
+260,Pensilvania,Wendys,Antes,0,0,0,4.25,22.9
+260,Pensilvania,Wendys,Despues,0,1,0,4.25,25.6
+261,Pensilvania,Wendys,Antes,0,0,0,4.25,23.8
+261,Pensilvania,Wendys,Despues,0,1,0,4.25,25.6
+262,Pensilvania,Burger King,Antes,0,0,0,4.25,25
+262,Pensilvania,Burger King,Despues,0,1,0,4.25,22.2
+263,Pensilvania,Burger King,Antes,0,0,0,4.25,22.5
+263,Pensilvania,Burger King,Despues,0,1,0,4.25,25
+264,Pensilvania,Burger King,Antes,0,0,0,4.25,28.2
+264,Pensilvania,Burger King,Despues,0,1,0,4.25,21.7
+265,Pensilvania,KFC,Antes,0,0,0,4.25,31.8
+265,Pensilvania,KFC,Despues,0,1,0,4.25,21.8
+266,Pensilvania,Wendys,Antes,0,0,0,4.25,12.7
+266,Pensilvania,Wendys,Despues,0,1,0,4.25,19.6
+267,Pensilvania,Burger King,Antes,0,0,0,4.25,31.5
+267,Pensilvania,Burger King,Despues,0,1,0,4.25,27.3
+268,Pensilvania,KFC,Antes,0,0,0,4.25,22.5
+268,Pensilvania,KFC,Despues,0,1,0,4.25,18.9
+269,Pensilvania,Burger King,Antes,0,0,0,4.25,30.6
+269,Pensilvania,Burger King,Despues,0,1,0,4.25,19.9
+270,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,29.3
+270,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,24.8
+271,Pensilvania,Burger King,Antes,0,0,0,4.25,23.5
+271,Pensilvania,Burger King,Despues,0,1,0,4.25,21.2
+272,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,18.8
+272,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,30.1
+273,Pensilvania,KFC,Antes,0,0,0,4.25,18.2
+273,Pensilvania,KFC,Despues,0,1,0,4.25,24.3
+274,Pensilvania,KFC,Antes,0,0,0,4.25,20.7
+274,Pensilvania,KFC,Despues,0,1,0,4.25,16
+275,Pensilvania,Wendys,Antes,0,0,0,4.25,16.7
+275,Pensilvania,Wendys,Despues,0,1,0,4.25,32.3
+276,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,24.7
+276,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,24.2
+277,Pensilvania,Wendys,Antes,0,0,0,4.25,27.8
+277,Pensilvania,Wendys,Despues,0,1,0,4.25,28.6
+278,Pensilvania,KFC,Antes,0,0,0,4.25,22.2
+278,Pensilvania,KFC,Despues,0,1,0,4.25,25.4
+279,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,19.9
+279,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,31.5
+280,Pensilvania,Wendys,Antes,0,0,0,4.25,30.4
+280,Pensilvania,Wendys,Despues,0,1,0,4.25,22.3
+281,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,26.7
+281,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,17.7
+282,Pensilvania,Burger King,Antes,0,0,0,4.25,30.3
+282,Pensilvania,Burger King,Despues,0,1,0,4.25,14.7
+283,Pensilvania,Wendys,Antes,0,0,0,4.25,16.9
+283,Pensilvania,Wendys,Despues,0,1,0,4.25,28.7
+284,Pensilvania,Burger King,Antes,0,0,0,4.25,36.4
+284,Pensilvania,Burger King,Despues,0,1,0,4.25,28.5
+285,Pensilvania,Wendys,Antes,0,0,0,4.25,28.5
+285,Pensilvania,Wendys,Despues,0,1,0,4.25,20.1
+286,Pensilvania,Burger King,Antes,0,0,0,4.25,28.8
+286,Pensilvania,Burger King,Despues,0,1,0,4.25,25.1
+287,Pensilvania,Burger King,Antes,0,0,0,4.25,23.3
+287,Pensilvania,Burger King,Despues,0,1,0,4.25,21.2
+288,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,29
+288,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,15.8
+289,Pensilvania,Burger King,Antes,0,0,0,4.25,28.3
+289,Pensilvania,Burger King,Despues,0,1,0,4.25,21.8
+290,Pensilvania,KFC,Antes,0,0,0,4.25,27
+290,Pensilvania,KFC,Despues,0,1,0,4.25,28.2
+291,Pensilvania,KFC,Antes,0,0,0,4.25,20.2
+291,Pensilvania,KFC,Despues,0,1,0,4.25,24.7
+292,Pensilvania,Wendys,Antes,0,0,0,4.25,21.4
+292,Pensilvania,Wendys,Despues,0,1,0,4.25,25.7
+293,Pensilvania,KFC,Antes,0,0,0,4.25,23.1
+293,Pensilvania,KFC,Despues,0,1,0,4.25,19.9
+294,Pensilvania,Burger King,Antes,0,0,0,4.25,18.6
+294,Pensilvania,Burger King,Despues,0,1,0,4.25,19.8
+295,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,22.9
+295,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,28.7
+296,Pensilvania,KFC,Antes,0,0,0,4.25,19.2
+296,Pensilvania,KFC,Despues,0,1,0,4.25,24
+297,Pensilvania,Wendys,Antes,0,0,0,4.25,18.7
+297,Pensilvania,Wendys,Despues,0,1,0,4.25,20.9
+298,Pensilvania,Burger King,Antes,0,0,0,4.25,24
+298,Pensilvania,Burger King,Despues,0,1,0,4.25,13.3
+299,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,26.9
+299,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,20.7
+300,Pensilvania,Wendys,Antes,0,0,0,4.25,15.2
+300,Pensilvania,Wendys,Despues,0,1,0,4.25,16.2
+301,Pensilvania,KFC,Antes,0,0,0,4.25,17.4
+301,Pensilvania,KFC,Despues,0,1,0,4.25,20.9
+302,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,18.5
+302,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,18.2
+303,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,28.9
+303,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,26.3
+304,Pensilvania,KFC,Antes,0,0,0,4.25,23.5
+304,Pensilvania,KFC,Despues,0,1,0,4.25,29.4
+305,Pensilvania,KFC,Antes,0,0,0,4.25,27.1
+305,Pensilvania,KFC,Despues,0,1,0,4.25,17
+306,Pensilvania,KFC,Antes,0,0,0,4.25,21.1
+306,Pensilvania,KFC,Despues,0,1,0,4.25,15.4
+307,Pensilvania,KFC,Antes,0,0,0,4.25,25.6
+307,Pensilvania,KFC,Despues,0,1,0,4.25,24.2
+308,Pensilvania,Burger King,Antes,0,0,0,4.25,23.7
+308,Pensilvania,Burger King,Despues,0,1,0,4.25,20.3
+309,Pensilvania,KFC,Antes,0,0,0,4.25,27.8
+309,Pensilvania,KFC,Despues,0,1,0,4.25,15.1
+310,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,20.2
+310,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,22.9
+311,Pensilvania,Burger King,Antes,0,0,0,4.25,20.3
+311,Pensilvania,Burger King,Despues,0,1,0,4.25,25.3
+312,Pensilvania,Burger King,Antes,0,0,0,4.25,23.6
+312,Pensilvania,Burger King,Despues,0,1,0,4.25,22
+313,Pensilvania,Burger King,Antes,0,0,0,4.25,29.5
+313,Pensilvania,Burger King,Despues,0,1,0,4.25,23.3
+314,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,19
+314,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,12.3
+315,Pensilvania,Wendys,Antes,0,0,0,4.25,28.5
+315,Pensilvania,Wendys,Despues,0,1,0,4.25,14.2
+316,Pensilvania,KFC,Antes,0,0,0,4.25,22
+316,Pensilvania,KFC,Despues,0,1,0,4.25,25.4
+317,Pensilvania,KFC,Antes,0,0,0,4.25,18
+317,Pensilvania,KFC,Despues,0,1,0,4.25,27.9
+318,Pensilvania,Wendys,Antes,0,0,0,4.25,24.1
+318,Pensilvania,Wendys,Despues,0,1,0,4.25,18
+319,Pensilvania,Wendys,Antes,0,0,0,4.25,33.3
+319,Pensilvania,Wendys,Despues,0,1,0,4.25,17.4
+320,Pensilvania,Burger King,Antes,0,0,0,4.25,22.9
+320,Pensilvania,Burger King,Despues,0,1,0,4.25,25.8
+321,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,20.7
+321,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,11.7
+322,Pensilvania,KFC,Antes,0,0,0,4.25,15.4
+322,Pensilvania,KFC,Despues,0,1,0,4.25,17.2
+323,Pensilvania,Wendys,Antes,0,0,0,4.25,20.6
+323,Pensilvania,Wendys,Despues,0,1,0,4.25,25.4
+324,Pensilvania,Wendys,Antes,0,0,0,4.25,17.1
+324,Pensilvania,Wendys,Despues,0,1,0,4.25,23.4
+325,Pensilvania,Burger King,Antes,0,0,0,4.25,18.3
+325,Pensilvania,Burger King,Despues,0,1,0,4.25,18.5
+326,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,29.6
+326,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,30.2
+327,Pensilvania,KFC,Antes,0,0,0,4.25,25.1
+327,Pensilvania,KFC,Despues,0,1,0,4.25,16.3
+328,Pensilvania,Burger King,Antes,0,0,0,4.25,30.5
+328,Pensilvania,Burger King,Despues,0,1,0,4.25,22.1
+329,Pensilvania,KFC,Antes,0,0,0,4.25,21.2
+329,Pensilvania,KFC,Despues,0,1,0,4.25,16
+330,Pensilvania,Wendys,Antes,0,0,0,4.25,17.6
+330,Pensilvania,Wendys,Despues,0,1,0,4.25,16.6
+331,Pensilvania,KFC,Antes,0,0,0,4.25,18.6
+331,Pensilvania,KFC,Despues,0,1,0,4.25,31.4
+332,Pensilvania,KFC,Antes,0,0,0,4.25,31.6
+332,Pensilvania,KFC,Despues,0,1,0,4.25,16.7
+333,Pensilvania,Burger King,Antes,0,0,0,4.25,28.8
+333,Pensilvania,Burger King,Despues,0,1,0,4.25,18.5
+334,Pensilvania,Wendys,Antes,0,0,0,4.25,26.4
+334,Pensilvania,Wendys,Despues,0,1,0,4.25,18.5
+335,Pensilvania,KFC,Antes,0,0,0,4.25,14.7
+335,Pensilvania,KFC,Despues,0,1,0,4.25,27.7
+336,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,15.3
+336,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,23.3
+337,Pensilvania,Burger King,Antes,0,0,0,4.25,19.7
+337,Pensilvania,Burger King,Despues,0,1,0,4.25,33.1
+338,Pensilvania,Wendys,Antes,0,0,0,4.25,22.9
+338,Pensilvania,Wendys,Despues,0,1,0,4.25,17.6
+339,Pensilvania,KFC,Antes,0,0,0,4.25,19.4
+339,Pensilvania,KFC,Despues,0,1,0,4.25,21.9
+340,Pensilvania,Wendys,Antes,0,0,0,4.25,20.6
+340,Pensilvania,Wendys,Despues,0,1,0,4.25,12.8
+341,Pensilvania,Wendys,Antes,0,0,0,4.25,14.9
+341,Pensilvania,Wendys,Despues,0,1,0,4.25,22.7
+342,Pensilvania,Burger King,Antes,0,0,0,4.25,23.8
+342,Pensilvania,Burger King,Despues,0,1,0,4.25,18.5
+343,Pensilvania,Burger King,Antes,0,0,0,4.25,20
+343,Pensilvania,Burger King,Despues,0,1,0,4.25,23.6
+344,Pensilvania,KFC,Antes,0,0,0,4.25,20.6
+344,Pensilvania,KFC,Despues,0,1,0,4.25,20
+345,Pensilvania,Wendys,Antes,0,0,0,4.25,20.9
+345,Pensilvania,Wendys,Despues,0,1,0,4.25,20.3
+346,Pensilvania,Wendys,Antes,0,0,0,4.25,23.7
+346,Pensilvania,Wendys,Despues,0,1,0,4.25,17.3
+347,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,28
+347,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,19.2
+348,Pensilvania,Burger King,Antes,0,0,0,4.25,23.7
+348,Pensilvania,Burger King,Despues,0,1,0,4.25,21.7
+349,Pensilvania,Wendys,Antes,0,0,0,4.25,19.2
+349,Pensilvania,Wendys,Despues,0,1,0,4.25,19.3
+350,Pensilvania,Burger King,Antes,0,0,0,4.25,26.7
+350,Pensilvania,Burger King,Despues,0,1,0,4.25,24.7
+351,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,29.2
+351,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,22.7
+352,Pensilvania,Burger King,Antes,0,0,0,4.25,21.4
+352,Pensilvania,Burger King,Despues,0,1,0,4.25,29
+353,Pensilvania,Burger King,Antes,0,0,0,4.25,23.3
+353,Pensilvania,Burger King,Despues,0,1,0,4.25,28.2
+354,Pensilvania,Wendys,Antes,0,0,0,4.25,23.9
+354,Pensilvania,Wendys,Despues,0,1,0,4.25,21
+355,Pensilvania,KFC,Antes,0,0,0,4.25,18.7
+355,Pensilvania,KFC,Despues,0,1,0,4.25,22.8
+356,Pensilvania,Wendys,Antes,0,0,0,4.25,11.7
+356,Pensilvania,Wendys,Despues,0,1,0,4.25,27.4
+357,Pensilvania,Burger King,Antes,0,0,0,4.25,27.5
+357,Pensilvania,Burger King,Despues,0,1,0,4.25,24.6
+358,Pensilvania,KFC,Antes,0,0,0,4.25,24.3
+358,Pensilvania,KFC,Despues,0,1,0,4.25,24.3
+359,Pensilvania,Wendys,Antes,0,0,0,4.25,27.8
+359,Pensilvania,Wendys,Despues,0,1,0,4.25,17.9
+360,Pensilvania,Burger King,Antes,0,0,0,4.25,32.5
+360,Pensilvania,Burger King,Despues,0,1,0,4.25,28.5
+361,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,23.6
+361,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,23.4
+362,Pensilvania,KFC,Antes,0,0,0,4.25,30.3
+362,Pensilvania,KFC,Despues,0,1,0,4.25,15.3
+363,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,19.5
+363,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,25.8
+364,Pensilvania,Burger King,Antes,0,0,0,4.25,22.5
+364,Pensilvania,Burger King,Despues,0,1,0,4.25,27.8
+365,Pensilvania,Burger King,Antes,0,0,0,4.25,9.6
+365,Pensilvania,Burger King,Despues,0,1,0,4.25,17
+366,Pensilvania,KFC,Antes,0,0,0,4.25,26.5
+366,Pensilvania,KFC,Despues,0,1,0,4.25,32
+367,Pensilvania,Wendys,Antes,0,0,0,4.25,28.6
+367,Pensilvania,Wendys,Despues,0,1,0,4.25,23.4
+368,Pensilvania,Wendys,Antes,0,0,0,4.25,28.5
+368,Pensilvania,Wendys,Despues,0,1,0,4.25,24.7
+369,Pensilvania,Wendys,Antes,0,0,0,4.25,21.2
+369,Pensilvania,Wendys,Despues,0,1,0,4.25,12.8
+370,Pensilvania,KFC,Antes,0,0,0,4.25,32.5
+370,Pensilvania,KFC,Despues,0,1,0,4.25,19.8
+371,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,24
+371,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,30.2
+372,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,27.9
+372,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,24.3
+373,Pensilvania,KFC,Antes,0,0,0,4.25,21.2
+373,Pensilvania,KFC,Despues,0,1,0,4.25,19.3
+374,Pensilvania,Burger King,Antes,0,0,0,4.25,21.1
+374,Pensilvania,Burger King,Despues,0,1,0,4.25,30.7
+375,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,27.2
+375,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,23.2
+376,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,25.1
+376,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,19.3
+377,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,24
+377,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,13.7
+378,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,22.9
+378,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,22
+379,Pensilvania,KFC,Antes,0,0,0,4.25,18.8
+379,Pensilvania,KFC,Despues,0,1,0,4.25,15.5
+380,Pensilvania,KFC,Antes,0,0,0,4.25,19.4
+380,Pensilvania,KFC,Despues,0,1,0,4.25,21.5
+381,Pensilvania,Burger King,Antes,0,0,0,4.25,21.3
+381,Pensilvania,Burger King,Despues,0,1,0,4.25,23.2
+382,Pensilvania,Burger King,Antes,0,0,0,4.25,21.1
+382,Pensilvania,Burger King,Despues,0,1,0,4.25,21.4
+383,Pensilvania,Wendys,Antes,0,0,0,4.25,36
+383,Pensilvania,Wendys,Despues,0,1,0,4.25,24.9
+384,Pensilvania,Burger King,Antes,0,0,0,4.25,23.7
+384,Pensilvania,Burger King,Despues,0,1,0,4.25,16.4
+385,Pensilvania,Wendys,Antes,0,0,0,4.25,21.6
+385,Pensilvania,Wendys,Despues,0,1,0,4.25,17.2
+386,Pensilvania,Burger King,Antes,0,0,0,4.25,28.7
+386,Pensilvania,Burger King,Despues,0,1,0,4.25,20.3
+387,Pensilvania,Burger King,Antes,0,0,0,4.25,20.1
+387,Pensilvania,Burger King,Despues,0,1,0,4.25,23.3
+388,Pensilvania,Burger King,Antes,0,0,0,4.25,20.1
+388,Pensilvania,Burger King,Despues,0,1,0,4.25,23.8
+389,Pensilvania,Burger King,Antes,0,0,0,4.25,13.5
+389,Pensilvania,Burger King,Despues,0,1,0,4.25,22.5
+390,Pensilvania,Wendys,Antes,0,0,0,4.25,22.6
+390,Pensilvania,Wendys,Despues,0,1,0,4.25,14
+391,Pensilvania,Wendys,Antes,0,0,0,4.25,22.9
+391,Pensilvania,Wendys,Despues,0,1,0,4.25,15.8
+392,Pensilvania,Burger King,Antes,0,0,0,4.25,23.6
+392,Pensilvania,Burger King,Despues,0,1,0,4.25,23.2
+393,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,25.7
+393,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,18.9
+394,Pensilvania,KFC,Antes,0,0,0,4.25,29.5
+394,Pensilvania,KFC,Despues,0,1,0,4.25,26.3
+395,Pensilvania,Wendys,Antes,0,0,0,4.25,22.5
+395,Pensilvania,Wendys,Despues,0,1,0,4.25,23.5
+396,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,30.7
+396,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,23.3
+397,Pensilvania,Roy Rogers,Antes,0,0,0,4.25,17.4
+397,Pensilvania,Roy Rogers,Despues,0,1,0,4.25,20.5
+398,Pensilvania,Burger King,Antes,0,0,0,4.25,21.7
+398,Pensilvania,Burger King,Despues,0,1,0,4.25,19.5
+399,Pensilvania,Burger King,Antes,0,0,0,4.25,23.1
+399,Pensilvania,Burger King,Despues,0,1,0,4.25,20
+400,Pensilvania,KFC,Antes,0,0,0,4.25,28.8
+400,Pensilvania,KFC,Despues,0,1,0,4.25,33.7
