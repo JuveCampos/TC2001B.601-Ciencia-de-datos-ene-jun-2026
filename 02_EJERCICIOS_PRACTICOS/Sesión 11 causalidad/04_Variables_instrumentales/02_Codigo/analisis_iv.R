@@ -299,6 +299,7 @@ p1 <- ggplot(datos, aes(x = anios_educacion, y = log_ingresos)) +
   ) +
   tema_iv
 
+p1
 ggsave(
   "03_Visualizaciones/01_educacion_vs_ingresos.png", p1,
   width = 8, height = 6, dpi = 300
@@ -341,6 +342,7 @@ p2 <- educacion_por_trimestre %>%
   ) +
   tema_iv
 
+p2
 ggsave(
   "03_Visualizaciones/02_primera_etapa_trimestre.png", p2,
   width = 8, height = 6, dpi = 300
@@ -476,6 +478,7 @@ p4 <- ingresos_por_trimestre %>%
   ) +
   tema_iv
 
+p4
 ggsave(
   "03_Visualizaciones/04_forma_reducida.png", p4,
   width = 8, height = 6, dpi = 300
