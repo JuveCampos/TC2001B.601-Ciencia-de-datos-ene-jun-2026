@@ -5,7 +5,7 @@ account: juvecamposf
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 17101003
-bundleId: 11830837
+bundleId: 11840570
 url: https://juvecamposf.shinyapps.io/guia_estudio_tc2001B_01/
 version: 1
 asMultiple: FALSE
