@@ -56,7 +56,7 @@ clinicas_test <- testing(split_clinicas) %>% select(-semana)
 receta_clinicas <- recipe(consultas_respiratorias ~ ., data = clinicas_train) %>%
   step_zv(all_predictors()) %>%
   step_normalize(all_numeric_predictors())
-
+# ?step_zv
 # 4) OLS como comparacion ----------------------------------------------------
 wf_ols <- workflow() %>%
   add_model(linear_reg() %>% set_engine("lm")) %>%
