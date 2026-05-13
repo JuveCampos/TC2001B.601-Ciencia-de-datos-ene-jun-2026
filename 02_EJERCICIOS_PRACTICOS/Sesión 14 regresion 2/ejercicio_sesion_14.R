@@ -1,4 +1,6 @@
 
+options(scipen = 999)
+
 # 1. Cargue las librerías correspondientes. Utilice la función tidymodels::tidymodels_prefer() para evitar conflictos de funciones.
 
 # Librerías ----
@@ -69,23 +71,56 @@ receta_viviendas <- receta_viviendas %>%
   # (5) convierta las variables nominales a variables dummy
   step_dummy(all_nominal_predictors())
 
+
+
 # 7. Una vez terminada la receta, aplique a las bases de entrenamiento y las bases de prueba.
 
 # Preparamos la receta
-receta_viviendas_prep <- receta_viviendas %>% prep(training = viviendas_training)
+receta_viviendas_prep <- receta_viviendas %>%
+  prep(training = viviendas_training)
 
 # Hacemos bake a los datos:
 
 # Preparar la base de entrenamiento:
-viviendas_training_prep <- receta_viviendas_prep %>% bake(new_data = NULL)
+viviendas_training_prep <- receta_viviendas_prep %>%
+  bake(new_data = NULL)
 
 # Preparar la base de prueba:
-viviendas_test_prep <- receta_viviendas_prep %>% bake(new_data = viviendas_test)
+viviendas_test_prep <- receta_viviendas_prep %>%
+  bake(new_data = viviendas_test)
 
+# 8. Ya con las bases “horneadas” (sin colinealidad y todos esos problemas) ajuste el modelo de regresión con la función fit() y la fórmula correspondiente.
 
-# 8. Ya con las bases “horneadas” (sin colinealidad y todos esos problemas) ajuste el modelo de regresión con la función fit() y la fórmula correspondiente. l
+modelo_lineal <- linear_reg() %>%
+  set_engine("lm") %>%
+  set_mode("regression")
 
-modelo_lineal <- linear_reg() %>% set_engine("lm") %>% set_mode("regression")
-modelo_lineal %>% fit(precio ~ . , data = viviendas_training_prep)
+modelo_fit <- modelo_lineal %>%
+  fit(precio ~ . ,
+      data = viviendas_training_prep)
 
+# 9. Una vez que tenga el modelo entrenado con la base de entrenamiento, prediga los valores de y con la base de prueba, usando la función predict().
+
+predicciones <- predict(object = modelo_fit, new_data = viviendas_test_prep)
+
+resultados_test <- viviendas_test_prep %>%
+  select(precio) %>%
+  bind_cols(predicciones)
+
+# 10. Una vez que tenga los datos predichos y los datos reales de la base de prueba, obtenga el rmse, el rsq y el mae (Mean Average Error).
+
+resultados_test %>% rmse(truth = precio, estimate = .pred)
+resultados_test %>% rsq(truth = precio, estimate = .pred)
+resultados_test %>% mae(truth = precio, estimate = .pred)
+
+metricas_evaluacion <- metric_set(rmse, rsq, mae)
+metricas_evaluacion
+metricas_evaluacion(resultados_test, truth = precio, estimate = .pred)
+
+# 11. Finalmente, genere una gráfica en ggplot como la de la clase pasada, donde tenga en el eje “X” los valores reales y en el eje “Y” los valores predichos. Agregue una línea diagonal con la capa geom_abline().
+
+resultados_test %>%
+  ggplot(aes(x =precio, y = .pred )) +
+  geom_point(alpha = 0.3, color = "red") +
+  geom_abline(color = "blue", linetype = 2)
 
