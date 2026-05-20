@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Informe para la clase — Proyecto MCCI</title>
+  <style>
+:root {
+--navy: #1E4C7D;
+--light-blue: #EAF2FA;
+--soft-blue: #DDE5ED;
+--soft-green: #D5F5E3;
+--dark-green: #1A7A3A;
+--soft-red: #FADBD8;
+--dark-red: #C0392B;
+--highlight-green: #F0FAF0;
+--gray-top: #F0F0F0;
+--gray: #555555;
+--text: #1a1a1a;
+--bg: #ffffff;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; color: var(--text); background: var(--bg); }
+body {
+font-family: "Ubuntu", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+font-size: 16.5px;
+line-height: 1.65;
+color: var(--text);
+background: var(--bg);
+max-width: 880px;
+margin: 0 auto;
+padding: 3rem 1.5rem 6rem;
+hyphens: none;
+overflow-wrap: break-word;
+}
+h1, h2, h3, h4 {
+font-family: "Ubuntu", system-ui, sans-serif;
+color: var(--navy);
+font-weight: 700;
+line-height: 1.25;
+margin-top: 2.5rem;
+margin-bottom: 1rem;
+}
+h1.title {
+font-size: 2.2rem;
+border-bottom: 4px solid var(--navy);
+padding-bottom: 0.6rem;
+margin-top: 0;
+margin-bottom: 1.5rem;
+}
+h1 { font-size: 2rem; }
+h2 { font-size: 1.55rem; margin-top: 3rem; padding-top: 0.8rem; border-top: 1px solid var(--soft-blue); }
+h3 { font-size: 1.2rem; color: var(--navy); }
+h4 { font-size: 1.05rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.04em; }
+p { margin: 0.7rem 0 1rem; }
+a {
+color: var(--navy);
+text-decoration: none;
+border-bottom: 1px solid var(--soft-blue);
+}
+a:hover {
+border-bottom-color: var(--navy);
+background: var(--light-blue);
+}
+ul, ol { padding-left: 1.4rem; }
+li { margin: 0.35rem 0; }
+li > p { margin: 0.2rem 0; }
+strong { color: var(--navy); font-weight: 700; }
+em { color: var(--gray); }
+code {
+font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+font-size: 0.9em;
+background: var(--light-blue);
+color: var(--navy);
+padding: 0.12em 0.4em;
+border-radius: 3px;
+}
+pre {
+background: #f6f8fa;
+border-left: 4px solid var(--navy);
+padding: 1rem 1.2rem;
+overflow-x: auto;
+border-radius: 0 6px 6px 0;
+font-size: 0.88rem;
+line-height: 1.5;
+}
+pre code { background: transparent; color: var(--text); padding: 0; }
+blockquote {
+border-left: 4px solid var(--navy);
+background: var(--light-blue);
+margin: 1.4rem 0;
+padding: 0.9rem 1.4rem;
+color: var(--gray);
+font-style: italic;
+border-radius: 0 6px 6px 0;
+}
+blockquote p { margin: 0.3rem 0; }
+blockquote strong { color: var(--navy); }
+table {
+width: 100%;
+border-collapse: collapse;
+margin: 1.5rem 0;
+font-size: 0.95rem;
+background: white;
+box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+border-radius: 4px;
+overflow: hidden;
+}
+thead { background: var(--navy); color: white; }
+th, td {
+padding: 0.65rem 0.9rem;
+text-align: left;
+border-bottom: 1px solid var(--soft-blue);
+}
+th { font-weight: 600; letter-spacing: 0.01em; color: white; }
+tbody tr:nth-child(even) { background: var(--soft-blue); }
+tbody tr:hover { background: var(--light-blue); }
+hr {
+border: none;
+border-top: 1px solid var(--soft-blue);
+margin: 3rem 0;
+}
+
+header#title-block-header {
+margin-bottom: 1rem;
+}
+header#title-block-header::before {
+content: "MCCI · Proyecto Integrador · Sesión informativa";
+display: block;
+background: var(--navy);
+color: white;
+padding: 0.55rem 1.2rem;
+margin: -3rem -1.5rem 2rem;
+font-size: 0.8rem;
+text-align: center;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+font-weight: 500;
+}
+
+nav#TOC {
+background: var(--light-blue);
+border-left: 4px solid var(--navy);
+padding: 1.2rem 1.8rem;
+margin: 2rem 0 3rem;
+border-radius: 0 6px 6px 0;
+}
+nav#TOC::before {
+content: "Contenido";
+display: block;
+font-weight: 700;
+color: var(--navy);
+margin-bottom: 0.6rem;
+text-transform: uppercase;
+font-size: 0.85rem;
+letter-spacing: 0.08em;
+}
+nav#TOC ul {
+list-style: none;
+margin: 0;
+padding-left: 0;
+}
+nav#TOC > ul { padding-left: 0; }
+nav#TOC ul ul { padding-left: 1.2rem; font-size: 0.92em; }
+nav#TOC li { margin: 0.3rem 0; }
+nav#TOC a {
+border-bottom: none;
+color: var(--text);
+display: inline-block;
+}
+nav#TOC a:hover {
+color: var(--navy);
+background: transparent;
+text-decoration: underline;
+}
+
+nav#TOC > ul > li { margin: 0.4rem 0; font-weight: 600; }
+nav#TOC > ul > li > a { color: var(--navy); }
+nav#TOC > ul > li > ul > li { font-weight: 400; }
+nav#TOC > ul > li > ul > li > a { color: var(--text); }
+section { scroll-margin-top: 1rem; }
+
+.badge {
+display: inline-block;
+padding: 0.18em 0.7em;
+font-size: 0.72rem;
+font-weight: 700;
+letter-spacing: 0.06em;
+text-transform: uppercase;
+border-radius: 999px;
+vertical-align: middle;
+margin: 0 0.12em;
+line-height: 1.5;
+font-style: normal;
+}
+.badge-intro {
+background: var(--soft-green);
+color: var(--dark-green);
+border: 1px solid #B8E6C5;
+}
+.badge-medio {
+background: var(--light-blue);
+color: var(--navy);
+border: 1px solid #C5D6E8;
+}
+.badge-avanzado {
+background: var(--soft-red);
+color: var(--dark-red);
+border: 1px solid #F1B8B0;
+}
+.badge-tipo {
+display: inline-block;
+padding: 0.18em 0.7em;
+font-size: 0.72rem;
+font-weight: 500;
+letter-spacing: 0.04em;
+border-radius: 999px;
+vertical-align: middle;
+margin: 0 0.12em;
+line-height: 1.5;
+font-style: normal;
+background: var(--gray-top);
+color: var(--gray);
+border: 1px solid #DDDDDD;
+}
+
+td .badge { font-size: 0.7rem; padding: 0.14em 0.6em; }
+@media print {
+body { max-width: none; font-size: 11pt; padding: 1rem; }
+header#title-block-header::before { background: none; color: var(--navy); border-bottom: 2px solid var(--navy); margin: 0; padding: 0 0 0.5rem; text-align: left; }
+pre, table { page-break-inside: avoid; }
+h2, h3 { page-break-after: avoid; }
+nav#TOC { page-break-after: always; }
+}
+@media (max-width: 640px) {
+body { padding: 2rem 1rem 4rem; font-size: 15.5px; }
+h1.title { font-size: 1.7rem; }
+h2 { font-size: 1.3rem; }
+table { font-size: 0.85rem; }
+th, td { padding: 0.5rem 0.6rem; }
+header#title-block-header::before { margin: -2rem -1rem 1.5rem; font-size: 0.7rem; }
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Informe para la clase — Proyecto MCCI</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#informe-para-la-clase--proyecto-mcci" id="toc-informe-para-la-clase--proyecto-mcci">Informe para la clase —
+Proyecto MCCI</a>
+<ul>
+<li><a href="#1-de-qué-trata-el-proyecto" id="toc-1-de-qué-trata-el-proyecto">1. ¿De qué trata el
+proyecto?</a></li>
+<li><a href="#2-los-datos" id="toc-2-los-datos">2. Los datos</a></li>
+<li><a href="#3-qué-proyectos-pueden-hacer-los-alumnos" id="toc-3-qué-proyectos-pueden-hacer-los-alumnos">3. Qué proyectos
+pueden hacer los alumnos</a></li>
+<li><a href="#4-inventario-de-paquetes-y-conceptos-que-ya-están-usados" id="toc-4-inventario-de-paquetes-y-conceptos-que-ya-están-usados">4.
+Inventario de paquetes y conceptos que ya están usados</a></li>
+<li><a href="#5-lo-que-aún-falta-evaluar-antes-de-mostrar-esto-en-clase" id="toc-5-lo-que-aún-falta-evaluar-antes-de-mostrar-esto-en-clase">5. Lo
+que aún falta evaluar antes de mostrar esto en clase</a></li>
+<li><a href="#6-por-qué-esto-les-sirve-a-los-chavos" id="toc-6-por-qué-esto-les-sirve-a-los-chavos">6. Por qué esto les sirve
+a los chavos</a></li>
+<li><a href="#7-cómo-presentar-el-repo-mañana-sugerencia-de-25-min" id="toc-7-cómo-presentar-el-repo-mañana-sugerencia-de-25-min">7. Cómo
+presentar el repo mañana (sugerencia de 25 min)</a></li>
+</ul></li>
+</ul>
+</nav>
+<section id="informe-para-la-clase--proyecto-mcci" class="level1">
+<h1>Informe para la clase — Proyecto MCCI</h1>
+<blockquote>
+<p>Material de apoyo para explicar mañana a los alumnos en qué consiste
+este proyecto, qué datos hay, qué pueden hacer con ellos y qué les queda
+por aprender.</p>
+</blockquote>
+<hr />
+<section id="1-de-qué-trata-el-proyecto" class="level2">
+<h2>1. ¿De qué trata el proyecto?</h2>
+<p>Es un repositorio educativo construido sobre datos reales de
+<strong>Mexicanos Contra la Corrupción y la Impunidad (MCCI)</strong> —
+una organización mexicana de la sociedad civil dedicada a investigación
+periodística sobre corrupción.</p>
+<p>Los datos describen <strong>contratos firmados por partidos políticos
+en México</strong> (proveedores, montos, fechas, descripciones). El
+stack es <strong>R + Quarto + tidymodels</strong>, todo orientado a
+producir un sitio web reproducible (<code>docs/</code>) y a servir como
+base para tres ejercicios integradores de Machine Learning.</p>
+<p>El repositorio ya tiene:</p>
+<ul>
+<li>2 notebooks de exploración (<code>01_exploracion.qmd</code>,
+<code>02_contratos_montos.qmd</code>).</li>
+<li>3 notebooks ML ya escritos (<code>03_clasificacion.qmd</code>,
+<code>04_regresion.qmd</code>, <code>05_clustering.qmd</code>) — siguen
+el mismo patrón pedagógico.</li>
+<li>Una presentación de 60 slides estilo Tec en
+<code>presentacion_ml/Presentacion_ML_MCCI.pptx</code>.</li>
+</ul>
+<hr />
+</section>
+<section id="2-los-datos" class="level2">
+<h2>2. Los datos</h2>
+<p>Dos CSV en <code>datos/</code>, comparten la columna
+<code>id</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Archivo</th>
+<th>Filas</th>
+<th>Columnas</th>
+<th>Tiene <code>partido</code> explícito</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>contratos.csv</code></td>
+<td>15,736</td>
+<td>28</td>
+<td>No (hay que parsear <code>partido_archivo</code>)</td>
+</tr>
+<tr>
+<td><code>contratos_montos.csv</code></td>
+<td>15,118</td>
+<td>30</td>
+<td><strong>Sí</strong> (recomendado para análisis por partido)</td>
+</tr>
+</tbody>
+</table>
+<p>La diferencia de 618 filas corresponde a registros sin partido
+identificable o sin monto. Para todo lo que sea ML usamos
+<code>contratos_montos.csv</code>.</p>
+<section id="variables-que-importan-para-los-ejercicios" class="level3">
+<h3>Variables que importan para los ejercicios</h3>
+<p><strong>Identificadores y metadatos</strong></p>
+<ul>
+<li><code>id</code> — identificador único del contrato</li>
+<li><code>partido</code> — partido político (factor) <strong>[solo en
+<code>contratos_montos</code>]</strong></li>
+<li><code>ano</code>, <code>fecha_firma</code>,
+<code>fecha_inicio_vigencia</code>, <code>fecha_fin_vigencia</code></li>
+</ul>
+<p><strong>Variables del contrato</strong></p>
+<ul>
+<li><code>tipo_contrato</code> — Adquisición / Prestación de servicio /
+etc.</li>
+<li><code>tipo_persona</code> — Física / Moral</li>
+<li><code>tema</code> — categoría temática (texto)</li>
+<li><code>descripcion</code> — texto libre del objeto del contrato
+(potencial para NLP, fuera de scope este curso)</li>
+<li><code>alcance</code> — tipo de adquisición</li>
+<li><code>area</code> — área del partido responsable</li>
+<li><code>costo</code> — <strong>el más importante</strong> (MXN, muy
+sesgado, requiere <code>log1p</code>)</li>
+</ul>
+<p><strong>Proveedor</strong></p>
+<ul>
+<li><code>tipo_persona</code>,
+<code>fisica_nombre</code>/<code>fisica_apellido1</code>/<code>fisica_apellido2</code>
+o <code>moral_razon</code></li>
+<li><code>nom_fisica_homo</code>, <code>moral_razon_homo</code> —
+versiones homologadas para cruzar y agregar</li>
+</ul>
+</section>
+<section id="features-ya-construidas-scriptsutilsr" class="level3">
+<h3>Features ya construidas (<code>scripts/utils.R</code>)</h3>
+<p>La función <code>agregar_features_ml()</code> crea
+automáticamente:</p>
+<ul>
+<li><code>duracion_dias</code> —
+<code>fecha_fin_vigencia - fecha_inicio_vigencia</code></li>
+<li><code>anio_firma</code>, <code>mes_firma</code>,
+<code>trimestre_firma</code>, <code>es_diciembre</code></li>
+<li><code>log_costo</code> — <code>log1p(costo)</code>, target para
+regresión</li>
+<li><code>alto_valor</code> — factor
+(<code>alto</code>/<code>bajo</code>) según mediana de
+<code>costo</code>, target para clasificación</li>
+</ul>
+<p>La función <code>agregar_por_proveedor()</code> colapsa a una fila
+por proveedor con: <code>n_contratos</code>, <code>monto_total</code>,
+<code>monto_promedio</code>, <code>monto_mediano</code>,
+<code>n_partidos</code>, <code>n_tipos</code>,
+<code>duracion_promedio</code>, <code>pct_diciembre</code>,
+<code>anios_activo</code>.</p>
+</section>
+<section id="convenciones-del-proyecto-que-los-alumnos-deben-respetar" class="level3">
+<h3>Convenciones del proyecto que los alumnos deben respetar</h3>
+<ul>
+<li>Los CSV se cargan <strong>siempre</strong> con
+<code>cargar_contratos()</code> o
+<code>cargar_contratos_montos()</code>, <strong>no</strong> con
+<code>read_csv()</code> directo (los helpers aplican
+<code>clean_names()</code>, parseo de fechas y casteos).</li>
+<li><strong>Prohibidas las gráficas circulares</strong> (pie / dona).
+Esto se evalúa.</li>
+<li>Idioma del código y prosa: español. Encoding UTF-8.</li>
+<li>Cualquier código asistido por IA lleva comentario con el
+prompt.</li>
+<li>Datasets derivados van a <code>datos/procesados/</code> (en
+<code>.gitignore</code>); nunca tocar <code>datos/</code>.</li>
+</ul>
+<hr />
+</section>
+</section>
+<section id="3-qué-proyectos-pueden-hacer-los-alumnos" class="level2">
+<h2>3. Qué proyectos pueden hacer los alumnos</h2>
+<section id="por-tipo-de-tarea-ml" class="level3">
+<h3>Por tipo de tarea ML</h3>
+<table>
+<thead>
+<tr>
+<th>Tipo</th>
+<th>Pregunta ejemplo</th>
+<th>Target</th>
+<th>Notebook plantilla</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clasificación binaria</td>
+<td>¿El contrato será de alto valor?</td>
+<td><code>alto_valor</code></td>
+<td><code>03_clasificacion.qmd</code></td>
+</tr>
+<tr>
+<td>Clasificación binaria</td>
+<td>¿Es persona física o moral?</td>
+<td><code>tipo_persona</code></td>
+<td><code>03_*</code> adaptado</td>
+</tr>
+<tr>
+<td>Clasificación multiclase</td>
+<td>¿Qué partido firmó este contrato?</td>
+<td><code>partido</code></td>
+<td><code>03_*</code> adaptado</td>
+</tr>
+<tr>
+<td>Regresión</td>
+<td>¿Cuánto costará este contrato?</td>
+<td><code>log1p(costo)</code></td>
+<td><code>04_regresion.qmd</code></td>
+</tr>
+<tr>
+<td>Regresión</td>
+<td>¿Cuántos días durará?</td>
+<td><code>duracion_dias</code></td>
+<td><code>04_*</code> adaptado</td>
+</tr>
+<tr>
+<td>Clustering</td>
+<td>¿Qué perfiles de proveedor hay?</td>
+<td>—</td>
+<td><code>05_clustering.qmd</code></td>
+</tr>
+<tr>
+<td>Clustering</td>
+<td>¿Qué partidos contratan parecido entre sí?</td>
+<td>—</td>
+<td><code>05_*</code> adaptado (cambiar unidad)</td>
+</tr>
+<tr>
+<td>Detección de anomalías</td>
+<td>¿Qué contratos son atípicos?</td>
+<td>—</td>
+<td>Isolation Forest / DBSCAN</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="por-nivel-de-ambición" class="level3">
+<h3>Por nivel de ambición</h3>
+<p><strong>Reproducible y honesto</strong> — toman uno de los notebooks
+03–05, lo adaptan a una pregunta nueva propia (distinta a la del
+ejemplo), cuidan el split, reportan métricas, interpretan con
+<code>vip</code> y <code>DALEX</code>, escriben sección ética.</p>
+<p><strong>Intermedio</strong> — combinan dos enfoques: clusterizan
+proveedores y luego entrenan un modelo de regresión por cluster; o usan
+el output del clustering como feature en clasificación.</p>
+<p><strong>Avanzado</strong> — definen una pregunta con valor
+periodístico (no solo técnico): ¿qué proveedores aparecen
+recurrentemente en <em>todos</em> los partidos? ¿hay estacionalidad de
+fin de año por partido? ¿predice mejor un modelo &quot;por partido&quot; que uno
+general? — y la responden con rigor.</p>
+</section>
+<section id="regla-del-curso-para-los-proyectos" class="level3">
+<h3>Regla del curso para los proyectos</h3>
+<p>Pueden reutilizar el código del repo, pero <strong>la pregunta de
+investigación tiene que ser original</strong>. Copiar el notebook
+cambiando solo el nombre del archivo no cuenta.</p>
+</section>
+<section id="catálogo-extendido-de-proyectos-18-ideas-adicionales" class="level3">
+<h3>Catálogo extendido de proyectos (18 ideas adicionales)</h3>
+<p>Lo de arriba son los caminos obvios. Estos otros 18 proyectos abren
+frentes que los notebooks actuales no exploran: series de tiempo, redes,
+calidad de datos, dashboards y combinaciones de métodos.</p>
+<section id="a-variaciones-sobre-los-notebooks-existentes" class="level4">
+<h4>A. Variaciones sobre los notebooks existentes</h4>
+<p><strong>1. Clasificador &quot;anómalo para su partido&quot;</strong>
+<span class="badge badge-medio">Intermedio</span><span class="badge-tipo">clasificación</span> Entrenan una regresión de
+<code>costo</code> <strong>por partido</strong> y marcan como
+<code>anómalo</code> cualquier contrato cuyo residuo absoluto supere 2σ.
+Luego clasifican binariamente esos &quot;anómalos&quot; usando el resto de
+variables. <em>Enseña:</em> modelos por grupo + binarización derivada +
+comparación con modelo global.</p>
+<p><strong>2. Predicción de <code>area</code> o
+<code>tema</code></strong> <span class="badge badge-medio">Intermedio</span><span class="badge-tipo">multiclass</span> Targets
+con muchas clases desbalanceadas. Obliga a usar <code>step_other</code>,
+<code>step_smote</code> de verdad, métricas multiclase
+(<code>roc_auc_hand_till</code>, F1 macro/micro). <em>Enseña:</em>
+multiclass real, no la versión sintética que ya hay.</p>
+<p><strong>3. Regresión por cuantiles</strong> <span class="badge badge-avanzado">Avanzado</span><span class="badge-tipo">regresión</span> En vez de predecir el <code>costo</code> promedio,
+predicen los cuantiles 10%, 50%, 90% con
+<code>parsnip::linear_reg(engine = &quot;quantreg&quot;)</code> o
+<code>boost_tree</code> con objetivo <code>reg:quantile</code>.
+<em>Enseña:</em> intervalos de predicción, comunicación de incertidumbre
+— clave en política pública.</p>
+<p><strong>4. Predicción de duración condicionada al monto</strong>
+<span class="badge badge-medio">Intermedio</span><span class="badge-tipo">regresión</span> Target = <code>duracion_dias</code>,
+predictores incluyen <code>log_costo</code>. Pregunta auxiliar: ¿hay
+tipos de contrato donde el monto predice la duración y otros donde no?
+<em>Enseña:</em> interacciones (<code>step_interact</code>) y análisis
+por subgrupo.</p>
+</section>
+<section id="b-perspectiva-temporal" class="level4">
+<h4>B. Perspectiva temporal</h4>
+<p><strong>5. Pronóstico mensual de gasto por partido</strong>
+<span class="badge badge-medio">Intermedio</span><span class="badge-tipo">series de tiempo</span> Agregan monto total por
+partido-mes y pronostican 6 meses adelante con <code>modeltime</code>
+(extensión tidymodels para series). <em>Enseña:</em>
+<code>modeltime</code>, ARIMA, Prophet, ETS con la misma sintaxis
+tidymodels.</p>
+<p><strong>6. Detección de cambios de régimen</strong> <span class="badge badge-avanzado">Avanzado</span><span class="badge-tipo">changepoint</span> Identifican fechas donde un partido cambió
+drásticamente su patrón de contratación (volumen, monto promedio, mix de
+proveedores). Paquete <code>changepoint</code>. <em>Enseña:</em> cómo
+eventos políticos (cambios de dirigencia, elecciones) se reflejan en
+datos.</p>
+<p><strong>7. Análisis electoral vs no electoral</strong>
+<span class="badge badge-intro">Introductorio</span><span class="badge-tipo">comparativo</span> Comparan contratos en años con
+elecciones federales (2018, 2021, 2024) contra el resto. ¿Suben los
+montos? ¿Cambia el tipo de proveedor? ¿Aparecen nuevos proveedores?
+<em>Enseña:</em> segmentación temporal, comparación de distribuciones,
+pruebas de hipótesis no paramétricas.</p>
+</section>
+<section id="c-análisis-de-redes-bipartito-partido-proveedor" class="level4">
+<h4>C. Análisis de redes (bipartito partido-proveedor)</h4>
+<p><strong>8. Proveedores &quot;puente&quot;</strong> <span class="badge badge-medio">Intermedio</span><span class="badge-tipo">redes</span> Construyen una red bipartita partido↔︎proveedor con
+<code>tidygraph</code>. Identifican proveedores que trabajan con
+<strong>muchos partidos</strong> y son hubs centrales. <em>Enseña:</em>
+centralidad de grado, intermediación, visualización con
+<code>ggraph</code>.</p>
+<p><strong>9. Comunidades de proveedores</strong> <span class="badge badge-avanzado">Avanzado</span><span class="badge-tipo">redes</span> Proyectan la red bipartita a proveedores conectados por
+&quot;comparten partido&quot;. Aplican detección de comunidades (Louvain,
+<code>igraph::cluster_louvain</code>). ¿Coinciden con los clusters del
+notebook 05? <em>Enseña:</em> comunidades vs clusters geométricos — dos
+formas de agrupar.</p>
+<p><strong>10. Concentración de mercado (HHI por partido)</strong>
+<span class="badge badge-medio">Intermedio</span><span class="badge-tipo">feature engineering + análisis</span> Para cada
+partido, calculan el índice Herfindahl-Hirschman sobre montos de
+proveedores. ¿Qué partidos tienen contratación más concentrada? ¿Cambia
+en el tiempo? <em>Enseña:</em> feature derivada con valor analítico,
+comunicación con métricas estandarizadas.</p>
+</section>
+<section id="d-calidad-de-datos-y-auditoría" class="level4">
+<h4>D. Calidad de datos y auditoría</h4>
+<p><strong>11. Mapa de completitud</strong> <span class="badge badge-intro">Introductorio</span><span class="badge-tipo">EDA estructurado</span> Análisis sistemático de qué campos faltan, por qué, y
+si la falta es informativa (¿los <code>NA</code> se concentran en
+ciertos partidos/años/áreas?). <em>Enseña:</em> MCAR/MAR/MNAR,
+decisiones de imputación justificadas — no el
+<code>step_impute_median</code> por defecto.</p>
+<p><strong>12. Detección de duplicados conceptuales</strong>
+<span class="badge badge-medio">Intermedio</span><span class="badge-tipo">similitud</span> Buscan contratos que probablemente
+sean el mismo objeto reportado dos veces (mismo proveedor, mismo monto,
+fechas cercanas). Distancia de Jaro-Winkler sobre
+<code>descripcion</code> + reglas. <em>Enseña:</em> string distance,
+deduplicación, pensamiento crítico sobre datos.</p>
+<p><strong>13. Validación cruzada entre datasets</strong>
+<span class="badge badge-intro">Introductorio</span><span class="badge-tipo">auditoría</span> Las 618 filas que están en
+<code>contratos.csv</code> pero no en <code>contratos_montos.csv</code>:
+¿qué tienen en común? ¿Es defendible el filtrado? <em>Enseña:</em>
+<code>anti_join</code>, decisiones de inclusión/exclusión documentadas,
+sesgo de selección concreto y visible.</p>
+</section>
+<section id="e-proyectos-de-comunicación" class="level4">
+<h4>E. Proyectos de comunicación</h4>
+<p><strong>14. Dashboard Shiny &quot;Ficha del partido X&quot;</strong>
+<span class="badge badge-medio">Intermedio</span><span class="badge-tipo">producto</span> App Shiny donde el usuario elige un
+partido y obtiene: serie de gasto, top proveedores, mix de áreas,
+comparación con la media nacional. <em>Enseña:</em> <code>shiny</code>,
+reactividad, diseño de dashboard, decisiones de diseño visual.</p>
+<p><strong>15. Reporte parametrizado en Quarto</strong>
+<span class="badge badge-intro">Introductorio</span><span class="badge-tipo">producto</span> Plantilla <code>.qmd</code> con
+parámetro <code>partido</code>, que al renderizar genera un PDF/HTML
+para <em>cada</em> partido. <em>Enseña:</em> <code>params</code> en
+Quarto, automatización de reportes, separación contenido/datos.</p>
+<p><strong>16. Visualización interactiva con ggiraph o plotly</strong>
+<span class="badge badge-intro">Introductorio</span><span class="badge-tipo">viz</span> Toman una de las gráficas estáticas del
+notebook 02 y la convierten en interactiva (tooltips, filtros).
+<em>Enseña:</em> extensión natural de ggplot, narrativa visual.</p>
+</section>
+<section id="f-combinación-de-métodos-capstone" class="level4">
+<h4>F. Combinación de métodos (capstone)</h4>
+<p><strong>17. Pipeline en dos etapas: clustering → modelo por
+cluster</strong> <span class="badge badge-avanzado">Avanzado</span><span class="badge-tipo">combinado</span> Paso 1: clusterizan
+proveedores (notebook 05). Paso 2: para cada cluster, entrenan un modelo
+de regresión de <code>costo</code> solo con sus contratos. ¿Predice
+mejor que un único modelo global? <em>Enseña:</em> segmentación previa
+al modelado, comparación honesta de pipelines, trade-off
+complejidad/desempeño.</p>
+<p><strong>18. Comparación de interpretaciones</strong> <span class="badge badge-avanzado">Avanzado</span><span class="badge-tipo">meta-análisis</span> Entrenan los 4 modelos del notebook 03 y comparan
+qué variables priorizan según <code>vip</code> y según DALEX. ¿Coinciden
+los rankings? Cuando difieren, ¿qué dice eso sobre cómo cada algoritmo
+&quot;ve&quot; el problema? <em>Enseña:</em> que la interpretabilidad no es
+objetiva, depende del modelo y del método.</p>
+</section>
+<section id="resumen-por-dificultad" class="level4">
+<h4>Resumen por dificultad</h4>
+<table>
+<thead>
+<tr>
+<th>Nivel</th>
+<th>Proyectos</th>
+<th>Carga estimada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="badge badge-intro">Introductorio</span></td>
+<td>7, 11, 13, 15, 16</td>
+<td>1–2 semanas</td>
+</tr>
+<tr>
+<td><span class="badge badge-medio">Intermedio</span></td>
+<td>1, 2, 4, 5, 8, 10, 12, 14</td>
+<td>2–3 semanas</td>
+</tr>
+<tr>
+<td><span class="badge badge-avanzado">Avanzado</span></td>
+<td>3, 6, 9, 17, 18</td>
+<td>3–4 semanas</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+</section>
+</section>
+<section id="4-inventario-de-paquetes-y-conceptos-que-ya-están-usados" class="level2">
+<h2>4. Inventario de paquetes y conceptos que ya están usados</h2>
+<p>Esto les sirve a los alumnos para saber qué van a tener que dominar
+para leer los notebooks.</p>
+<section id="paquetes-tidymodels-presentes-en-el-código" class="level3">
+<h3>Paquetes tidymodels presentes en el código</h3>
+<table>
+<thead>
+<tr>
+<th>Paquete</th>
+<th>Para qué se usa</th>
+<th>Dónde aparece</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rsample</code></td>
+<td><code>initial_split</code>, <code>vfold_cv</code> (estratificación
+por target)</td>
+<td>03, 04, 05</td>
+</tr>
+<tr>
+<td><code>recipes</code></td>
+<td><code>step_unknown</code>, <code>step_impute_median</code>,
+<code>step_other</code>, <code>step_novel</code>,
+<code>step_dummy</code>, <code>step_zv</code>,
+<code>step_normalize</code>, <code>step_log</code>,
+<code>step_pca</code>, <code>update_role</code></td>
+<td>03, 04, 05</td>
+</tr>
+<tr>
+<td><code>parsnip</code></td>
+<td><code>logistic_reg</code>, <code>linear_reg</code>,
+<code>rand_forest</code>, <code>boost_tree</code></td>
+<td>03, 04</td>
+</tr>
+<tr>
+<td><code>workflows</code></td>
+<td><code>workflow()</code>, <code>workflow_set()</code></td>
+<td>03, 04, 05</td>
+</tr>
+<tr>
+<td><code>tune</code></td>
+<td><code>tune()</code>, <code>select_best</code>,
+<code>finalize_workflow</code>, <code>last_fit</code></td>
+<td>03, 04, 05</td>
+</tr>
+<tr>
+<td><code>finetune</code></td>
+<td><code>tune_race_anova</code> (racing ANOVA)</td>
+<td>03, 04</td>
+</tr>
+<tr>
+<td><code>yardstick</code></td>
+<td><code>metric_set</code> (<code>roc_auc</code>,
+<code>accuracy</code>, <code>rmse</code>, <code>mae</code>,
+<code>rsq</code>), <code>conf_mat</code>, <code>roc_curve</code></td>
+<td>03, 04</td>
+</tr>
+<tr>
+<td><code>themis</code></td>
+<td><code>step_smote</code> (preparado, no activo)</td>
+<td>03</td>
+</tr>
+<tr>
+<td><code>tidyclust</code></td>
+<td><code>k_means</code>, <code>hier_clust</code>,
+<code>tune_cluster</code>, <code>cluster_metric_set</code>,
+<code>extract_cluster_assignment</code></td>
+<td>05</td>
+</tr>
+<tr>
+<td><code>vip</code></td>
+<td>Importancia global de variables</td>
+<td>03, 04</td>
+</tr>
+<tr>
+<td><code>DALEX</code> / <code>DALEXtra</code></td>
+<td>Importancia por permutación, PDP, break-down local</td>
+<td>03, 04</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="engines-de-modelos" class="level3">
+<h3>Engines de modelos</h3>
+<ul>
+<li><code>glm</code>, <code>glmnet</code>, <code>ranger</code>,
+<code>xgboost</code>, <code>stats</code> (k-means y hclust).</li>
+</ul>
+</section>
+<section id="conceptos-transversales" class="level3">
+<h3>Conceptos transversales</h3>
+<ul>
+<li>Split estratificado y cross-validation con
+<code>vfold_cv</code>.</li>
+<li>Receta como contrato declarativo (separar definición de
+aplicación).</li>
+<li>Tuning con racing (<code>tune_race_anova</code>) — descarta
+candidatos malos por ANOVA en cada fold.</li>
+<li>Métricas internas de clustering: SSE intra-cluster (codo) +
+silhouette.</li>
+<li>Interpretabilidad: global (vip) vs model-agnostic (DALEX) vs local
+(break-down).</li>
+<li>Transformación inversa: modelar <code>log1p(costo)</code> y reportar
+error con <code>expm1()</code> en MXN.</li>
+<li>Anti-leakage: el target <code>alto_valor</code> deriva de
+<code>costo</code> → <code>costo</code> y <code>log_costo</code> no
+pueden ser predictores.</li>
+</ul>
+<hr />
+</section>
+</section>
+<section id="5-lo-que-aún-falta-evaluar-antes-de-mostrar-esto-en-clase" class="level2">
+<h2>5. Lo que aún falta evaluar antes de mostrar esto en clase</h2>
+<p>Bloqueantes:</p>
+<ol type="1">
+<li><strong>Renderizar los 3 notebooks de ML.</strong> Nunca se han
+corrido. La primera ejecución puede tomar 5–15 min cada uno por el
+tuning; después el cache de Quarto los hace instantáneos. Riesgos
+conocidos: paquetes faltantes, problemas con engines (xgboost en macOS
+arm64), NaN en <code>duracion_dias</code> cuando faltan fechas.</li>
+<li><strong>Verificar que <code>scripts/instalar_paquetes.R</code>
+instala todo limpio en una máquina nueva.</strong> Los alumnos lo van a
+correr.</li>
+<li><strong>Decidir si la presentación se separa en 2 sesiones.</strong>
+Hay un corte natural en la slide 32 (&quot;Parte 5&quot;) para dividir en dos
+clases de 90 min.</li>
+</ol>
+<p>Decisiones pedagógicas pendientes:</p>
+<ol start="4" type="1">
+<li><strong>¿Mostrar <code>step_smote</code> realmente activo?</strong>
+Hoy <code>alto_valor</code> está balanceado al 50/50 (es la mediana),
+así que SMOTE no hace nada. Para enseñarlo de verdad habría que cambiar
+el target al <strong>percentil 90</strong> (10% de clase positiva). Vale
+la pena hacer una versión paralela del notebook 03 para esto.</li>
+<li><strong>¿Cómo enseñar paralelización?</strong> Hoy no se usa
+<code>doParallel</code>/<code>future</code>. Encenderlos reduce el
+tuning drásticamente y los alumnos lo van a necesitar para sus
+proyectos.</li>
+<li><strong>¿K-medoids?</strong> No está incluido por limitación de
+<code>tidyclust</code> (no lo soporta nativo). Si los alumnos quieren
+PAM, hay que abrir excepción al &quot;todo tidymodels&quot;.</li>
+<li><strong>¿Versión &quot;express&quot; del notebook 03?</strong> Una variante
+que use solo lo cubierto hasta cierta sesión del curso, sin XGBoost ni
+DALEX, para no quemarlo todo el primer día.</li>
+</ol>
+<p>Fuera de scope acordado (no replantear sin razón):</p>
+<ul>
+<li><strong>NLP</strong>: la columna <code>descripcion</code> es texto
+libre y rica, pero TF-IDF / topic modeling se quedan para el siguiente
+semestre.</li>
+<li><strong>Causalidad</strong>: el repo está exclusivamente sobre
+predicción; análisis causal (DiD, RDD, etc.) está en otro proyecto
+separado.</li>
+</ul>
+<hr />
+</section>
+<section id="6-por-qué-esto-les-sirve-a-los-chavos" class="level2">
+<h2>6. Por qué esto les sirve a los chavos</h2>
+<p><strong>A nivel técnico</strong></p>
+<ul>
+<li>Aprenden <strong>un solo framework</strong> (tidymodels) que sirve
+para clasificación, regresión y clustering — no tienen que aprender tres
+APIs distintas.</li>
+<li>Salen sabiendo el pipeline completo de un proyecto ML real: split →
+recipe → workflow → tune → evaluar → interpretar → discutir sesgos. No
+solo &quot;entrenar un modelo&quot;.</li>
+<li>Aprenden a comparar 3–4 algoritmos rigurosamente (mismo CV, mismo
+preprocesamiento) en vez de &quot;probar varios a ver cuál sale mejor&quot;.</li>
+<li>Se llevan herramientas de interpretabilidad (vip + DALEX) que casi
+nadie enseña a nivel de curso.</li>
+</ul>
+<p><strong>A nivel de criterio</strong></p>
+<ul>
+<li>Trabajan con datos reales mexicanos, con sesgos reales (partidos
+sobre/subrepresentados, contratos no reportados, distribución de costo
+brutal).</li>
+<li>Ven en primera persona la diferencia entre
+<strong>predicción</strong> y <strong>causalidad</strong> — clave para
+no escribir tonterías cuando hagan análisis para una organización o un
+medio.</li>
+<li>Practican el reflejo de escribir una sección ética por proyecto, no
+como adorno sino como parte del entregable.</li>
+</ul>
+<p><strong>A nivel de portafolio</strong></p>
+<ul>
+<li>El sitio Quarto renderizado es público y compartible
+(<code>docs/</code>).</li>
+<li>El dataset es citable (MCCI tiene URL pública).</li>
+<li>Un proyecto bien hecho aquí es un caso real de &quot;analicé datos de
+contrataciones públicas con tidymodels e interpretabilidad
+model-agnostic&quot; — eso pesa en un CV junior.</li>
+<li>Para quienes quieran seguir por periodismo de datos: MCCI es
+referencia obligada en México.</li>
+</ul>
+<p><strong>A nivel de conexión con el resto del curso</strong></p>
+<ul>
+<li>Los métodos causales (DiD, RDD, PSM, IV, control sintético) que ya
+tienen del otro material se complementan con esto: aquí aprenden a
+<em>predecir</em>, allá aprenden a <em>estimar efectos</em>. Un buen
+analista distingue cuándo usar cuál.</li>
+</ul>
+<hr />
+</section>
+<section id="7-cómo-presentar-el-repo-mañana-sugerencia-de-25-min" class="level2">
+<h2>7. Cómo presentar el repo mañana (sugerencia de 25 min)</h2>
+<ol type="1">
+<li><strong>(3 min)</strong> Quiénes son MCCI y por qué estos datos
+importan: contratación pública en México, periodismo de datos,
+transparencia.</li>
+<li><strong>(5 min)</strong> Tour del repo: <code>datos/</code>,
+<code>notebooks/</code>, <code>scripts/utils.R</code>,
+<code>presentacion_ml/</code>. Mostrar la tabla de diferencia entre los
+dos CSV.</li>
+<li><strong>(5 min)</strong> Demo en vivo de
+<code>cargar_contratos_montos() |&gt; agregar_features_ml() |&gt; glimpse()</code>.
+Que vean las features ya construidas.</li>
+<li><strong>(7 min)</strong> Abrir el notebook 03 renderizado y caminar
+por las 8 etapas (split → recipe → workflow_set → tune_race → ranking →
+last_fit → vip → ética).</li>
+<li><strong>(3 min)</strong> Mostrar las ideas de proyectos (sección 3
+de este informe) y la regla de &quot;pregunta propia obligatoria&quot;.</li>
+<li><strong>(2 min)</strong> Reglas de oro: nada de pies, citar prompts
+de IA, no tocar <code>datos/</code>.</li>
+</ol>
+<hr />
+<p><em>Generado por Claude (Anthropic) el 2026-05-19 a petición del
+usuario, en una sesión donde se retomó el proyecto MCCI tras tres días
+sin tocarlo. Verificado contra el código actual de
+<code>notebooks/03_clasificacion.qmd</code>,
+<code>04_regresion.qmd</code>, <code>05_clustering.qmd</code>,
+<code>scripts/utils.R</code> y <code>README.md</code>.</em></p>
+</section>
+</section>
+</body>
+</html>
