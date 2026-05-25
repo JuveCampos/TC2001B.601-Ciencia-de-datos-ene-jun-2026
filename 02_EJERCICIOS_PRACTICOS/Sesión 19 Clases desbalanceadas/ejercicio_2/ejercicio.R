@@ -1,0 +1,302 @@
+
+options(scipen = 999)
+
+# =============================================================================
+# SESIÓN 19 — CLASES DESBALANCEADAS
+# Ejercicio 2: detección de fraude en transacciones con tarjeta (~96/4)
+# =============================================================================
+#
+# Un banco quiere marcar, en tiempo de autorización, las transacciones con
+# tarjeta que probablemente sean fraude. Pero el fraude es raro: apenas ~4 % de
+# las transacciones lo son. Este desbalance es MÁS severo que el del ejercicio
+# 1 (90/10) y lleva al límite el problema de fondo: el modelo, si no hacemos
+# nada, aprende a ignorar la clase rara. Aquí el costo de NO detectar un fraude
+# (falso negativo) es alto, así que nos importa muchísimo el recall.
+
+# Librerías (todas al inicio) ------------------------------------------------
+library(tidyverse)
+library(tidymodels)
+library(themis)   # step_downsample, step_upsample, step_smote
+
+tidymodels::tidymodels_prefer()
+
+# -----------------------------------------------------------------------------
+# 1. Cargar los datos y preparar la variable objetivo
+# -----------------------------------------------------------------------------
+# Pasamos 'fraude' a factor (parsnip/yardstick lo exigen para clasificación).
+#
+# DECISIÓN CLAVE CON DESBALANCE: ponemos "si" (fraude, lo que buscamos) como
+# PRIMER nivel del factor. yardstick interpreta el primer nivel como el evento
+# positivo. Con solo ~4 % de fraude, si dejáramos "no" primero, recall,
+# precision, f_meas y pr_auc se calcularían sobre las transacciones legítimas y
+# nos darían un retrato falsamente optimista: lo importante (atrapar fraude)
+# quedaría invisible en las métricas.
+transacciones <- read_csv("datos.csv") %>%
+  select(-id_transaccion) %>%   # identificador, sin valor predictivo
+  mutate(fraude = factor(fraude, levels = c("si", "no")))
+
+# Confirmamos que "si" quedó como primer nivel (el evento positivo).
+levels(transacciones$fraude)
+
+# -----------------------------------------------------------------------------
+# 2. Proporción de clases y por qué la accuracy NO sirve aquí
+# -----------------------------------------------------------------------------
+transacciones %>%
+  group_by(fraude) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(porcentaje = 100 * (n / sum(n)))
+
+prop.table(table(transacciones$fraude))
+
+# El argumento del "modelo perezoso":
+# Como el 96 % de las transacciones son legítimas, un clasificador que SIEMPRE
+# diga "no fraude" acertaría el 96 % de las veces. Su accuracy (0.96) parecería
+# excelente, pero su recall sobre el fraude sería 0: no detectaría ni una sola
+# transacción fraudulenta. Para un banco eso es catastrófico. Conclusión: con
+# 96/4, la accuracy es una métrica casi inútil; debemos mirar recall, precision,
+# f_meas y pr_auc, todas centradas en la clase rara "si".
+
+# -----------------------------------------------------------------------------
+# 3. Split estratificado + validación cruzada estratificada
+# -----------------------------------------------------------------------------
+# Con solo 102 casos de fraude en total, estratificar es indispensable: sin
+# ello, un fold podría quedarse casi sin positivos y las métricas serían ruido.
+set.seed(2026)
+transacciones_split <- initial_split(data = transacciones,
+                                     prop = 0.75,
+                                     strata = fraude)
+
+transacciones_entrenamiento <- transacciones_split %>% training()
+transacciones_prueba        <- transacciones_split %>% testing()
+
+# Comprobamos que el ~4 % de fraude se preservó en ambos conjuntos.
+table(transacciones_entrenamiento$fraude) %>% prop.table()
+table(transacciones_prueba$fraude) %>% prop.table()
+
+# Validación cruzada estratificada, solo sobre el entrenamiento.
+set.seed(2026)
+folds_cv <- vfold_cv(data = transacciones_entrenamiento,
+                     v = 5,
+                     strata = fraude)
+
+# -----------------------------------------------------------------------------
+# 4. Receta base de preprocesamiento
+# -----------------------------------------------------------------------------
+# Secuencia de pasos cuidada para el balanceo posterior:
+#   (1) step_impute_median: 'distancia_km_domicilio' tiene ~4 % de NAs y ni el
+#       SMOTE ni la normalización los toleran, así que imputamos primero.
+#   (2) step_dummy: convierte 'es_compra_internacional' y, sobre todo,
+#       'categoria_comercio' (6 niveles -> 5 dummies) en numéricas. Va ANTES de
+#       cualquier paso de themis porque step_smote() solo admite predictores
+#       numéricos.
+#   (3) step_normalize: estandariza (z-score) para que las distancias que usa
+#       SMOTE entre vecinos no estén dominadas por las variables de mayor escala
+#       (los montos en MXN, por ejemplo).
+# Nota: 'monto_transaccion_mxn' y 'monto_promedio_historico_mxn' están
+# correlacionadas (~0.77). NO las filtramos: ambas aportan señal antifraude
+# (compara la compra actual contra el gasto típico del titular).
+receta_base <- recipe(fraude ~ ., data = transacciones_entrenamiento) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_normalize(all_numeric_predictors())
+
+# -----------------------------------------------------------------------------
+# 5. Recetas con técnicas de balanceo
+# -----------------------------------------------------------------------------
+# RECORDATORIO IMPORTANTE: los pasos de themis (down/up/smote) SOLO rebalancean
+# el conjunto de entrenamiento dentro de cada fold. NUNCA tocan el conjunto de
+# evaluación (assessment) ni la base de prueba. Es lo correcto: rebalanceamos
+# para que el modelo APRENDA mejor el fraude, pero lo EVALUAMOS sobre la
+# distribución real (96/4) que enfrentará en producción.
+#
+# Recordatorio conceptual de cada técnica:
+#   - downsample: recorta transacciones legítimas hasta igualar al fraude. Como
+#     hay muchísimas legítimas, tira mucha información (queda un dataset chico).
+#   - upsample: replica las transacciones de fraude (las copia) hasta igualar a
+#     las legítimas. No genera variedad, repite los mismos 102 casos.
+#   - smote: genera transacciones de fraude SINTÉTICAS interpolando entre cada
+#     caso de fraude y sus vecinos cercanos en el espacio de predictores. Da
+#     más diversidad que upsample; por eso necesita todo numérico.
+
+receta_downsample <- receta_base %>%
+  step_downsample(fraude)
+
+receta_upsample <- receta_base %>%
+  step_upsample(fraude)
+
+receta_smote <- receta_base %>%
+  step_smote(fraude)
+
+# -----------------------------------------------------------------------------
+# 6. Modelo base y workflows (uno por técnica)
+# -----------------------------------------------------------------------------
+# Mantenemos un solo clasificador (regresión logística) en las cuatro recetas,
+# de modo que cualquier diferencia de desempeño se deba al balanceo y no al
+# modelo. Es la forma justa de comparar técnicas de rebalanceo.
+modelo_logistico <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+
+workflow_sin_balanceo <- workflow() %>%
+  add_recipe(receta_base) %>%
+  add_model(modelo_logistico)
+
+workflow_downsample <- workflow() %>%
+  add_recipe(receta_downsample) %>%
+  add_model(modelo_logistico)
+
+workflow_upsample <- workflow() %>%
+  add_recipe(receta_upsample) %>%
+  add_model(modelo_logistico)
+
+workflow_smote <- workflow() %>%
+  add_recipe(receta_smote) %>%
+  add_model(modelo_logistico)
+
+# -----------------------------------------------------------------------------
+# 7. Métricas adecuadas al desbalance
+# -----------------------------------------------------------------------------
+# Con "si" como primer nivel, recall/precision/f_meas/pr_auc miden el fraude.
+# Dejamos accuracy SOLO como contraste (esperamos verla alta y engañosa).
+# pr_auc y roc_auc operan sobre la probabilidad predicha (.pred_si).
+metricas_desbalance <- metric_set(recall, precision, f_meas,
+                                  roc_auc, pr_auc, accuracy)
+
+# -----------------------------------------------------------------------------
+# 8. Evaluar cada técnica con validación cruzada estratificada
+# -----------------------------------------------------------------------------
+# fit_resamples ajusta y evalúa cada workflow en los 5 folds; el balanceo se
+# realiza dentro de cada fold solo sobre su porción de entrenamiento.
+control_cv <- control_resamples(save_pred = TRUE)
+
+set.seed(2026)
+res_sin_balanceo <- fit_resamples(workflow_sin_balanceo,
+                                  resamples = folds_cv,
+                                  metrics = metricas_desbalance,
+                                  control = control_cv)
+
+set.seed(2026)
+res_downsample <- fit_resamples(workflow_downsample,
+                                resamples = folds_cv,
+                                metrics = metricas_desbalance,
+                                control = control_cv)
+
+set.seed(2026)
+res_upsample <- fit_resamples(workflow_upsample,
+                              resamples = folds_cv,
+                              metrics = metricas_desbalance,
+                              control = control_cv)
+
+set.seed(2026)
+res_smote <- fit_resamples(workflow_smote,
+                           resamples = folds_cv,
+                           metrics = metricas_desbalance,
+                           control = control_cv)
+
+# -----------------------------------------------------------------------------
+# 9. Tabla comparativa de técnicas
+# -----------------------------------------------------------------------------
+# Juntamos las métricas promedio de los 5 folds. Usamos lapply (suficiente y
+# preferido frente a purrr::map para este recorrido simple sobre una lista) para
+# extraer y etiquetar las métricas de cada técnica.
+lista_resultados <- list(sin_balanceo = res_sin_balanceo,
+                         downsample   = res_downsample,
+                         upsample     = res_upsample,
+                         smote        = res_smote)
+
+metricas_por_tecnica <- lapply(names(lista_resultados), function(nombre) {
+  collect_metrics(lista_resultados[[nombre]]) %>%
+    mutate(tecnica = nombre)
+})
+
+comparacion_tecnicas <- bind_rows(metricas_por_tecnica) %>%
+  select(tecnica, .metric, mean) %>%
+  pivot_wider(names_from = .metric, values_from = mean) %>%
+  arrange(desc(pr_auc))
+
+comparacion_tecnicas
+
+# Lectura del resultado (muy instructivo con desbalance EXTREMO 96/4):
+# - "sin_balanceo" tiene accuracy ~0.96 pero un recall ridículo (~0.01):
+#   detecta apenas 1 de cada 100 fraudes. La accuracy alta es un puro espejismo,
+#   y verás que su pr_auc queda prácticamente EMPATADO con el de las técnicas
+#   de balanceo. Esto enseña una lección fina: ninguna métrica resuelve sola el
+#   problema; hay que elegir la métrica alineada con el objetivo del negocio.
+# - Las técnicas de balanceo (down/up/smote) suben el recall a ~0.54-0.58
+#   (detectan más de la mitad de los fraudes) a costa de precision baja. En
+#   antifraude ese intercambio suele valer la pena: preferimos revisar de más
+#   que dejar pasar fraude. Su f_meas (balance entre precision y recall sobre la
+#   clase rara) supera claramente al de la línea base.
+
+# -----------------------------------------------------------------------------
+# 10. Curvas ROC y PR del mejor enfoque + last_fit sobre la prueba
+# -----------------------------------------------------------------------------
+# Elegimos el workflow ganador por f_meas (no por pr_auc): con un desbalance
+# tan extremo, el pr_auc de "sin_balanceo" engaña porque queda casi empatado
+# pese a no detectar fraude. f_meas penaliza el recall pésimo de la línea base
+# y premia a la técnica que mejor equilibra atrapar fraude (recall) con no
+# saturar de falsas alarmas (precision), que es justo el objetivo antifraude.
+# Lo seleccionamos de forma programática para que el script se adapte al
+# resultado observado.
+nombre_ganador <- comparacion_tecnicas %>%
+  slice_max(f_meas, n = 1) %>%
+  pull(tecnica)
+
+nombre_ganador
+
+workflows_disponibles <- list(sin_balanceo = workflow_sin_balanceo,
+                              downsample   = workflow_downsample,
+                              upsample     = workflow_upsample,
+                              smote        = workflow_smote)
+
+workflow_ganador <- workflows_disponibles[[nombre_ganador]]
+
+# last_fit reentrena el ganador sobre TODO el entrenamiento y evalúa una sola
+# vez sobre la base de prueba, que conserva el desbalance real 96/4.
+set.seed(2026)
+ajuste_final <- last_fit(workflow_ganador,
+                         split = transacciones_split,
+                         metrics = metricas_desbalance)
+
+# Métricas finales sobre la prueba.
+collect_metrics(ajuste_final)
+
+# Predicciones (clase y probabilidades) sobre la prueba.
+predicciones_finales <- collect_predictions(ajuste_final)
+
+# Curva ROC (probabilidad de la clase positiva .pred_si).
+predicciones_finales %>%
+  roc_curve(truth = fraude, .pred_si) %>%
+  autoplot() +
+  labs(title = paste0("Curva ROC - Mejor enfoque (", nombre_ganador, ")")) +
+  theme_minimal()
+
+# Curva Precision-Recall. Con solo ~4 % de fraude, la ROC tiende a verse
+# optimista; la curva PR retrata mejor el desempeño real sobre la clase rara.
+predicciones_finales %>%
+  pr_curve(truth = fraude, .pred_si) %>%
+  autoplot() +
+  labs(title = paste0("Curva Precision-Recall - Mejor enfoque (",
+                      nombre_ganador, ")")) +
+  theme_minimal()
+
+# Matriz de confusión sobre la prueba.
+conf_mat(predicciones_finales,
+         truth = fraude,
+         estimate = .pred_class) %>%
+  autoplot(type = "heatmap") +
+  labs(title = paste0("Matriz de confusión - Mejor enfoque (",
+                      nombre_ganador, ")")) +
+  scale_fill_gradientn(
+    colors = RColorBrewer::brewer.pal(n = 9, name = "Reds")) +
+  theme_minimal()
+
+# Cierre del ejercicio:
+# En detección de fraude rara vez optimizamos accuracy: optimizamos atrapar
+# fraude (recall) sin saturar al equipo antifraude con falsas alarmas
+# (precision). El balanceo de la clase rara es lo que permite ese giro. Aquí
+# vimos además una sutileza: con desbalance tan extremo (4 %) ni siquiera la
+# pr_auc distingue bien por sí sola (queda empatada con la línea base inútil),
+# así que la elección final debe guiarse por la métrica alineada al objetivo
+# del negocio: f_meas/recall sobre la clase de fraude.

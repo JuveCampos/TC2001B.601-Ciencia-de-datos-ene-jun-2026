@@ -1,0 +1,356 @@
+---
+title: "Ejercicio 1: clientes prometedores en un casino en línea (~90/10)"
+subtitle: "SESIÓN 19 — CLASES DESBALANCEADAS"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+format:
+  html:
+    toc: true
+    toc-title: "Contenido"
+    toc-location: left
+    toc-depth: 2
+    number-sections: false
+    code-tools: true
+    code-copy: true
+    theme: cosmo
+    highlight-style: github
+    fig-width: 8
+    fig-height: 5
+    fig-align: center
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+Una plataforma de casino en línea quiere detectar a sus clientes "prometedores" (de alto valor potencial) para dirigirles campañas de retención. El problema: solo ~9 % de los clientes son prometedores. Cuando una clase es tan rara, los modelos tienden a ignorarla y la accuracy deja de ser una métrica útil. En esta sesión aprendemos a (a) medir bien con clases desbalanceadas y (b) rebalancear los datos de entrenamiento.
+
+```{r}
+# Librerías (todas al inicio) ------------------------------------------------
+library(tidyverse)
+library(tidymodels)
+library(themis)   # step_downsample, step_upsample, step_smote
+```
+
+```{r}
+tidymodels::tidymodels_prefer()
+```
+
+## 1. Cargar los datos y preparar la variable objetivo
+
+```{r}
+# Convertimos 'prometedor' a factor: yardstick y parsnip requieren factor para
+# clasificación (conf_mat, roc_curve, metric_set, etc. fallan con character).
+#
+# CLAVE DEL DESBALANCE: fijamos "si" (la clase rara, lo que queremos detectar)
+# como el PRIMER nivel del factor. yardstick toma por convención el primer
+# nivel como el "evento" positivo. Si dejáramos "no" primero (orden alfabético
+# por defecto), métricas como recall, precision, f_meas y pr_auc se calcularían
+# sobre la clase mayoritaria "no" y NO nos dirían nada útil sobre los clientes
+# prometedores, que es justo lo que el negocio quiere encontrar.
+clientes <- read_csv("datos.csv") %>%
+  select(-id_cliente) %>%   # identificador, no es predictor
+  mutate(prometedor = factor(prometedor, levels = c("si", "no")))
+```
+
+```{r}
+# Verificamos el orden de niveles: "si" debe aparecer primero.
+levels(clientes$prometedor)
+```
+
+## 2. Proporción de clases y por qué la accuracy engaña
+
+```{r}
+clientes %>%
+  group_by(prometedor) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(porcentaje = 100 * (n / sum(n)))
+```
+
+```{r}
+prop.table(table(clientes$prometedor))
+```
+
+Reflexión sobre la accuracy: La clase mayoritaria "no" representa ~91 % de los datos. Un modelo "tonto" que SIEMPRE prediga "no" acertaría ~91 % de las veces: tendría accuracy alta pero recall = 0 sobre los clientes prometedores (no detectaría ni uno). Para el negocio ese modelo es inútil. Por eso, con clases desbalanceadas medimos recall (cobertura de la clase rara), precision (calidad de las alertas), f_meas (su balance) y, sobre todo, pr_auc (área precision-recall).
+
+## 3. Split estratificado + validación cruzada estratificada
+
+```{r}
+# Estratificar por 'prometedor' garantiza que entrenamiento y prueba conserven
+# la proporción ~90/10. Sin estratificar, con una clase tan rara el azar podría
+# dejar muy pocos (o ningún) caso "si" en algún conjunto.
+set.seed(123)
+clientes_split <- initial_split(data = clientes,
+                                prop = 0.75,
+                                strata = prometedor)
+```
+
+```{r}
+clientes_entrenamiento <- clientes_split %>% training()
+clientes_prueba        <- clientes_split %>% testing()
+```
+
+```{r}
+# Verificamos que la proporción se mantuvo en ambos conjuntos.
+table(clientes_entrenamiento$prometedor) %>% prop.table()
+table(clientes_prueba$prometedor) %>% prop.table()
+```
+
+```{r}
+# Folds de validación cruzada estratificada, solo sobre el entrenamiento.
+set.seed(123)
+folds_cv <- vfold_cv(data = clientes_entrenamiento,
+                     v = 5,
+                     strata = prometedor)
+```
+
+## 4. Receta base de preprocesamiento
+
+```{r}
+# Orden de los pasos pensado para el desbalance:
+#   (1) Imputar NAs primero: ni el balanceo ni step_normalize toleran NAs.
+#   (2) step_dummy ANTES de cualquier paso de themis: step_smote() solo opera
+#       sobre predictores NUMÉRICOS, así que las variables nominales deben
+#       convertirse a dummies antes de llegar al SMOTE.
+#   (3) step_normalize (z-score): pone todo en la misma escala, necesario para
+#       que las distancias de SMOTE entre vecinos sean comparables.
+receta_base <- recipe(prometedor ~ ., data = clientes_entrenamiento) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_normalize(all_numeric_predictors())
+```
+
+## 5. Recetas con técnicas de balanceo
+
+IMPORTANTE: los pasos de themis (down/up/smote) solo se aplican al CONJUNTO DE ENTRENAMIENTO de cada fold; NUNCA se aplican al conjunto de evaluación (assessment) ni a la base de prueba. Esto es correcto: queremos rebalancear para que el modelo APRENDA mejor la clase rara, pero queremos EVALUAR sobre la distribución real desbalanceada que veremos en producción.
+
+Qué hace cada técnica:
+
+- downsample: descarta observaciones de la mayoría "no" hasta igualar a la minoría "si". Rápido, pero tira información.
+- upsample: replica (copia) observaciones de la minoría "si" hasta igualar a la mayoría. No inventa datos nuevos, los repite tal cual.
+- smote: crea ejemplos SINTÉTICOS de la minoría interpolando entre cada observación rara y sus vecinos más cercanos. Genera variedad en vez de copias exactas; por eso necesita todos los predictores numéricos.
+
+```{r}
+receta_downsample <- receta_base %>%
+  step_downsample(prometedor)
+```
+
+```{r}
+receta_upsample <- receta_base %>%
+  step_upsample(prometedor)
+```
+
+```{r}
+receta_smote <- receta_base %>%
+  step_smote(prometedor)
+```
+
+## 6. Modelo base y workflows (uno por técnica)
+
+```{r}
+# Fijamos un único clasificador (regresión logística) para TODAS las técnicas:
+# así la comparación es justa y lo único que cambia es el balanceo.
+modelo_logistico <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+```
+
+```{r}
+workflow_sin_balanceo <- workflow() %>%
+  add_recipe(receta_base) %>%
+  add_model(modelo_logistico)
+```
+
+```{r}
+workflow_downsample <- workflow() %>%
+  add_recipe(receta_downsample) %>%
+  add_model(modelo_logistico)
+```
+
+```{r}
+workflow_upsample <- workflow() %>%
+  add_recipe(receta_upsample) %>%
+  add_model(modelo_logistico)
+```
+
+```{r}
+workflow_smote <- workflow() %>%
+  add_recipe(receta_smote) %>%
+  add_model(modelo_logistico)
+```
+
+## 7. Métricas adecuadas al desbalance
+
+```{r}
+# Recordatorio: "si" es el primer nivel, así que recall/precision/f_meas/pr_auc
+# se calculan sobre la clase rara. Incluimos accuracy SOLO para contrastar (no
+# es nuestra métrica de decisión). pr_auc y roc_auc usan la probabilidad
+# predicha, no la clase, por eso requieren la columna .pred_si más abajo.
+metricas_desbalance <- metric_set(recall, precision, f_meas,
+                                  roc_auc, pr_auc, accuracy)
+```
+
+## 8. Evaluar cada técnica con validación cruzada estratificada
+
+```{r}
+# fit_resamples entrena y evalúa cada workflow en los 5 folds. El balanceo se
+# aplica dentro de cada fold solo a su porción de entrenamiento.
+# Guardamos un control común para reusarlo.
+control_cv <- control_resamples(save_pred = TRUE)
+```
+
+```{r}
+set.seed(123)
+res_sin_balanceo <- fit_resamples(workflow_sin_balanceo,
+                                  resamples = folds_cv,
+                                  metrics = metricas_desbalance,
+                                  control = control_cv)
+```
+
+```{r}
+set.seed(123)
+res_downsample <- fit_resamples(workflow_downsample,
+                                resamples = folds_cv,
+                                metrics = metricas_desbalance,
+                                control = control_cv)
+```
+
+```{r}
+set.seed(123)
+res_upsample <- fit_resamples(workflow_upsample,
+                              resamples = folds_cv,
+                              metrics = metricas_desbalance,
+                              control = control_cv)
+```
+
+```{r}
+set.seed(123)
+res_smote <- fit_resamples(workflow_smote,
+                           resamples = folds_cv,
+                           metrics = metricas_desbalance,
+                           control = control_cv)
+```
+
+## 9. Tabla comparativa de técnicas
+
+```{r}
+# Reunimos las métricas promedio (sobre los 5 folds) de cada técnica en una
+# sola tabla. Usamos lapply (preferido sobre purrr::map para este caso simple)
+# para extraer y etiquetar las métricas de cada objeto de resampling.
+lista_resultados <- list(sin_balanceo = res_sin_balanceo,
+                         downsample   = res_downsample,
+                         upsample     = res_upsample,
+                         smote        = res_smote)
+```
+
+```{r}
+metricas_por_tecnica <- lapply(names(lista_resultados), function(nombre) {
+  collect_metrics(lista_resultados[[nombre]]) %>%
+    mutate(tecnica = nombre)
+})
+```
+
+```{r}
+comparacion_tecnicas <- bind_rows(metricas_por_tecnica) %>%
+  select(tecnica, .metric, mean) %>%
+  pivot_wider(names_from = .metric, values_from = mean) %>%
+  arrange(desc(pr_auc))
+```
+
+```{r}
+comparacion_tecnicas
+```
+
+Interpretación de la tabla:
+
+- "sin_balanceo" tiene la accuracy MÁS alta (~0.91) pero el recall MÁS bajo (~0.11): apenas detecta uno de cada diez clientes prometedores. Es el ejemplo perfecto de por qué la accuracy engaña con desbalance.
+- downsample, upsample y smote disparan el recall a ~0.62-0.66 (detectan ~6 de cada 10 prometedores) a costa de bajar la precision. Su f_meas (~0.30) triplica al de la línea base (~0.18): mucho mejor balance sobre la clase rara. Los pr_auc quedan casi empatados (~0.30-0.32) entre todas.
+- Como las tres técnicas de balanceo rinden parecido en pr_auc, nos quedamos con la de mayor pr_auc según la tabla. Aquí extraemos ese nombre de forma programática para no "cablear" a mano una técnica que podría cambiar.
+
+## 10. Curvas ROC y PR del mejor enfoque + last_fit sobre la prueba
+
+```{r}
+# Elegimos el workflow ganador como el de mayor pr_auc en la tabla comparativa.
+nombre_ganador <- comparacion_tecnicas %>%
+  slice_max(pr_auc, n = 1) %>%
+  pull(tecnica)
+```
+
+```{r}
+nombre_ganador
+```
+
+```{r}
+# Mapeamos el nombre ganador a su workflow correspondiente.
+workflows_disponibles <- list(sin_balanceo = workflow_sin_balanceo,
+                              downsample   = workflow_downsample,
+                              upsample     = workflow_upsample,
+                              smote        = workflow_smote)
+```
+
+```{r}
+workflow_ganador <- workflows_disponibles[[nombre_ganador]]
+```
+
+```{r}
+# last_fit entrena el workflow ganador sobre TODO el entrenamiento y evalúa una
+# sola vez sobre la base de prueba (que NUNCA fue rebalanceada).
+set.seed(123)
+ajuste_final <- last_fit(workflow_ganador,
+                         split = clientes_split,
+                         metrics = metricas_desbalance)
+```
+
+```{r}
+# Métricas finales sobre la base de prueba.
+collect_metrics(ajuste_final)
+```
+
+```{r}
+# Predicciones (clase y probabilidades) sobre la base de prueba.
+predicciones_finales <- collect_predictions(ajuste_final)
+```
+
+```{r}
+# Curva ROC: el segundo argumento es la probabilidad de la clase positiva
+# (.pred_si, porque "si" es el primer nivel).
+predicciones_finales %>%
+  roc_curve(truth = prometedor, .pred_si) %>%
+  autoplot() +
+  labs(title = paste0("Curva ROC - Mejor enfoque (", nombre_ganador, ")")) +
+  theme_minimal()
+```
+
+```{r}
+# Curva Precision-Recall: más informativa que la ROC cuando la clase positiva
+# es muy rara, porque se enfoca en el desempeño sobre esa clase.
+predicciones_finales %>%
+  pr_curve(truth = prometedor, .pred_si) %>%
+  autoplot() +
+  labs(title = paste0("Curva Precision-Recall - Mejor enfoque (",
+                      nombre_ganador, ")")) +
+  theme_minimal()
+```
+
+```{r}
+# Matriz de confusión sobre la base de prueba.
+conf_mat(predicciones_finales,
+         truth = prometedor,
+         estimate = .pred_class) %>%
+  autoplot(type = "heatmap") +
+  labs(title = paste0("Matriz de confusión - Mejor enfoque (",
+                      nombre_ganador, ")")) +
+  scale_fill_gradientn(
+    colors = RColorBrewer::brewer.pal(n = 9, name = "Blues")) +
+  theme_minimal()
+```
+
+Cierre: El valor de esta sesión no está en subir la accuracy (que incluso puede bajar), sino en lograr que el modelo DETECTE a los clientes prometedores (recall alto) sin disparar demasiadas falsas alarmas (precision razonable). pr_auc resume ese compromiso y es la métrica que recomendamos vigilar con clases desbalanceadas.

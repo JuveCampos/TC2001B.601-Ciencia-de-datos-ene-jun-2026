@@ -1,0 +1,446 @@
+---
+title: "Clasificación: aprobación de crédito (dataset reutilizado de la Sesión 16)"
+subtitle: "SESIÓN 20 — OTROS MODELOS Y ENSAMBLES"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+format:
+  html:
+    toc: true
+    toc-title: "Contenido"
+    toc-location: left
+    toc-depth: 2
+    number-sections: false
+    code-tools: true
+    code-copy: true
+    theme: cosmo
+    highlight-style: github
+    fig-width: 8
+    fig-height: 5
+    fig-align: center
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+En esta sesión dejamos atrás la regresión logística y el KNN como únicos clasificadores y conocemos una familia más amplia de modelos:
+
+1) Árbol de decisión (rpart): un solo árbol que parte el espacio de predictores con reglas tipo "si ingreso > X y score > Y, entonces...". Es muy interpretable pero inestable (alta varianza): cambia mucho con pequeñas variaciones de los datos.
+
+2) Random forest (ranger): un ENSAMBLE por BAGGING. Entrena muchos árboles, cada uno sobre una muestra bootstrap de los datos y con un subconjunto aleatorio de predictores en cada corte, y promedia/vota. El promedio de muchos árboles ruidosos pero poco sesgados REDUCE la varianza sin aumentar el sesgo. Bagging = "bootstrap aggregating".
+
+3) XGBoost (xgboost): un ENSAMBLE por BOOSTING. Aquí los árboles se construyen en SECUENCIA: cada árbol nuevo se enfoca en corregir los errores del conjunto anterior. Boosting reduce sobre todo el SESGO y suele dar el mejor desempeño predictivo, a costa de más hiperparámetros y más riesgo de sobreajuste si no se regulariza.
+
+4) Regresión logística regularizada (glmnet): la regresión logística de siempre, pero con una penalización que encoge los coeficientes.
+
+- L1 (lasso, mixture = 1): puede llevar coeficientes a CERO (selección de variables).
+- L2 (ridge, mixture = 0): encoge sin eliminar.
+- Elastic net (0 < mixture < 1): mezcla de ambas. penalty (lambda) controla cuánta penalización; mixture controla la mezcla L1/L2. Ambos se tunean.
+
+Finalmente combinamos los cuatro modelos en un ENSAMBLE POR STACKING con el paquete stacks: en vez de elegir un único ganador, un meta-modelo aprende qué tanto peso darle a cada modelo base para maximizar el desempeño.
+
+```{r}
+# Librerías (todas al inicio)
+library(tidyverse)
+library(tidymodels)
+library(stacks)
+library(rpart)
+library(ranger)
+library(xgboost)
+library(glmnet)
+```
+
+```{r}
+tidymodels_prefer()
+```
+
+## 1. Cargar los datos
+
+```{r}
+# Convertimos la variable objetivo a factor desde el inicio: yardstick y
+# parsnip requieren la objetivo como factor para clasificación. Removemos el
+# identificador, que no es un predictor.
+credito <- read_csv("datos.csv") %>%
+  select(-id_solicitud) %>%
+  mutate(aprobado = factor(aprobado))
+```
+
+```{r}
+# Proporción de clases de la variable objetivo
+credito %>%
+  group_by(aprobado) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(porcentaje = 100 * (n / sum(n)))
+```
+
+Las clases están casi balanceadas (~52/48). Aun así usaremos roc_auc como métrica principal, porque mide el poder de discriminación del modelo y no depende de un umbral fijo.
+
+```{r}
+# NAs por columna
+summary(credito)
+# ingreso_mensual_mxn: ~47 NAs ; score_historial: ~38 NAs
+```
+
+## 2. Split entrenamiento / prueba (estratificado por la objetivo)
+
+```{r}
+set.seed(2020)
+credito_split <- initial_split(credito, prop = 0.75, strata = aprobado)
+credito_entrenamiento <- credito_split %>% training()
+credito_prueba <- credito_split %>% testing()
+```
+
+```{r}
+# Verificamos que la estratificación preservó la proporción de clases
+table(credito_entrenamiento$aprobado) %>% prop.table()
+table(credito_prueba$aprobado) %>% prop.table()
+```
+
+## 3. Receta de preprocesamiento (compartida por los cuatro modelos)
+
+```{r}
+# Pasos (todos los predictores son numéricos):
+#  (1) Imputar NAs numéricos con la mediana (los pasos siguientes no toleran
+#      NAs y los árboles de rpart/ranger tampoco aquí).
+#  (2) step_nzv: quitar predictores con varianza casi nula.
+#  (3) step_corr: filtrar colinealidad (pago_mensual ~ monto_solicitado).
+#  (4) step_normalize: estandarizar numéricos. Necesario para glmnet (la
+#      penalización L1/L2 depende de la escala); inocuo para árboles/ensambles.
+#  (5) step_zv: por seguridad, quitar variables con varianza cero.
+# Usamos UNA sola receta para que los cuatro modelos sean comparables y el
+# stacking opere sobre la misma representación de los datos.
+receta_credito <- recipe(aprobado ~ ., data = credito_entrenamiento) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_nzv(all_predictors()) %>%
+  step_corr(all_numeric_predictors(), threshold = 0.7) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+## 4. Especificaciones de los cuatro modelos (con hiperparámetros a tunear)
+
+```{r}
+# 4.1 Árbol de decisión (rpart)
+#  - cost_complexity (cp): penaliza árboles grandes (poda).
+#  - tree_depth: profundidad máxima.
+modelo_arbol <- decision_tree(
+    cost_complexity = tune(),
+    tree_depth = tune()
+  ) %>%
+  set_engine("rpart") %>%
+  set_mode("classification")
+```
+
+```{r}
+# 4.2 Random forest (ranger)
+#  - mtry: cuántos predictores se consideran en cada corte.
+#  - min_n: mínimo de observaciones por nodo.
+#  Fijamos trees = 500 (suficiente y estable). Pedimos importancia de
+#  variables para poder inspeccionarla después.
+modelo_rf <- rand_forest(
+    mtry = tune(),
+    min_n = tune(),
+    trees = 500
+  ) %>%
+  set_engine("ranger", importance = "impurity") %>%
+  set_mode("classification")
+```
+
+```{r}
+# 4.3 XGBoost (boosting)
+#  - tree_depth, learn_rate, loss_reduction: controlan complejidad y velocidad
+#    de aprendizaje. Fijamos trees = 500 para acotar el tiempo de cómputo.
+modelo_xgb <- boost_tree(
+    trees = 500,
+    tree_depth = tune(),
+    learn_rate = tune(),
+    loss_reduction = tune()
+  ) %>%
+  set_engine("xgboost") %>%
+  set_mode("classification")
+```
+
+```{r}
+# 4.4 Regresión logística regularizada (glmnet)
+#  - penalty (lambda) y mixture (mezcla L1/L2) se tunean: mixture cerca de 1
+#    es lasso, cerca de 0 es ridge, intermedio es elastic net.
+modelo_glmnet <- logistic_reg(
+    penalty = tune(),
+    mixture = tune()
+  ) %>%
+  set_engine("glmnet") %>%
+  set_mode("classification")
+```
+
+## 5. Workflows: una receta común + cada modelo
+
+```{r}
+workflow_arbol <- workflow() %>%
+  add_recipe(receta_credito) %>%
+  add_model(modelo_arbol)
+```
+
+```{r}
+workflow_rf <- workflow() %>%
+  add_recipe(receta_credito) %>%
+  add_model(modelo_rf)
+```
+
+```{r}
+workflow_xgb <- workflow() %>%
+  add_recipe(receta_credito) %>%
+  add_model(modelo_xgb)
+```
+
+```{r}
+workflow_glmnet <- workflow() %>%
+  add_recipe(receta_credito) %>%
+  add_model(modelo_glmnet)
+```
+
+## 6. Validación cruzada y control para stacking
+
+```{r}
+# Usamos 5-fold CV estratificada SOLO sobre el entrenamiento. Es la base
+# tanto para elegir hiperparámetros como para que el stacking aprenda los
+# pesos del ensamble.
+set.seed(2020)
+folds_cv <- vfold_cv(credito_entrenamiento, v = 5, strata = aprobado)
+```
+
+```{r}
+# Métricas a vigilar durante el tuning. roc_auc es la principal.
+metricas_clasificacion <- metric_set(roc_auc, accuracy, sensitivity,
+                                      yardstick::spec)
+```
+
+```{r}
+# control_stack_grid() le pide a tune_grid que GUARDE las predicciones
+# out-of-fold y los workflows de cada candidato. El paquete stacks necesita
+# esas predicciones para entrenar el meta-modelo más adelante.
+control_stack <- control_stack_grid()
+```
+
+## 7. Tuning de cada modelo (grillas pequeñas para que corra rápido)
+
+grid = 6 candidatos por modelo: suficiente para esta clase y rápido con n ~ 950 y 5 folds.
+
+```{r}
+set.seed(2020)
+tuning_arbol <- workflow_arbol %>%
+  tune_grid(resamples = folds_cv,
+            grid = 6,
+            metrics = metricas_clasificacion,
+            control = control_stack)
+```
+
+```{r}
+set.seed(2020)
+tuning_rf <- workflow_rf %>%
+  tune_grid(resamples = folds_cv,
+            grid = 6,
+            metrics = metricas_clasificacion,
+            control = control_stack)
+```
+
+```{r}
+set.seed(2020)
+tuning_xgb <- workflow_xgb %>%
+  tune_grid(resamples = folds_cv,
+            grid = 6,
+            metrics = metricas_clasificacion,
+            control = control_stack)
+```
+
+```{r}
+set.seed(2020)
+tuning_glmnet <- workflow_glmnet %>%
+  tune_grid(resamples = folds_cv,
+            grid = 6,
+            metrics = metricas_clasificacion,
+            control = control_stack)
+```
+
+## 8. Mejor candidato de cada modelo según roc_auc (en validación cruzada)
+
+```{r}
+mejor_arbol <- tuning_arbol %>% select_best(metric = "roc_auc")
+mejor_rf <- tuning_rf %>% select_best(metric = "roc_auc")
+mejor_xgb <- tuning_xgb %>% select_best(metric = "roc_auc")
+mejor_glmnet <- tuning_glmnet %>% select_best(metric = "roc_auc")
+```
+
+```{r}
+# AUC promedio (validación cruzada) del mejor candidato de cada familia.
+# Esto nos dice cuál modelo individual luce mejor ANTES de ver la prueba.
+auc_cv_arbol <- tuning_arbol %>%
+  show_best(metric = "roc_auc", n = 1) %>%
+  mutate(modelo = "arbol")
+auc_cv_rf <- tuning_rf %>%
+  show_best(metric = "roc_auc", n = 1) %>%
+  mutate(modelo = "random_forest")
+auc_cv_xgb <- tuning_xgb %>%
+  show_best(metric = "roc_auc", n = 1) %>%
+  mutate(modelo = "xgboost")
+auc_cv_glmnet <- tuning_glmnet %>%
+  show_best(metric = "roc_auc", n = 1) %>%
+  mutate(modelo = "glmnet")
+```
+
+```{r}
+auc_cv_comparacion <- bind_rows(auc_cv_arbol, auc_cv_rf,
+                                auc_cv_xgb, auc_cv_glmnet) %>%
+  select(modelo, .metric, mean, std_err)
+```
+
+```{r}
+# AUC promedio en validación cruzada por modelo
+auc_cv_comparacion
+```
+
+## 9. Finalizar y reentrenar cada modelo sobre TODO el entrenamiento
+
+```{r}
+fit_arbol <- workflow_arbol %>%
+  finalize_workflow(mejor_arbol) %>%
+  fit(data = credito_entrenamiento)
+```
+
+```{r}
+fit_rf <- workflow_rf %>%
+  finalize_workflow(mejor_rf) %>%
+  fit(data = credito_entrenamiento)
+```
+
+```{r}
+fit_xgb <- workflow_xgb %>%
+  finalize_workflow(mejor_xgb) %>%
+  fit(data = credito_entrenamiento)
+```
+
+```{r}
+fit_glmnet <- workflow_glmnet %>%
+  finalize_workflow(mejor_glmnet) %>%
+  fit(data = credito_entrenamiento)
+```
+
+## 10. Evaluación de cada modelo individual en la base de PRUEBA
+
+```{r}
+# Guardamos los modelos ajustados en una lista y usamos lapply() para obtener
+# el AUC de prueba de cada uno (lapply es suficiente: solo iteramos sobre 4
+# objetos y no necesitamos la maquinaria extra de purrr).
+modelos_fit <- list(arbol = fit_arbol,
+                    random_forest = fit_rf,
+                    xgboost = fit_xgb,
+                    glmnet = fit_glmnet)
+```
+
+```{r}
+auc_prueba_lista <- lapply(modelos_fit, function(fit_modelo) {
+  prob_pred <- predict(fit_modelo, new_data = credito_prueba, type = "prob")
+  credito_prueba %>%
+    select(aprobado) %>%
+    bind_cols(prob_pred) %>%
+    roc_auc(truth = aprobado, .pred_no) %>%
+    pull(.estimate)
+})
+```
+
+```{r}
+auc_prueba_individuales <- tibble(
+    modelo = names(auc_prueba_lista),
+    roc_auc_prueba = unlist(auc_prueba_lista)
+  ) %>%
+  arrange(desc(roc_auc_prueba))
+```
+
+```{r}
+# AUC en la base de PRUEBA de cada modelo individual
+auc_prueba_individuales
+```
+
+## 11. ENSAMBLE POR STACKING (paquete stacks)
+
+¿Qué es el stacking?
+
+En vez de quedarnos con un único modelo ganador, el stacking entrena un META-MODELO (aquí una regresión logística regularizada) que aprende cómo COMBINAR las predicciones de varios modelos base. Cada modelo base aporta su "opinión" (su probabilidad predicha) y el meta-modelo aprende qué tanto peso darle a cada uno usando las predicciones out-of-fold (las que guardamos con control_stack_grid). El stack suele igualar o superar al mejor modelo individual, porque aprovecha la diversidad de los modelos.
+
+Flujo del paquete stacks: stacks() -> add_candidates() -> blend_predictions() -> fit_members()
+
+```{r}
+set.seed(2020)
+stack_credito <- stacks() %>%
+  add_candidates(tuning_arbol) %>%
+  add_candidates(tuning_rf) %>%
+  add_candidates(tuning_xgb) %>%
+  add_candidates(tuning_glmnet)
+```
+
+```{r}
+# blend_predictions ajusta el meta-modelo (lasso sobre las predicciones de los
+# candidatos): decide qué candidatos entran y con qué peso.
+set.seed(2020)
+stack_credito_blend <- stack_credito %>%
+  blend_predictions()
+```
+
+```{r}
+# fit_members reentrena, sobre todo el entrenamiento, los modelos base que el
+# meta-modelo decidió conservar (los de peso distinto de cero).
+stack_credito_fit <- stack_credito_blend %>%
+  fit_members()
+```
+
+```{r}
+# Pesos del ensamble: qué modelos quedaron y con qué peso relativo
+stack_credito_fit
+```
+
+## 12. Desempeño del STACK en la base de PRUEBA
+
+```{r}
+prob_stack <- predict(stack_credito_fit, new_data = credito_prueba,
+                      type = "prob")
+```
+
+```{r}
+resultados_stack <- credito_prueba %>%
+  select(aprobado) %>%
+  bind_cols(prob_stack)
+```
+
+```{r}
+auc_stack <- resultados_stack %>%
+  roc_auc(truth = aprobado, .pred_no) %>%
+  pull(.estimate)
+```
+
+## 13. Comparación FINAL: modelos individuales vs ensamble (stacking)
+
+```{r}
+comparacion_final <- auc_prueba_individuales %>%
+  bind_rows(tibble(modelo = "STACK (ensamble)",
+                   roc_auc_prueba = auc_stack)) %>%
+  arrange(desc(roc_auc_prueba))
+```
+
+```{r}
+# Tabla final: AUC de prueba de cada modelo y del ensamble
+comparacion_final
+print(comparacion_final)
+```
+
+Interpretación:
+
+- El modelo individual con mayor roc_auc de prueba es el "ganador" entre los modelos base; típicamente random forest o XGBoost le ganan al árbol simple (gracias a bagging/boosting) y a la logística regularizada.
+- El STACK suele quedar a la par o por encima del mejor individual: si lo supera, vemos el valor de combinar modelos diversos; si solo lo iguala, el stacking básicamente "redescubrió" que el mejor modelo ya era muy bueno.
+- Usamos roc_auc (no accuracy) porque mide el poder de discriminación independientemente del umbral de decisión.

@@ -1,0 +1,277 @@
+---
+title: "Ejercicio 2: municipios por indicadores socioeconómicos (clustering + PCA)"
+subtitle: "SESIÓN 18 — APRENDIZAJE NO SUPERVISADO"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+format:
+  html:
+    toc: true
+    toc-title: "Contenido"
+    toc-location: left
+    toc-depth: 2
+    number-sections: false
+    code-tools: true
+    code-copy: true
+    theme: cosmo
+    highlight-style: github
+    fig-width: 8
+    fig-height: 5
+    fig-align: center
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+Contexto de política pública:
+
+Tenemos 500 municipios de México descritos por indicadores de pobreza, carencias, ingreso, ruralidad, conectividad y marginación. NO hay una etiqueta oficial de "tipo de municipio". Queremos AGRUPARLOS en perfiles socioeconómicos para diseñar políticas diferenciadas: no tiene sentido aplicar la misma intervención a un municipio urbano bien conectado que a uno rural marginado.
+
+Esto es aprendizaje NO supervisado: no hay variable objetivo ni partición entrenamiento/prueba. El objetivo es descubrir e interpretar estructura.
+
+```{r}
+# Librerías ----
+library(tidyverse)
+library(tidymodels)
+library(factoextra)
+library(cluster)
+```
+
+```{r}
+tidymodels::tidymodels_prefer()
+```
+
+## 1. CARGA Y PREPARACIÓN DE LOS DATOS
+
+```{r}
+# Cargamos los 500 municipios. clave_municipio es solo un identificador
+# (MUN001, MUN002, ...): NO es un indicador y debe removerse antes de
+# cualquier cálculo de distancia (si no, el "id" entraría como variable).
+municipios <- read_csv("datos.csv") %>%
+  select(-clave_municipio)
+```
+
+```{r}
+glimpse(municipios)
+summary(municipios)
+```
+
+```{r}
+# NAs por columna: esperamos faltantes en ingreso_promedio_mxn (~4%).
+# Los algoritmos de distancia y el PCA NO toleran NAs: hay que resolverlos.
+colSums(is.na(municipios))
+```
+
+```{r}
+# Colinealidad: grado_marginacion_idx se construye a partir de la pobreza y
+# la carencia educativa, así que estará muy correlacionado con ellas.
+# La dejamos (el PCA la absorbe en componentes ortogonales) pero la
+# señalamos para interpretarla con cuidado.
+matriz_cor <- municipios %>%
+  cor(use = "complete.obs") %>%
+  round(2)
+matriz_cor[, c("pct_pobreza", "pct_carencia_educativa",
+               "grado_marginacion_idx")]
+```
+
+IMPUTACIÓN Y NORMALIZACIÓN
+
+```{r}
+# step_impute_median: rellena los NAs de ingreso con la MEDIANA. Preferimos
+# la mediana sobre la media porque el ingreso es asimétrico (unos pocos
+# municipios ricos inflan la media); la mediana es más robusta.
+#
+# ¿POR QUÉ NORMALIZAR (z-score) ES INDISPENSABLE?
+# Los porcentajes van de 0 a 100, el ingreso a decenas de miles de pesos y
+# la densidad puede ser enorme. El PCA (que maximiza varianza) y el
+# clustering (que mide distancias) son SENSIBLES A LA ESCALA: sin
+# normalizar, ingreso_promedio_mxn y densidad_pob_km2 dominarían por sus
+# números grandes, y los grupos reflejarían las unidades, no el perfil
+# socioeconómico. El z-score deja toda variable con media 0 y desviación 1,
+# de modo que pesen por igual.
+receta_municipios <- recipe(~ ., data = municipios) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_normalize(all_numeric_predictors())
+```
+
+```{r}
+# prep() aprende la mediana de imputación y los parámetros de escala;
+# bake() devuelve la matriz lista (imputada y normalizada).
+municipios_norm <- receta_municipios %>%
+  prep() %>%
+  bake(new_data = NULL)
+```
+
+```{r}
+# Verificación: media ~0, desviación ~1 y sin NAs.
+municipios_norm %>%
+  summarise(across(everything(), list(media = mean, desv = sd))) %>%
+  glimpse()
+colSums(is.na(municipios_norm))
+```
+
+## 2. PCA — ANÁLISIS DE COMPONENTES PRINCIPALES
+
+Reducimos los 9 indicadores a unos pocos ejes (componentes) que concentran la varianza, para visualizar a los 500 municipios en un plano y entender qué indicadores "se mueven juntos". Ya normalizamos, así que prcomp() no vuelve a escalar.
+
+```{r}
+pca_municipios <- prcomp(municipios_norm, center = FALSE, scale. = FALSE)
+```
+
+```{r}
+# Scree plot: varianza explicada por componente. Buscamos el "codo" para
+# decidir cuántas componentes resumen lo esencial.
+fviz_eig(pca_municipios, addlabels = TRUE,
+         barfill = "#2d7a7a", barcolor = "#2d7a7a",
+         main = "Varianza explicada por componente (scree plot)")
+```
+
+```{r}
+# Varianza explicada en números (proporción y acumulada).
+varianza_explicada <- summary(pca_municipios)$importance
+varianza_explicada[, 1:5]
+```
+
+```{r}
+# Cargas (rotation): peso de cada indicador en PC1 y PC2.
+cargas <- pca_municipios$rotation[, 1:2] %>%
+  round(2)
+cargas
+```
+
+INTERPRETACIÓN DE LAS PRIMERAS COMPONENTES (leer la tabla 'cargas'):
+
+- PC1 captura el GRADIENTE DE DESARROLLO/MARGINACIÓN, el contraste socioeconómico dominante: de un lado pobreza, carencias, ruralidad y grado de marginación (que cargan juntos por su colinealidad); del otro, ingreso, acceso a internet y alfabetización. Un municipio con PC1 alto en un sentido es marginado; en el opuesto, desarrollado.
+- PC2 recoge un segundo eje, típicamente ligado a la RURALIDAD/DENSIDAD independiente del nivel de marginación: separa municipios densos y urbanos de los dispersos y rurales con niveles de carencia parecidos. La lectura exacta depende de los signos en 'cargas'; el alumno debe describir el contraste real observado.
+
+```{r}
+# Proyección de los 500 municipios en PC1-PC2 (biplot). Las flechas de
+# pct_pobreza, grado_marginacion_idx y pct_carencia_educativa deberían salir
+# casi paralelas, mostrando visualmente su colinealidad.
+fviz_pca_biplot(pca_municipios,
+                label = "var", col.var = "#d62828",
+                col.ind = "#1e4c7d", alpha.ind = 0.4,
+                title = "Municipios en el plano PC1-PC2 (biplot)")
+```
+
+## 3. ELECCIÓN DEL NÚMERO DE GRUPOS (k)
+
+Necesitamos fijar k para k-means. Lo decidimos con dos diagnósticos.
+
+```{r}
+# Método del codo (WSS): al subir k, la suma de cuadrados dentro de los
+# grupos siempre baja; buscamos el codo donde el descenso se vuelve
+# marginal. Ese k es un buen candidato.
+set.seed(2026)
+fviz_nbclust(municipios_norm, kmeans, method = "wss", nstart = 20) +
+  labs(title = "Método del codo (WSS) — municipios")
+```
+
+```{r}
+# Método de la silueta: mide qué tan bien separados quedan los grupos para
+# cada k. El k con silueta promedio MÁS ALTA es el preferido; suele desempatar
+# cuando el codo no es claro.
+set.seed(2026)
+fviz_nbclust(municipios_norm, kmeans, method = "silhouette", nstart = 20) +
+  labs(title = "Método de la silueta — municipios")
+```
+
+```{r}
+# Sustantivamente esperamos del orden de 4 perfiles de municipio (urbano
+# desarrollado, urbano medio, rural en transición, rural marginado). Tras
+# leer codo y silueta elegimos k = 4.
+k_elegido <- 4
+```
+
+## 4. K-MEANS CON EL k ELEGIDO
+
+```{r}
+#
+# nstart = 25: k-means depende de la inicialización aleatoria; con 25
+# arranques nos quedamos con la mejor solución y evitamos óptimos locales.
+set.seed(2026)
+km_municipios <- kmeans(municipios_norm, centers = k_elegido, nstart = 25)
+```
+
+```{r}
+# Tamaño de cada grupo (número de municipios).
+km_municipios$size
+```
+
+```{r}
+# Visualización de los clusters proyectados en PC1-PC2.
+fviz_cluster(km_municipios, data = municipios_norm,
+             geom = "point", ellipse.type = "convex",
+             palette = c("#1e4c7d", "#2d7a7a", "#c97b2a", "#7d3c66"),
+             main = paste0("k-means (k = ", k_elegido, ") — municipios"))
+```
+
+```{r}
+# PERFILADO DE LOS GRUPOS:
+# Para nombrar cada grupo calculamos las medias de los indicadores
+# ORIGINALES (en sus unidades: %, MXN, hab/km²) por cluster. Así leemos
+# directamente el perfil socioeconómico de cada grupo.
+municipios_perfilados <- municipios %>%
+  mutate(cluster = factor(km_municipios$cluster))
+```
+
+```{r}
+perfil_clusters <- municipios_perfilados %>%
+  group_by(cluster) %>%
+  summarise(across(everything(), mean), n = n()) %>%
+  ungroup()
+perfil_clusters
+```
+
+INTERPRETACIÓN (leer 'perfil_clusters'): Comparando las medias por grupo se reconocen perfiles de política pública, por ejemplo:
+
+- municipios urbanos desarrollados: ingreso y acceso a internet altos, pobreza y marginación bajas, poca población rural;
+- municipios urbanos medios: indicadores intermedios;
+- municipios rurales en transición: ruralidad alta pero con avances en conectividad/alfabetización;
+- municipios rurales marginados: pobreza, carencias y marginación altas, ingreso y acceso a internet bajos. El alumno debe etiquetar cada grupo según las cifras reales observadas y pensar qué intervención prioritaria correspondería a cada uno.
+
+## 5. CLUSTERING JERÁRQUICO (comparación)
+
+El jerárquico construye un árbol fusionando municipios por cercanía; lo cortamos al número de grupos deseado. Sirve para contrastar con k-means.
+
+```{r}
+# Distancias euclidianas entre los 500 municipios normalizados.
+dist_municipios <- dist(municipios_norm, method = "euclidean")
+```
+
+```{r}
+# Ward (ward.D2): produce grupos compactos y de tamaño comparable, lo que
+# facilita la comparación contra k-means.
+hc_municipios <- hclust(dist_municipios, method = "ward.D2")
+```
+
+```{r}
+# Dendrograma coloreado al mismo k que k-means.
+fviz_dend(hc_municipios, k = k_elegido,
+          k_colors = c("#1e4c7d", "#2d7a7a", "#c97b2a", "#7d3c66"),
+          show_labels = FALSE, rect = TRUE,
+          main = paste0("Dendrograma (Ward) — corte en k = ",
+                        k_elegido))
+```
+
+```{r}
+# Cortamos en k grupos.
+grupos_hc <- cutree(hc_municipios, k = k_elegido)
+```
+
+```{r}
+# COMPARACIÓN k-means vs jerárquico:
+# Las etiquetas de grupo son arbitrarias entre métodos, así que NO miramos
+# la diagonal: revisamos si cada grupo de un método cae mayormente en UN
+# grupo del otro. Si la correspondencia es fuerte, ambos métodos descubren
+# los mismos perfiles de municipio y eso da robustez a la segmentación que
+# llevaríamos al diseño de política.
+table(kmeans = km_municipios$cluster, jerarquico = grupos_hc)
+```

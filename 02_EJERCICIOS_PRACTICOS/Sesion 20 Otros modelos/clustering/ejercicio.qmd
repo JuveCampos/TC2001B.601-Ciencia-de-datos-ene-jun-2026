@@ -1,0 +1,310 @@
+---
+title: "Clustering: perfiles de municipios (dataset reutilizado de la Sesión 18)"
+subtitle: "SESIÓN 20 — OTROS MODELOS Y ENSAMBLES"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+format:
+  html:
+    toc: true
+    toc-title: "Contenido"
+    toc-location: left
+    toc-depth: 2
+    number-sections: false
+    code-tools: true
+    code-copy: true
+    theme: cosmo
+    highlight-style: github
+    fig-width: 8
+    fig-height: 5
+    fig-align: center
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+El clustering es aprendizaje NO SUPERVISADO: no hay variable objetivo; el objetivo es descubrir grupos de municipios con perfiles socioeconómicos parecidos. Comparamos TRES familias de algoritmos:
+
+1) k-means: parte los datos en k grupos minimizando la distancia de cada punto al centroide de su grupo. Hay que decir cuántos grupos (k) de antemano. Asume grupos "esféricos" de tamaño similar y es sensible a outliers. Todo punto queda asignado a algún grupo (no detecta ruido).
+
+2) Jerárquico aglomerativo (hclust + cutree): empieza con cada punto como su propio grupo y va fusionando los más cercanos hasta tener un único grupo, construyendo un dendrograma (árbol). Con cutree() "cortamos" el árbol a la altura que da k grupos. No exige fijar k antes de calcular; el dendrograma ayuda a elegirlo. Usamos enlace de Ward (ward.D2), que tiende a formar grupos compactos y de tamaño parecido.
+
+3) DBSCAN (dbscan): agrupa por DENSIDAD. No fija k: descubre tantos grupos como regiones densas haya y marca como RUIDO (cluster 0) los puntos en zonas poco densas. Dos hiperparámetros:
+
+- eps: radio de vecindad. Qué tan cerca deben estar dos puntos para considerarse vecinos.
+- minPts: mínimo de puntos dentro de eps para que una zona se considere densa (semilla de un grupo). Es el único de los tres que detecta outliers explícitamente y encuentra grupos de forma arbitraria (no esféricos).
+
+REGLA DE ORO: en TODOS hay que NORMALIZAR primero. Las variables están en escalas muy distintas (porcentajes 0-100, ingreso en miles de pesos, densidad hasta ~2,500 hab/km2). Sin estandarizar, la densidad y el ingreso dominarían las distancias euclidianas y los grupos solo reflejarían esas dos variables.
+
+```{r}
+# Librerías (todas al inicio)
+library(tidyverse)
+library(tidymodels)
+library(dbscan)
+library(factoextra)
+library(cluster)
+```
+
+```{r}
+tidymodels_prefer()
+```
+
+## 1. Cargar los datos
+
+```{r}
+# Guardamos la clave del municipio aparte (es identificador, no variable de
+# agrupamiento) y la removemos de la matriz que entra a los algoritmos.
+municipios <- read_csv("datos.csv")
+```
+
+```{r}
+claves_municipio <- municipios %>% select(clave_municipio)
+```
+
+```{r}
+municipios_vars <- municipios %>%
+  select(-clave_municipio)
+```
+
+```{r}
+# NAs por columna
+summary(municipios_vars)
+# ingreso_promedio_mxn: ~20 NAs
+```
+
+## 2. Normalización (paso OBLIGATORIO) con una receta
+
+```{r}
+# Usamos una receta solo para preprocesar (no hay modelo supervisado aquí):
+#  (1) step_impute_median: en clustering no podemos dejar NAs (romperían todas
+#      las distancias). Imputamos ingreso_promedio_mxn con la mediana.
+#  (2) step_normalize: z-score de todas las variables numéricas.
+# Nota sobre colinealidad: grado_marginacion_idx está muy correlacionado con
+# pct_pobreza; lo dejamos por simplicidad, pero hay que recordar que esa
+# dimensión queda algo sobre-ponderada en las distancias.
+receta_municipios <- recipe(~ ., data = municipios_vars) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_normalize(all_numeric_predictors())
+```
+
+```{r}
+# Preparamos y aplicamos la receta: obtenemos la matriz estandarizada que
+# alimentará a los tres algoritmos.
+municipios_norm <- receta_municipios %>%
+  prep() %>%
+  bake(new_data = NULL)
+```
+
+```{r}
+# Vistazo a los datos estandarizados (media ~0, desviación ~1)
+summary(municipios_norm)
+```
+
+## 3. ¿Cuántos clusters? Método del codo para orientar k
+
+```{r}
+# fviz_nbclust con el método "wss" (within sum of squares) grafica la suma de
+# distancias internas contra k. Buscamos el "codo": el punto donde agregar más
+# grupos ya no reduce mucho la dispersión interna. Esperamos ~4 perfiles.
+set.seed(2020)
+grafico_codo <- fviz_nbclust(municipios_norm, kmeans, method = "wss",
+                             k.max = 10)
+grafico_codo
+```
+
+```{r}
+# A partir del codo (y del contexto: ~4 perfiles latentes de municipios)
+# fijamos k = 4 para k-means y para el corte del jerárquico.
+k_grupos <- 4
+```
+
+## 4. MÉTODO 1: k-means
+
+```{r}
+# nstart = 25: k-means depende del azar (centroides iniciales); con 25
+# arranques nos quedamos con la mejor solución. centers = k_grupos.
+set.seed(2020)
+modelo_kmeans <- kmeans(municipios_norm, centers = k_grupos, nstart = 25)
+```
+
+```{r}
+# Tamaño de cada cluster
+cluster_kmeans <- modelo_kmeans$cluster
+table(cluster_kmeans)
+```
+
+```{r}
+# Visualización en el plano de las dos primeras componentes principales
+fviz_cluster(modelo_kmeans, data = municipios_norm,
+             geom = "point",
+             main = "k-means (k = 4)")
+```
+
+## 5. MÉTODO 2: jerárquico aglomerativo (hclust + cutree)
+
+```{r}
+# Primero la matriz de distancias euclidianas entre municipios estandarizados.
+distancias <- dist(municipios_norm, method = "euclidean")
+```
+
+```{r}
+# hclust con enlace de Ward (ward.D2): minimiza la varianza intra-grupo al
+# fusionar; produce grupos compactos.
+modelo_hclust <- hclust(distancias, method = "ward.D2")
+```
+
+```{r}
+# El dendrograma muestra el orden de fusiones; la línea roja marca el corte.
+fviz_dend(modelo_hclust, k = k_grupos,
+          rect = TRUE, show_labels = FALSE,
+          main = "Dendrograma (Ward) — corte en k = 4")
+```
+
+```{r}
+# cutree corta el árbol para obtener exactamente k_grupos clusters.
+cluster_hclust <- cutree(modelo_hclust, k = k_grupos)
+table(cluster_hclust)
+```
+
+## 6. MÉTODO 3: DBSCAN (agrupamiento por densidad)
+
+```{r}
+# ¿Cómo elegir eps? Regla práctica: graficar la distancia al k-ésimo vecino
+# más cercano (kNNdistplot) ordenada de menor a mayor. El "codo" de esa curva
+# (donde la distancia se dispara) es un buen valor de eps: separa los puntos
+# que tienen vecinos cercanos (densos) de los aislados (ruido). Usamos k =
+# minPts. Regla común para minPts: aproximadamente el número de dimensiones + 1
+# o un poco más; con 9 variables tomamos minPts = 5 como punto de partida
+# razonable para este tamaño de datos.
+min_pts <- 5
+```
+
+```{r}
+# Convertimos a matriz (dbscan trabaja sobre matriz numérica).
+matriz_norm <- as.matrix(municipios_norm)
+```
+
+```{r}
+# Gráfico de distancias al k-ésimo vecino para localizar el codo (eps).
+# La curva sube despacio y luego se dispara: ese quiebre (cerca de 1.0 en
+# estos datos estandarizados) es nuestro eps.
+kNNdistplot(matriz_norm, k = min_pts)
+abline(h = 1.0, lty = 2, col = "red")  # eps leído del codo de la curva
+```
+
+```{r}
+# Fijamos eps en la zona del codo observada en el gráfico anterior.
+eps_valor <- 1.0
+```
+
+```{r}
+set.seed(2020)
+modelo_dbscan <- dbscan(matriz_norm, eps = eps_valor, minPts = min_pts)
+```
+
+```{r}
+# En DBSCAN el cluster 0 es el RUIDO (outliers). El número de clusters reales
+# es el número de etiquetas distintas de 0.
+cluster_dbscan <- modelo_dbscan$cluster
+table(cluster_dbscan)
+```
+
+```{r}
+# Conteo explícito de grupos y de puntos de ruido
+num_clusters_dbscan <- length(unique(cluster_dbscan[cluster_dbscan != 0]))
+num_ruido_dbscan <- sum(cluster_dbscan == 0)
+```
+
+```{r}
+# Número de clusters (sin contar ruido) y puntos de ruido detectados por DBSCAN
+print(num_clusters_dbscan)
+print(num_ruido_dbscan)
+```
+
+## 7. Comparación de las asignaciones entre métodos
+
+```{r}
+# Número de clusters que produjo cada método
+resumen_metodos <- tibble(
+    metodo = c("k-means", "jerarquico", "dbscan"),
+    num_clusters = c(length(unique(cluster_kmeans)),
+                     length(unique(cluster_hclust)),
+                     num_clusters_dbscan),
+    puntos_ruido = c(0, 0, num_ruido_dbscan)
+  )
+```
+
+```{r}
+# Resumen: clusters y ruido por método
+resumen_metodos
+```
+
+```{r}
+# Tabla cruzada k-means vs jerárquico: ¿coinciden las asignaciones?
+# (Las ETIQUETAS de los grupos son arbitrarias; lo que importa es si los
+# mismos municipios caen juntos. Una tabla "casi diagonal" indica acuerdo.)
+table(kmeans = cluster_kmeans, jerarquico = cluster_hclust)
+```
+
+```{r}
+# Tabla cruzada k-means vs DBSCAN (recordando que 0 en DBSCAN es ruido)
+table(kmeans = cluster_kmeans, dbscan = cluster_dbscan)
+```
+
+## 8. Calidad de los grupos: ancho de silueta (k-means y jerárquico)
+
+```{r}
+# La silueta mide, para cada punto, qué tan bien está dentro de su grupo
+# comparado con el grupo vecino más cercano (de -1 a 1; más alto es mejor).
+# La calculamos para k-means y jerárquico (DBSCAN tiene ruido, que complica
+# la silueta clásica, por eso lo dejamos fuera de esta comparación).
+silueta_kmeans <- silhouette(cluster_kmeans, distancias)
+silueta_hclust <- silhouette(cluster_hclust, distancias)
+```
+
+```{r}
+# Ancho de silueta promedio por método (más alto = grupos mejor separados)
+comparacion_silueta <- tibble(
+    metodo = c("k-means", "jerarquico"),
+    silueta_promedio = c(mean(silueta_kmeans[, "sil_width"]),
+                         mean(silueta_hclust[, "sil_width"]))
+  )
+```
+
+```{r}
+comparacion_silueta
+```
+
+## 9. Perfiles: ¿cómo se ve cada cluster de k-means en las variables ORIGINALES?
+
+```{r}
+# Para interpretar los grupos volvemos a la escala original (no estandarizada)
+# y promediamos las variables por cluster. Así "le ponemos nombre" a cada
+# perfil (p. ej. "municipios urbanos con baja marginación").
+perfiles_kmeans <- municipios_vars %>%
+  mutate(cluster = factor(cluster_kmeans)) %>%
+  group_by(cluster) %>%
+  summarise(across(everything(), ~ round(mean(.x, na.rm = TRUE), 1)),
+            .groups = "drop")
+```
+
+```{r}
+# Perfil promedio de cada cluster de k-means (variables originales)
+perfiles_kmeans
+print(perfiles_kmeans)
+```
+
+## 10. ¿Cuándo conviene cada método?
+
+- k-means: rápido y simple cuando esperamos grupos compactos, de tamaño parecido, y tenemos una idea de k. Mala opción con outliers o grupos de forma irregular.
+- Jerárquico: no exige k de antemano; el dendrograma da una visión completa de la estructura a distintos niveles. Más costoso en datos grandes (calcula toda la matriz de distancias), pero excelente para EXPLORAR y decidir k.
+- DBSCAN: ideal cuando hay ruido/outliers y grupos de forma arbitraria, y cuando NO queremos fijar k. Su reto es elegir eps y minPts; es muy sensible a eps (de ahí el kNNdistplot). Si casi todo queda como ruido o como un solo grupo, hay que ajustar eps.
+
+Conclusión práctica para municipios: k-means y jerárquico suelen coincidir en ~4 perfiles socioeconómicos coherentes (de baja a alta marginación), y DBSCAN sirve como contraste para detectar municipios atípicos (muy densos o con perfiles extremos) que los otros dos fuerzan dentro de algún grupo.

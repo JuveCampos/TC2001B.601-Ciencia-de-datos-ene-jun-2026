@@ -1,0 +1,226 @@
+
+options(scipen = 999)
+
+# =============================================================================
+# Sesión 17 — ML + IA
+# Solución de referencia: REGRESIÓN
+# Problema: predecir el costo médico anual (en pesos) de un paciente.
+# Modelo: KNN de regresión con el número de vecinos (k) tuneado por CV.
+# Punto clave: la variable objetivo está SESGADA a la derecha; modelamos
+#              su logaritmo y luego exponenciamos para reportar en pesos.
+# =============================================================================
+
+# Librerías (todas al inicio) ------------------------------------------------
+library(tidyverse)
+library(tidymodels)
+library(kknn)            # motor para el modelo KNN
+
+tidymodels::tidymodels_prefer()
+
+# -----------------------------------------------------------------------------
+# 1. Cargar los datos
+# -----------------------------------------------------------------------------
+# Removemos id_paciente: es un identificador, no un predictor; dejarlo podría
+# inducir fuga de información (data leakage). La objetivo (costo_anual_mxn)
+# se queda numérica: es un problema de regresión.
+costos <- read_csv("datos.csv") %>%
+  select(-id_paciente)
+
+# -----------------------------------------------------------------------------
+# 2. Explorar la variable objetivo: ¿está sesgada?
+# -----------------------------------------------------------------------------
+# Comparamos media vs mediana: si la media es bastante mayor que la mediana,
+# hay sesgo a la derecha (cola larga hacia costos altos). Eso es típico de
+# variables monetarias y de conteo de uso de servicios.
+costos %>%
+  summarise(media = mean(costo_anual_mxn),
+            mediana = median(costo_anual_mxn),
+            minimo = min(costo_anual_mxn),
+            maximo = max(costo_anual_mxn))
+
+# Histograma del costo en escala original: se ve la cola larga a la derecha.
+costos %>%
+  ggplot(aes(x = costo_anual_mxn)) +
+  geom_histogram(bins = 40, fill = "#1e4c7d", color = "white") +
+  labs(title = "Distribución del costo anual (escala original)",
+       x = "Costo anual (MXN)", y = "Frecuencia") +
+  theme_minimal()
+
+# -----------------------------------------------------------------------------
+# 3. ¿Por qué modelar log(costo_anual_mxn) y no el costo directo?
+# -----------------------------------------------------------------------------
+# La objetivo está sesgada a la derecha (distribución tipo log-normal).
+# Modelar el logaritmo del costo conviene porque:
+#   (1) ESTABILIZA LA VARIANZA: la dispersión del costo crece con su nivel
+#       (heterocedasticidad); el log la comprime y la vuelve más homogénea.
+#   (2) LINEALIZA RELACIONES: relaciones multiplicativas entre predictores y
+#       costo se vuelven aproximadamente lineales en escala log, lo que ayuda
+#       al modelo a ajustar mejor.
+#   (3) MEJORA EL AJUSTE: reduce el peso desproporcionado de los valores
+#       extremos, que de otro modo dominan el error cuadrático.
+# Aplicamos la transformación DENTRO de la receta con step_log() sobre la
+# objetivo. CONSECUENCIA: las métricas (RMSE, MAE) quedarán en escala
+# logarítmica; para interpretarlas en pesos hay que EXPONENCIAR de vuelta
+# (exp()) tanto la predicción como el valor real. Lo hacemos al final.
+
+# Histograma del log del costo: la distribución se ve mucho más simétrica.
+costos %>%
+  ggplot(aes(x = log(costo_anual_mxn))) +
+  geom_histogram(bins = 40, fill = "#2d7a7a", color = "white") +
+  labs(title = "Distribución de log(costo anual): más simétrica",
+       x = "log(Costo anual)", y = "Frecuencia") +
+  theme_minimal()
+
+# -----------------------------------------------------------------------------
+# 4. Revisar valores faltantes (NAs)
+# -----------------------------------------------------------------------------
+# Esperamos ~42 NAs en imc (~4%). Los imputaremos en la receta.
+summary(costos)
+
+# -----------------------------------------------------------------------------
+# 5. Partición entrenamiento / prueba
+# -----------------------------------------------------------------------------
+# En regresión podemos estratificar por la propia objetivo para que la
+# distribución del costo quede parecida en ambas particiones.
+set.seed(123)
+costos_split <- initial_split(data = costos, prop = 0.75,
+                              strata = costo_anual_mxn)
+
+costos_entrenamiento <- costos_split %>% training()
+costos_prueba        <- costos_split %>% testing()
+
+# -----------------------------------------------------------------------------
+# 6. Receta de preprocesamiento (feature engineering)
+# -----------------------------------------------------------------------------
+# El orden importa:
+#   (1) step_log() sobre la objetivo: la transformamos PRIMERO. skip = FALSE
+#       (valor por defecto) asegura que se aplique también al evaluar.
+#   (2) step_impute_median(): imputa los NAs de imc antes de pasos que no
+#       toleran NAs.
+#   (3) step_unknown(): NAs categóricos -> nivel "unknown" antes de dummies.
+#   (4) step_nzv(): quita predictores de varianza casi nula.
+#   (5) step_normalize(): z-score sobre numéricos. INDISPENSABLE para KNN,
+#       que se basa en distancias y es sensible a la escala.
+#   (6) step_dummy(): codifica categóricas como variables binarias.
+#   (7) step_zv(): elimina columnas dummy constantes.
+receta_costos <- recipe(costo_anual_mxn ~ ., data = costos_entrenamiento) %>%
+  step_log(costo_anual_mxn, base = exp(1)) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_unknown(all_nominal_predictors()) %>%
+  step_nzv(all_predictors()) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+
+# -----------------------------------------------------------------------------
+# 7. Especificación del modelo KNN de regresión con k tuneable
+# -----------------------------------------------------------------------------
+# Mismo modelo KNN, pero en modo "regression": en vez de votar una clase,
+# promedia el valor (aquí, el log del costo) de los k vecinos más cercanos.
+modelo_knn <- nearest_neighbor(neighbors = tune()) %>%
+  set_engine("kknn") %>%
+  set_mode("regression")
+
+# -----------------------------------------------------------------------------
+# 8. Workflow: receta + modelo
+# -----------------------------------------------------------------------------
+workflow_knn <- workflow() %>%
+  add_recipe(receta_costos) %>%
+  add_model(modelo_knn)
+
+# -----------------------------------------------------------------------------
+# 9. Validación cruzada y tuning del hiperparámetro k
+# -----------------------------------------------------------------------------
+# 5 folds sobre el entrenamiento. Nunca usamos la prueba para elegir k.
+set.seed(123)
+folds_cv <- vfold_cv(data = costos_entrenamiento, v = 5,
+                     strata = costo_anual_mxn)
+
+# Grilla de valores candidatos de k.
+grilla_k <- tibble(neighbors = c(3, 5, 7, 11, 15, 21, 31, 51, 75, 101))
+
+# Métricas de regresión. rmse es la principal; añadimos rsq y mae.
+# OJO: estas métricas están en escala LOGARÍTMICA, porque el modelo predice
+# el log del costo. Sirven para elegir k; el error en pesos lo calculamos
+# después exponenciando.
+metricas_tuning <- metric_set(rmse, rsq, mae)
+
+resultados_tuning <- workflow_knn %>%
+  tune_grid(resamples = folds_cv,
+            grid = grilla_k,
+            metrics = metricas_tuning)
+
+# Métricas promediadas por valor de k (en escala log).
+collect_metrics(resultados_tuning)
+
+# Visualizamos el RMSE (escala log) por k.
+resultados_tuning %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  ggplot(aes(x = neighbors, y = mean)) +
+  geom_line() +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean - std_err, ymax = mean + std_err),
+                width = 0.5) +
+  labs(title = "RMSE (escala log) por valor de k (CV 5-fold)",
+       x = "k (vecinos)",
+       y = "RMSE promedio (log)") +
+  theme_minimal()
+
+# -----------------------------------------------------------------------------
+# 10. Elegir el mejor k y finalizar el workflow
+# -----------------------------------------------------------------------------
+# En regresión queremos el menor RMSE, así que select_best por rmse.
+mejor_k <- resultados_tuning %>% select_best(metric = "rmse")
+mejor_k
+
+workflow_knn_final <- workflow_knn %>%
+  finalize_workflow(mejor_k)
+
+# -----------------------------------------------------------------------------
+# 11. last_fit(): reentrena con todo el entrenamiento y evalúa en la prueba
+# -----------------------------------------------------------------------------
+set.seed(123)
+ajuste_final <- workflow_knn_final %>%
+  last_fit(split = costos_split,
+           metrics = metric_set(rmse, rsq, mae))
+
+# Métricas finales sobre la prueba EN ESCALA LOGARÍTMICA.
+collect_metrics(ajuste_final)
+
+# -----------------------------------------------------------------------------
+# 12. Reportar el error EN PESOS (exponenciando de vuelta)
+# -----------------------------------------------------------------------------
+# Las predicciones (.pred) y la objetivo de la receta están en log. Para
+# interpretar el error en MXN, exponenciamos ambos y recalculamos las
+# métricas en la escala original (pesos).
+predicciones_finales <- collect_predictions(ajuste_final) %>%
+  mutate(pred_pesos = exp(.pred),
+         real_pesos = exp(costo_anual_mxn))
+
+# Métricas en pesos: ahora el RMSE y el MAE se leen directamente en MXN.
+metricas_pesos <- metric_set(rmse, rsq, mae)
+metricas_pesos(predicciones_finales, truth = real_pesos,
+               estimate = pred_pesos)
+
+# -----------------------------------------------------------------------------
+# 13. Gráfico de valores reales vs. predichos (en pesos)
+# -----------------------------------------------------------------------------
+# Una buena predicción cae cerca de la recta de 45 grados.
+predicciones_finales %>%
+  ggplot(aes(x = real_pesos, y = pred_pesos)) +
+  geom_point(alpha = 0.4, color = "#1e4c7d") +
+  geom_abline(slope = 1, intercept = 0, color = "#d62828",
+              linetype = "dashed") +
+  labs(title = "Costo real vs. predicho (escala de pesos)",
+       x = "Costo real (MXN)", y = "Costo predicho (MXN)") +
+  theme_minimal()
+
+# -----------------------------------------------------------------------------
+# Interpretación:
+# - El RSQ indica qué proporción de la variación del (log del) costo explica
+#   el modelo; cerca de 1 es mejor.
+# - El RMSE en escala log sirve para elegir k; el RMSE en pesos es el que se
+#   reporta al área de negocio porque está en la unidad que entienden (MXN).
+# - El k elegido por CV equilibra sesgo y varianza.
+# =============================================================================

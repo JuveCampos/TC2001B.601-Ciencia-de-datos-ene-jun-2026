@@ -1,0 +1,314 @@
+
+options(scipen = 999)
+
+# =============================================================================
+# SESIÓN 20 — OTROS MODELOS Y ENSAMBLES
+# Regresión: costo médico anual (dataset reutilizado de la Sesión 17)
+# -----------------------------------------------------------------------------
+# Comparamos tres familias de modelos de regresión y luego un ensamble:
+#
+#   1) Regresión lineal regularizada (glmnet): mínimos cuadrados con una
+#      penalización que encoge los coeficientes.
+#        - L1 (lasso, mixture = 1): puede llevar coeficientes a CERO
+#          (selección automática de variables).
+#        - L2 (ridge, mixture = 0): encoge sin eliminar; útil con colinealidad.
+#        - Elastic net (0 < mixture < 1): mezcla de ambas.
+#      Tunearemos penalty (lambda) y mixture, de modo que el propio tuning
+#      decida si conviene lasso, ridge o un punto intermedio.
+#
+#   2) Random forest (ranger): ENSAMBLE por BAGGING. Promedia muchos árboles
+#      de regresión entrenados sobre muestras bootstrap. Reduce la varianza y
+#      captura relaciones no lineales e interacciones sin que las
+#      especifiquemos a mano.
+#
+#   3) XGBoost (xgboost): ENSAMBLE por BOOSTING. Árboles en secuencia, cada
+#      uno corrigiendo los errores del conjunto previo. Suele ser el más
+#      potente, a costa de más hiperparámetros.
+#
+# Y combinamos los tres en un ENSAMBLE POR STACKING (paquete stacks).
+#
+# DETALLE IMPORTANTE — la objetivo está SESGADA:
+#   costo_anual_mxn tiene una cola larga a la derecha (media >> mediana). Si
+#   modelamos el costo en su escala original, los pocos pacientes carísimos
+#   dominan el error cuadrático y violan los supuestos de la regresión lineal.
+#   La solución estándar es modelar log(costo_anual_mxn): la transformación
+#   logarítmica comprime la cola y vuelve la relación más lineal y con
+#   varianza más estable (homocedástica).
+#
+#   ¿Por qué transformamos la objetivo ANTES de la receta y no con
+#   step_log(all_outcomes()) DENTRO de la receta? Porque si la receta
+#   transforma la objetivo, el workflow espera la columna original
+#   (costo_anual_mxn) al momento de predecir y se complica evaluar en escala
+#   log. Transformar de antemano (creando costo_log = log(costo_anual_mxn) y
+#   modelando esa variable) es más simple y transparente: predict() devuelve
+#   directamente predicciones en escala log. Como las tres familias comparten
+#   la misma objetivo en log, rmse y rsq son directamente comparables.
+# =============================================================================
+
+# Librerías (todas al inicio)
+library(tidyverse)
+library(tidymodels)
+library(stacks)
+library(ranger)
+library(xgboost)
+library(glmnet)
+
+tidymodels_prefer()
+
+# -----------------------------------------------------------------------------
+# 1. Cargar los datos
+# -----------------------------------------------------------------------------
+# Removemos el identificador del paciente: no es un predictor.
+costos <- read_csv("datos.csv") %>%
+  select(-id_paciente)
+
+# NAs por columna
+summary(costos)
+# imc: ~42 NAs
+
+# Confirmamos el sesgo de la objetivo: media muy por encima de la mediana
+costos %>%
+  summarise(media = mean(costo_anual_mxn),
+            mediana = median(costo_anual_mxn),
+            maximo = max(costo_anual_mxn))
+
+# Transformamos la objetivo a log y eliminamos la versión en pesos: a partir
+# de aquí modelamos costo_log. Todos los modelos y el stack usarán esta misma
+# objetivo, así que predict() devolverá predicciones en escala log.
+costos <- costos %>%
+  mutate(costo_log = log(costo_anual_mxn)) %>%
+  select(-costo_anual_mxn)
+
+# -----------------------------------------------------------------------------
+# 2. Split entrenamiento / prueba
+# -----------------------------------------------------------------------------
+# Estratificamos por la objetivo (ya en log) para que ambas particiones
+# cubran bien todo el rango de costos (incluida la cola alta).
+set.seed(2020)
+costos_split <- initial_split(costos, prop = 0.75, strata = costo_log)
+costos_entrenamiento <- costos_split %>% training()
+costos_prueba <- costos_split %>% testing()
+
+# -----------------------------------------------------------------------------
+# 3. Receta de preprocesamiento (compartida por los tres modelos)
+# -----------------------------------------------------------------------------
+# La objetivo (costo_log) ya viene transformada a log, así que la receta solo
+# se ocupa de los predictores. Pasos:
+#  (1) step_impute_median: imputa los NAs de imc con la mediana.
+#  (2) step_normalize: estandariza numéricos. Necesario para glmnet (la
+#      penalización depende de la escala de los predictores).
+#  (3) step_dummy: variables indicadoras para sexo, fumador y region.
+#  (4) step_zv: quita predictores de varianza cero.
+receta_costos <- recipe(costo_log ~ ., data = costos_entrenamiento) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+
+# -----------------------------------------------------------------------------
+# 4. Especificaciones de los tres modelos (hiperparámetros a tunear)
+# -----------------------------------------------------------------------------
+
+# 4.1 Regresión lineal regularizada (glmnet): lasso / ridge / elastic net
+modelo_glmnet <- linear_reg(
+    penalty = tune(),
+    mixture = tune()
+  ) %>%
+  set_engine("glmnet")
+
+# 4.2 Random forest (ranger) para regresión
+modelo_rf <- rand_forest(
+    mtry = tune(),
+    min_n = tune(),
+    trees = 500
+  ) %>%
+  set_engine("ranger", importance = "impurity") %>%
+  set_mode("regression")
+
+# 4.3 XGBoost (boosting) para regresión
+modelo_xgb <- boost_tree(
+    trees = 500,
+    tree_depth = tune(),
+    learn_rate = tune(),
+    loss_reduction = tune()
+  ) %>%
+  set_engine("xgboost") %>%
+  set_mode("regression")
+
+# -----------------------------------------------------------------------------
+# 5. Workflows: receta común + cada modelo
+# -----------------------------------------------------------------------------
+workflow_glmnet <- workflow() %>%
+  add_recipe(receta_costos) %>%
+  add_model(modelo_glmnet)
+
+workflow_rf <- workflow() %>%
+  add_recipe(receta_costos) %>%
+  add_model(modelo_rf)
+
+workflow_xgb <- workflow() %>%
+  add_recipe(receta_costos) %>%
+  add_model(modelo_xgb)
+
+# -----------------------------------------------------------------------------
+# 6. Validación cruzada y control para stacking
+# -----------------------------------------------------------------------------
+set.seed(2020)
+folds_cv <- vfold_cv(costos_entrenamiento, v = 5, strata = costo_log)
+
+# Métricas de regresión: rmse (error, menor es mejor) y rsq (R^2, mayor mejor).
+metricas_regresion <- metric_set(rmse, rsq)
+
+# control_stack_grid guarda predicciones out-of-fold y workflows para stacks.
+control_stack <- control_stack_grid()
+
+# -----------------------------------------------------------------------------
+# 7. Tuning de cada modelo (grillas pequeñas)
+# -----------------------------------------------------------------------------
+set.seed(2020)
+tuning_glmnet <- workflow_glmnet %>%
+  tune_grid(resamples = folds_cv,
+            grid = 6,
+            metrics = metricas_regresion,
+            control = control_stack)
+
+set.seed(2020)
+tuning_rf <- workflow_rf %>%
+  tune_grid(resamples = folds_cv,
+            grid = 6,
+            metrics = metricas_regresion,
+            control = control_stack)
+
+set.seed(2020)
+tuning_xgb <- workflow_xgb %>%
+  tune_grid(resamples = folds_cv,
+            grid = 6,
+            metrics = metricas_regresion,
+            control = control_stack)
+
+# -----------------------------------------------------------------------------
+# 8. Mejor candidato de cada modelo según rmse (validación cruzada)
+# -----------------------------------------------------------------------------
+mejor_glmnet <- tuning_glmnet %>% select_best(metric = "rmse")
+mejor_rf <- tuning_rf %>% select_best(metric = "rmse")
+mejor_xgb <- tuning_xgb %>% select_best(metric = "rmse")
+
+# RMSE promedio (en escala log) del mejor candidato de cada familia en CV
+rmse_cv_glmnet <- tuning_glmnet %>%
+  show_best(metric = "rmse", n = 1) %>%
+  mutate(modelo = "glmnet")
+rmse_cv_rf <- tuning_rf %>%
+  show_best(metric = "rmse", n = 1) %>%
+  mutate(modelo = "random_forest")
+rmse_cv_xgb <- tuning_xgb %>%
+  show_best(metric = "rmse", n = 1) %>%
+  mutate(modelo = "xgboost")
+
+rmse_cv_comparacion <- bind_rows(rmse_cv_glmnet, rmse_cv_rf, rmse_cv_xgb) %>%
+  select(modelo, .metric, mean, std_err)
+
+# RMSE promedio (escala log) en validación cruzada por modelo
+rmse_cv_comparacion
+
+# -----------------------------------------------------------------------------
+# 9. Finalizar y reentrenar cada modelo sobre TODO el entrenamiento
+# -----------------------------------------------------------------------------
+fit_glmnet <- workflow_glmnet %>%
+  finalize_workflow(mejor_glmnet) %>%
+  fit(data = costos_entrenamiento)
+
+fit_rf <- workflow_rf %>%
+  finalize_workflow(mejor_rf) %>%
+  fit(data = costos_entrenamiento)
+
+fit_xgb <- workflow_xgb %>%
+  finalize_workflow(mejor_xgb) %>%
+  fit(data = costos_entrenamiento)
+
+# -----------------------------------------------------------------------------
+# 10. Evaluación de cada modelo individual en la base de PRUEBA
+# -----------------------------------------------------------------------------
+# La objetivo es costo_log, así que predict() devuelve predicciones en escala
+# log y comparamos contra costo_log directamente. Iteramos con lapply()
+# (solo 3 modelos; no necesitamos purrr).
+modelos_fit <- list(glmnet = fit_glmnet,
+                    random_forest = fit_rf,
+                    xgboost = fit_xgb)
+
+metricas_prueba_lista <- lapply(modelos_fit, function(fit_modelo) {
+  pred_log <- predict(fit_modelo, new_data = costos_prueba)
+  costos_prueba %>%
+    select(costo_log) %>%
+    bind_cols(pred_log) %>%
+    metricas_regresion(truth = costo_log, estimate = .pred)
+})
+
+metricas_prueba_individuales <- bind_rows(metricas_prueba_lista,
+                                          .id = "modelo") %>%
+  select(modelo, .metric, .estimate) %>%
+  pivot_wider(names_from = .metric, values_from = .estimate) %>%
+  arrange(rmse)
+
+# Métricas en la base de PRUEBA (escala log) de cada modelo individual
+metricas_prueba_individuales
+
+# -----------------------------------------------------------------------------
+# 11. ENSAMBLE POR STACKING (paquete stacks)
+# -----------------------------------------------------------------------------
+# El stacking entrena un META-MODELO que aprende a combinar las predicciones
+# de glmnet, random forest y XGBoost. Usa las predicciones out-of-fold que
+# guardamos con control_stack_grid y decide qué peso darle a cada modelo base.
+# Flujo: stacks() -> add_candidates() -> blend_predictions() -> fit_members()
+
+set.seed(2020)
+stack_costos <- stacks() %>%
+  add_candidates(tuning_glmnet) %>%
+  add_candidates(tuning_rf) %>%
+  add_candidates(tuning_xgb)
+
+set.seed(2020)
+stack_costos_blend <- stack_costos %>%
+  blend_predictions()
+
+stack_costos_fit <- stack_costos_blend %>%
+  fit_members()
+
+# Pesos del ensamble: qué modelos quedaron y con qué peso
+stack_costos_fit
+
+# -----------------------------------------------------------------------------
+# 12. Desempeño del STACK en la base de PRUEBA
+# -----------------------------------------------------------------------------
+# El stack también predice en escala log (la objetivo es costo_log).
+pred_stack_log <- predict(stack_costos_fit, new_data = costos_prueba)
+
+metricas_stack <- costos_prueba %>%
+  select(costo_log) %>%
+  bind_cols(pred_stack_log) %>%
+  metricas_regresion(truth = costo_log, estimate = .pred) %>%
+  select(.metric, .estimate) %>%
+  pivot_wider(names_from = .metric, values_from = .estimate) %>%
+  mutate(modelo = "STACK (ensamble)")
+
+# -----------------------------------------------------------------------------
+# 13. Comparación FINAL: modelos individuales vs ensamble (stacking)
+# -----------------------------------------------------------------------------
+comparacion_final <- metricas_prueba_individuales %>%
+  bind_rows(metricas_stack) %>%
+  select(modelo, rmse, rsq) %>%
+  arrange(rmse)
+
+# Tabla final: rmse y rsq de prueba (escala log) de cada modelo y del ensamble
+comparacion_final
+print(comparacion_final)
+
+# Interpretación:
+# - Menor rmse y mayor rsq = mejor. Entre los modelos individuales suele
+#   ganar el random forest o el XGBoost frente a la regularizada, porque la
+#   relación costo-perfil tiene no linealidades (p. ej. el efecto de fumar).
+# - El STACK normalmente iguala o mejora al mejor individual al combinar la
+#   robustez del ensamble con la estabilidad del modelo lineal.
+# - Trabajamos en escala log por el sesgo de la objetivo: si quisiéramos
+#   reportar pesos en MXN, aplicaríamos exp() a las predicciones (recordando
+#   el sesgo de retransformación), pero para COMPARAR modelos la escala log
+#   es la correcta y suficiente.

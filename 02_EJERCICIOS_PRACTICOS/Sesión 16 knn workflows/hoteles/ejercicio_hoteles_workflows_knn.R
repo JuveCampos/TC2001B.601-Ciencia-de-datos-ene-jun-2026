@@ -406,6 +406,7 @@ resultados_tuning <- workflow_knn_tune %>%
   tune_grid(resamples = folds_cv,
             grid = grilla_k,
             metrics = metricas_tuning)
+# ?tune_grid
 
 # 7. Inspeccionar los resultados
 collect_metrics(resultados_tuning)
