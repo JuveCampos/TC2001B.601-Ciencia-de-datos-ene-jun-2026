@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Metadatos — Reservas de Hotel</title>
+<style>
+  body {
+    font-family: 'Ubuntu', 'Helvetica Neue', Arial, sans-serif;
+    background-color: #FFFFFF;
+    color: #000000;
+    margin: 0;
+    padding: 0 0 40px 0;
+    line-height: 1.55;
+  }
+  .banda-titulo {
+    background-color: #1E4C7D;
+    color: #FFFFFF;
+    padding: 30px 50px;
+  }
+  .banda-titulo h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .banda-titulo p {
+    margin: 6px 0 0 0;
+    font-size: 14px;
+    font-style: italic;
+    color: #DDE5ED;
+  }
+  .contenido {
+    padding: 30px 50px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  h2 {
+    color: #1E4C7D;
+    border-bottom: 2px solid #DDE5ED;
+    padding-bottom: 6px;
+    margin-top: 36px;
+    font-size: 20px;
+  }
+  .card {
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 14px 0;
+  }
+  .card-info {
+    background-color: #EAF2FA;
+    border-left: 5px solid #1E4C7D;
+  }
+  .card-positivo {
+    background-color: #D5F5E3;
+    border-left: 5px solid #1A7A3A;
+  }
+  .card-positivo h3 { color: #1A7A3A; }
+  .card-advertencia {
+    background-color: #FADBD8;
+    border-left: 5px solid #C0392B;
+  }
+  .card-advertencia h3 { color: #C0392B; }
+  .card h3 {
+    margin: 0 0 8px 0;
+    font-size: 15px;
+    color: #1E4C7D;
+  }
+  .highlight-final {
+    background-color: #F0FAF0;
+    border: 1px solid #1A7A3A;
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin-top: 24px;
+  }
+  .highlight-final p { margin: 4px 0; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0 20px 0;
+    font-size: 13.5px;
+  }
+  th {
+    background-color: #1E4C7D;
+    color: #FFFFFF;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #DDE5ED;
+    vertical-align: top;
+  }
+  tbody tr:nth-child(even) td {
+    background-color: #DDE5ED;
+  }
+  code {
+    background-color: #F0F0F0;
+    color: #1E4C7D;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+    font-family: 'Menlo', 'Consolas', monospace;
+  }
+  .meta {
+    color: #555555;
+    font-size: 13px;
+    font-style: italic;
+  }
+  .target-flag {
+    display: inline-block;
+    background-color: #C0392B;
+    color: #FFFFFF;
+    padding: 1px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    margin-left: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="banda-titulo">
+  <h1>Metadatos — Cancelación de reservas de hotel</h1>
+  <p>Dataset reservas_hotel.csv · 1500 observaciones · 19 variables · Curso de ML — CCM</p>
+</div>
+
+<div class="contenido">
+
+<h2>Contexto del caso</h2>
+<div class="card card-info">
+  <h3>Pregunta de negocio</h3>
+  <p>Una cadena hotelera quiere anticipar qué reservas tienen alta probabilidad
+  de ser <strong>canceladas</strong> antes del check-in, para gestionar mejor el
+  inventario de habitaciones, ofrecer incentivos a clientes en riesgo y operar
+  un programa de <em>overbooking</em> controlado.</p>
+  <p>Cada fila representa una reserva confirmada en el sistema de reservaciones
+  del hotel. La variable objetivo registra si la reserva fue finalmente
+  cancelada o si el huésped se presentó.</p>
+</div>
+
+<h2>Resumen general</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Atributo</th>
+      <th>Valor</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Número de observaciones</td><td>1 500 reservas</td></tr>
+    <tr><td>Número de variables</td><td>19 (1 identificador + 17 predictores + 1 objetivo)</td></tr>
+    <tr><td>Variable objetivo</td><td><code>cancelo</code> (binaria: <em>si</em> / <em>no</em>)</td></tr>
+    <tr><td>Prevalencia de la clase positiva</td><td>≈ 40 % cancelan</td></tr>
+    <tr><td>Variables con faltantes</td><td><code>precio_total_mxn</code>, <code>descuento_aplicado_pct</code>, <code>pais_origen</code></td></tr>
+    <tr><td>Tipo de problema</td><td>Clasificación binaria supervisada</td></tr>
+  </tbody>
+</table>
+
+<h2>Variables numéricas</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Variable</th>
+      <th>Descripción</th>
+      <th>Rango / Unidad</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>id_reserva</code></td>
+      <td>Identificador único de la reserva. No se usa como predictor.</td>
+      <td>1–1500</td>
+    </tr>
+    <tr>
+      <td><code>dias_anticipacion</code></td>
+      <td>Días entre la fecha de reserva y la fecha de check-in (<em>lead time</em>).</td>
+      <td>1 – ~300 días</td>
+    </tr>
+    <tr>
+      <td><code>num_noches</code></td>
+      <td>Total de noches reservadas.</td>
+      <td>1 – 14 noches</td>
+    </tr>
+    <tr>
+      <td><code>num_noches_finde</code></td>
+      <td>Cuántas de las noches caen en sábado o domingo.</td>
+      <td>0 – num_noches</td>
+    </tr>
+    <tr>
+      <td><code>num_adultos</code></td>
+      <td>Adultos incluidos en la reserva.</td>
+      <td>1 – 4</td>
+    </tr>
+    <tr>
+      <td><code>num_ninos</code></td>
+      <td>Menores incluidos en la reserva.</td>
+      <td>0 – 3</td>
+    </tr>
+    <tr>
+      <td><code>num_solicitudes_especiales</code></td>
+      <td>Solicitudes adicionales hechas por el huésped (cuna, cama extra, vista, piso alto, etc.).</td>
+      <td>0 – 5</td>
+    </tr>
+    <tr>
+      <td><code>num_estancias_previas</code></td>
+      <td>Veces que el huésped ya se ha hospedado en el hotel antes de esta reserva.</td>
+      <td>0 – ~10</td>
+    </tr>
+    <tr>
+      <td><code>precio_total_mxn</code></td>
+      <td>Precio total de la reserva en pesos mexicanos antes de descuentos. <em>Contiene faltantes (~4 %).</em></td>
+      <td>1 500 – 28 000 MXN</td>
+    </tr>
+    <tr>
+      <td><code>descuento_aplicado_pct</code></td>
+      <td>Porcentaje de descuento aplicado por promoción o tarifa especial. <em>Contiene faltantes (~5 %).</em></td>
+      <td>0 – 40 %</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Variables categóricas</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Variable</th>
+      <th>Descripción</th>
+      <th>Niveles</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>tipo_habitacion</code></td>
+      <td>Categoría de la habitación reservada.</td>
+      <td>estandar · junior · suite · ejecutiva</td>
+    </tr>
+    <tr>
+      <td><code>canal_reserva</code></td>
+      <td>Medio por el cual se realizó la reserva.</td>
+      <td>web_propio · ota · agencia · telefono</td>
+    </tr>
+    <tr>
+      <td><code>regimen</code></td>
+      <td>Plan de alimentación contratado.</td>
+      <td>solo_habitacion · desayuno · media_pension · todo_incluido</td>
+    </tr>
+    <tr>
+      <td><code>temporada</code></td>
+      <td>Temporada turística asignada a las fechas de la estancia.</td>
+      <td>alta · media · baja</td>
+    </tr>
+    <tr>
+      <td><code>forma_pago</code></td>
+      <td>Esquema de pago acordado en el momento de la reserva.</td>
+      <td>anticipado · deposito_50pct · en_hotel</td>
+    </tr>
+    <tr>
+      <td><code>pais_origen</code></td>
+      <td>Región de procedencia del huésped principal. <em>Contiene faltantes (~3 %).</em></td>
+      <td>mexico · eua_canada · europa · otro</td>
+    </tr>
+    <tr>
+      <td><code>cliente_recurrente</code></td>
+      <td>Indica si el huésped ya tenía al menos una estancia previa registrada.</td>
+      <td>si · no</td>
+    </tr>
+    <tr>
+      <td><code>tiene_promocion</code></td>
+      <td>Indica si la reserva tiene algún descuento aplicado.</td>
+      <td>si · no</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Variable objetivo</h2>
+<div class="card card-advertencia">
+  <h3>cancelo <span class="target-flag">target</span></h3>
+  <p>Variable binaria que indica si la reserva fue cancelada antes del check-in.</p>
+  <p><strong>Clase positiva:</strong> <code>"si"</code> (la reserva se canceló).
+  En el preprocesamiento se coloca como <strong>primer nivel</strong> del factor
+  para que <code>yardstick</code> calcule sensibilidad, especificidad, precision
+  y recall tomando "canceló" como evento de interés.</p>
+  <p><strong>Distribución aproximada:</strong> 40 % <em>si</em> · 60 % <em>no</em>.</p>
+</div>
+
+<h2>Relaciones esperadas (intuición de negocio)</h2>
+<div class="card card-positivo">
+  <h3>Predictores asociados a mayor probabilidad de cancelar</h3>
+  <ul>
+    <li>Reservas hechas con <strong>mucha anticipación</strong>.</li>
+    <li>Canal <strong>OTA</strong> (Booking, Expedia, etc.) versus reserva directa.</li>
+    <li>Reservas con <strong>descuento</strong> alto o promoción.</li>
+    <li>Habitaciones de gama alta (<em>suite</em>, <em>ejecutiva</em>).</li>
+    <li>Temporada <strong>baja</strong>.</li>
+  </ul>
+</div>
+<div class="card card-positivo">
+  <h3>Predictores asociados a menor probabilidad de cancelar</h3>
+  <ul>
+    <li>Pago <strong>anticipado</strong> o depósito del 50 %.</li>
+    <li>Mayor número de <strong>solicitudes especiales</strong> (huésped comprometido con la estancia).</li>
+    <li><strong>Cliente recurrente</strong> con historial de estancias previas.</li>
+    <li>Temporada <strong>alta</strong>.</li>
+  </ul>
+</div>
+
+<h2>Notas para el preprocesamiento</h2>
+<div class="card card-info">
+  <h3>Receta recomendada</h3>
+  <ol>
+    <li><code>step_impute_median()</code> para <code>precio_total_mxn</code> y <code>descuento_aplicado_pct</code>.</li>
+    <li><code>step_impute_mode()</code> para <code>pais_origen</code>.</li>
+    <li><code>step_nzv()</code> — descarta predictores con varianza casi nula.</li>
+    <li><code>step_corr(threshold = 0.85)</code> — detecta colinealidad
+    (atención: <code>num_noches</code> y <code>num_noches_finde</code> están correlacionados).</li>
+    <li><code>step_normalize()</code> — z-score sobre todas las numéricas.</li>
+    <li><code>step_dummy()</code> — codificación one-hot de las categóricas.</li>
+  </ol>
+  <p class="meta">El identificador <code>id_reserva</code> debe excluirse con
+  <code>update_role(id_reserva, new_role = "id")</code> antes de aplicar la receta.</p>
+</div>
+
+<div class="highlight-final">
+  <p><strong>En síntesis:</strong> el dataset está diseñado para practicar el
+  ciclo completo de tidymodels con un problema de clasificación binaria
+  realista, mezcla de variables numéricas y categóricas, faltantes
+  intencionales y una clase positiva (<em>canceló</em>) lo suficientemente
+  frecuente para que las métricas de sensibilidad y precisión sean
+  interpretables sin necesidad de técnicas de remuestreo.</p>
+</div>
+
+</div>
+
+</body>
+</html>
