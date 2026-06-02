@@ -1,0 +1,353 @@
+---
+title: "Ejercicio 1: patrones de apostadores en línea (PCA + clustering)"
+subtitle: "SESIÓN 19 — APRENDIZAJE NO SUPERVISADO"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+format:
+  html:
+    toc: true
+    toc-title: "Contenido"
+    toc-location: left
+    toc-depth: 2
+    number-sections: false
+    code-tools: true
+    code-copy: true
+    theme: cosmo
+    highlight-style: github
+    fig-width: 8
+    fig-height: 5
+    fig-align: center
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+## Idea central
+
+En el aprendizaje **NO supervisado** NO hay variable objetivo (no existe una
+"y" que predecir). Por eso aquí **no** partimos los datos en
+entrenamiento/prueba: no hay un acierto que medir. El objetivo es **descubrir
+estructura**.
+
+**Caso:** una plataforma de apuestas en línea quiere entender el
+comportamiento de sus 500 cuentas para diseñar mensajes de **juego
+responsable**. Nadie etiquetó a los jugadores. ¿Existen perfiles naturales de
+apostadores? ¿Cuántos hay y cuál concentra las señales de riesgo? *(Datos
+ficticios.)*
+
+Usaremos dos familias de técnicas, todo dentro del ecosistema **tidymodels**:
+
+- **PCA** (componentes principales): reduce las 12 variables a unos pocos ejes
+  que concentran la varianza; sirve para visualizar y ver qué variables "van
+  juntas". Lo hacemos con `recipes::step_pca()`.
+- **Clustering** (k-means y jerárquico): agrupa cuentas por cercanía. Lo
+  hacemos con `tidyclust`.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(tidyclust)
+tidymodels_prefer()
+```
+
+## 1. Carga y exploración
+
+```{r}
+apostadores <- read_csv("datos.csv")
+glimpse(apostadores)
+```
+
+`jugador_id` es un **identificador**, no un indicador de comportamiento: lo
+excluiremos del modelo (no tiene sentido medir distancias entre folios).
+Revisamos faltantes —los algoritmos de distancia y el PCA **no toleran NAs**—:
+
+```{r}
+colSums(is.na(apostadores))
+```
+
+**Colinealidad.** `deposito_mensual_mxn` se construye a partir de la apuesta
+promedio y del número de depósitos, así que esperamos correlación alta. No la
+eliminamos: el PCA la absorbe al proyectar sobre ejes ortogonales.
+
+```{r}
+apostadores %>%
+  select(where(is.numeric)) %>%
+  drop_na() %>%
+  cor() %>%
+  round(2) %>%
+  .[, c("apuesta_promedio_mxn", "num_depositos_mes", "deposito_mensual_mxn")]
+```
+
+> **¿Por qué normalizar (z-score) es indispensable?** Las variables viven en
+> escalas muy distintas: porcentajes (0–100), conteos (0–20) y pesos (cientos a
+> miles). Tanto el PCA (maximiza varianza) como el clustering (mide distancias)
+> son **sensibles a la escala**. Sin normalizar, los montos en pesos dominarían
+> todo y los grupos reflejarían las **unidades**, no el comportamiento. El
+> z-score deja cada variable con media 0 y desviación 1: todas pesan igual.
+
+## 2. Receta de preprocesamiento
+
+Una sola `recipe()` resume el preprocesamiento y la reutilizamos para PCA y
+clustering: marcamos el id, imputamos NAs con la mediana y normalizamos.
+
+```{r}
+receta <- recipe(~ ., data = apostadores) %>%
+  update_role(jugador_id, new_role = "id") %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_normalize(all_numeric_predictors())
+```
+
+`prep()` **aprende** las medianas y los parámetros de escala; `bake()` los
+**aplica**. Verificamos que cada indicador quedó con media ≈ 0 y desviación ≈ 1:
+
+```{r}
+datos_norm <- receta %>% prep() %>% bake(new_data = NULL)
+datos_norm %>%
+  select(where(is.numeric)) %>%
+  summarise(across(everything(), list(media = mean, desv = sd))) %>%
+  glimpse()
+```
+
+## 3. PCA — Análisis de componentes principales
+
+En tidymodels el PCA es **un paso más** de la receta: `step_pca()`.
+
+```{r}
+receta_pca <- recipe(~ ., data = apostadores) %>%
+  update_role(jugador_id, new_role = "id") %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_pca(all_numeric_predictors(), num_comp = 11, id = "pca")
+
+pca_prep <- prep(receta_pca)
+```
+
+### 3a. Varianza explicada (scree plot)
+
+`tidy(type = "variance")` da la varianza por componente. Buscamos el **codo**:
+a partir de qué componente añadir más aporta poco.
+
+```{r}
+varianza <- tidy(pca_prep, id = "pca", type = "variance") %>%
+  filter(terms %in% c("percent variance", "cumulative percent variance")) %>%
+  mutate(terms = recode(terms,
+                        "percent variance" = "individual",
+                        "cumulative percent variance" = "acumulada"))
+
+varianza %>%
+  filter(terms == "individual", component <= 11) %>%
+  ggplot(aes(component, value)) +
+  geom_col(fill = "#1e4c7d") +
+  geom_text(aes(label = paste0(round(value), "%")), vjust = -0.4, size = 3) +
+  scale_x_continuous(breaks = 1:11) +
+  labs(title = "Varianza explicada por componente (scree plot)",
+       x = "Componente principal", y = "% de varianza") +
+  theme_minimal(base_size = 12)
+```
+
+### 3b. Cargas (loadings)
+
+`tidy(type = "coef")` da el peso de cada variable en cada componente: leerlas
+nos dice **qué significa** cada eje. Barras grandes (en valor absoluto) definen
+el eje; el signo indica la dirección.
+
+```{r}
+cargas <- tidy(pca_prep, id = "pca", type = "coef") %>%
+  filter(component %in% c("PC1", "PC2"))
+
+cargas %>%
+  mutate(terms = fct_reorder(terms, value)) %>%
+  ggplot(aes(value, terms, fill = value > 0)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ component) +
+  scale_fill_manual(values = c(`TRUE` = "#1e4c7d", `FALSE` = "#d62828")) +
+  labs(title = "Cargas de las variables en PC1 y PC2",
+       x = "Peso (carga)", y = NULL) +
+  theme_minimal(base_size = 11)
+```
+
+### 3c. Proyección de las cuentas en PC1-PC2
+
+`bake()` sobre la receta con PCA devuelve las coordenadas (*scores*) de cada
+cuenta. (Las nombra `PC01, PC02, …`; renombramos las dos primeras.)
+
+```{r}
+scores <- bake(pca_prep, new_data = NULL) %>%
+  rename(PC1 = PC01, PC2 = PC02)
+
+scores %>%
+  ggplot(aes(PC1, PC2)) +
+  geom_point(alpha = 0.5, color = "#1e4c7d") +
+  labs(title = "Las 500 cuentas proyectadas en PC1-PC2",
+       subtitle = "Cada punto es un jugador; ya se intuyen agrupamientos") +
+  theme_minimal(base_size = 12)
+```
+
+## 4. ¿Cuántos grupos? Elección de k con `tune_cluster()`
+
+k-means necesita que fijemos *k* de antemano. Declaramos el modelo con
+`num_clusters = tune()` y dejamos que `tune_cluster()` pruebe varios valores,
+midiendo dos diagnósticos: `sse_within_total` (para el **codo**) y
+`silhouette_avg` (cuanto **más alta**, mejor).
+
+```{r}
+receta_clust <- recipe(~ ., data = apostadores) %>%
+  update_role(jugador_id, new_role = "id") %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_normalize(all_numeric_predictors())
+
+km_spec <- k_means(num_clusters = tune()) %>%
+  set_engine("stats", nstart = 25)   # 25 arranques: evita óptimos locales
+
+wf_km <- workflow() %>%
+  add_recipe(receta_clust) %>%
+  add_model(km_spec)
+
+metricas_clust <- cluster_metric_set(sse_within_total, silhouette_avg)
+
+rejilla_k <- tibble(num_clusters = 1:8)
+set.seed(123)
+folds <- vfold_cv(apostadores, v = 5)
+
+set.seed(123)
+afinado <- tune_cluster(wf_km, resamples = folds,
+                        grid = rejilla_k, metrics = metricas_clust)
+
+metricas_k <- collect_metrics(afinado)
+metricas_k
+```
+
+**Método del codo:**
+
+```{r}
+metricas_k %>%
+  filter(.metric == "sse_within_total") %>%
+  ggplot(aes(num_clusters, mean)) +
+  geom_line(color = "#1e4c7d") +
+  geom_point(size = 2, color = "#1e4c7d") +
+  scale_x_continuous(breaks = 1:8) +
+  labs(title = "Método del codo (inercia intra-grupo)",
+       x = "Número de grupos (k)", y = "WSS promedio") +
+  theme_minimal(base_size = 12)
+```
+
+**Método de la silueta** (no se define para k = 1):
+
+```{r}
+metricas_k %>%
+  filter(.metric == "silhouette_avg", num_clusters >= 2) %>%
+  ggplot(aes(num_clusters, mean)) +
+  geom_line(color = "#2d7a7a") +
+  geom_point(size = 2, color = "#2d7a7a") +
+  scale_x_continuous(breaks = 2:8) +
+  labs(title = "Método de la silueta (promedio por k)",
+       x = "Número de grupos (k)", y = "Silueta promedio") +
+  theme_minimal(base_size = 12)
+```
+
+> **Un caso realista donde los diagnósticos no coinciden.** La silueta es más
+> alta en k = 2 (la división más "limpia": intensos vs. ligeros). Pero el codo
+> sigue bajando de forma importante hasta k = 4 y luego se aplana: hay
+> estructura más fina. Los diagnósticos son **guías**, no veredictos. Como el
+> objetivo es accionable (mensajes para perfiles distinguibles), elegimos
+> **k = 4**: grupos interpretables y separados.
+
+```{r}
+k_elegido <- 4
+```
+
+## 5. K-means final
+
+```{r}
+km_final <- k_means(num_clusters = k_elegido) %>%
+  set_engine("stats", nstart = 25)
+wf_final <- workflow() %>% add_recipe(receta_clust) %>% add_model(km_final)
+
+set.seed(123)
+ajuste_km <- fit(wf_final, data = apostadores)
+
+asignacion <- extract_cluster_assignment(ajuste_km)
+table(asignacion$.cluster)
+```
+
+Centroides en el espacio **normalizado** (positivo = por encima del promedio):
+
+```{r}
+extract_centroids(ajuste_km)
+```
+
+### 5a. Los grupos sobre PC1-PC2
+
+```{r}
+scores_grupos <- scores %>% bind_cols(cluster = asignacion$.cluster)
+
+scores_grupos %>%
+  ggplot(aes(PC1, PC2, color = cluster)) +
+  geom_point(alpha = 0.7) +
+  scale_color_manual(values = c("#1e4c7d", "#2d7a7a", "#c97b2a", "#7d3c66")) +
+  labs(title = paste0("k-means (k = ", k_elegido, ") sobre PC1-PC2"),
+       color = "Grupo") +
+  theme_minimal(base_size = 12)
+```
+
+### 5b. Perfilado en unidades originales
+
+Para interpretar **qué tipo de jugador** es cada grupo, promediamos las
+variables originales (no las normalizadas) por cluster.
+
+```{r}
+apostadores_grupos <- apostadores %>% bind_cols(cluster = asignacion$.cluster)
+
+perfil <- apostadores_grupos %>%
+  group_by(cluster) %>%
+  summarise(
+    n = n(),
+    sesiones_semana = mean(sesiones_semana),
+    apuesta_promedio_mxn = mean(apuesta_promedio_mxn),
+    deposito_mensual_mxn = mean(deposito_mensual_mxn, na.rm = TRUE),
+    pct_juego_madrugada = mean(pct_juego_madrugada),
+    pct_incremento_tras_perdida = mean(pct_incremento_tras_perdida),
+    retiros_mes = mean(retiros_mes),
+    ratio_perdida_pct = mean(ratio_perdida_pct)
+  ) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 1)))
+perfil
+```
+
+**Interpretación (leyendo `perfil` y los centroides).** Cada grupo corresponde
+a un perfil con sentido: *recreativo ocasional* (pocas sesiones, montos bajos,
+casi nada de madrugada ni *chasing*); *entusiasta controlado* (juega seguido y
+variado, pero retira y no persigue); *en riesgo / problemático* (muchas
+sesiones, alto % de madrugada, persigue pérdidas, casi no retira → objetivo de
+juego responsable); y *gran apostador* (montos enormes pero controlado). El
+alumno debe **nombrar** cada grupo con las cifras reales observadas.
+
+## 6. Clustering jerárquico (comparación)
+
+El jerárquico no fija *k* de antemano: fusiona puntos por cercanía y luego
+"cortamos". En tidyclust se usa igual, con `hier_clust()`.
+
+```{r}
+hc_spec <- hier_clust(num_clusters = k_elegido,
+                      linkage_method = "ward.D2") %>%
+  set_engine("stats")
+
+wf_hc <- workflow() %>% add_recipe(receta_clust) %>% add_model(hc_spec)
+ajuste_hc <- fit(wf_hc, data = apostadores)
+asignacion_hc <- extract_cluster_assignment(ajuste_hc)
+
+table(kmeans = asignacion$.cluster, jerarquico = asignacion_hc$.cluster)
+```
+
+Las etiquetas de grupo son **arbitrarias** (el "Cluster_1" de un método no es
+el del otro). No miramos la diagonal, sino si cada grupo de un método cae
+mayormente en **un solo** grupo del otro: eso indica que ambos descubren la
+**misma estructura**, lo que da confianza en los perfiles encontrados.

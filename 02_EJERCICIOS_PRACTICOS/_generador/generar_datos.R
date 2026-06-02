@@ -293,6 +293,55 @@ write_csv(municipios, file.path(base_dir, "Sesión 18 Aprendizaje no supervisado
 cat("\nS18-ej2 municipios:", nrow(municipios), "filas,", ncol(municipios), "columnas\n")
 
 # =============================================================================
+# S18 - EJ3: APOSTADORES EN CASAS DE APUESTAS EN LINEA (clustering + PCA) - NUEVO
+# =============================================================================
+set.seed(1803)
+# cuatro perfiles latentes de jugador online:
+#  1 recreativo / casual      2 VIP / alto valor
+#  3 en riesgo / problematico  4 cazador de bonos
+gen_apostador <- function(n, p, frac_retiro, sd_frac = 0.09) {
+  dep <- pmax(rnorm(n, p[4], p[4] * 0.22), 50)
+  ret <- pmax(dep * pmin(pmax(rnorm(n, frac_retiro, sd_frac), 0), 1.4), 0)
+  tibble(
+    edad = pmin(pmax(round(rnorm(n, p[1], 6)), 18), 80),
+    antiguedad_dias = pmax(round(rnorm(n, p[2], p[2] * 0.28)), 5),
+    num_depositos_mes = pmax(round(rnorm(n, p[3], p[3] * 0.25)), 0),
+    monto_total_depositado_mxn = round(dep),
+    monto_promedio_apuesta_mxn = pmax(round(rnorm(n, p[5], p[5] * 0.22)), 5),
+    num_apuestas_mes = pmax(round(rnorm(n, p[6], p[6] * 0.22)), 1),
+    num_sesiones_mes = pmax(round(rnorm(n, p[7], p[7] * 0.22)), 1),
+    duracion_sesion_min = pmax(round(rnorm(n, p[8], p[8] * 0.22)), 2),
+    pct_apuestas_nocturnas = pmin(pmax(rnorm(n, p[9], 7), 0), 100),
+    num_juegos_distintos = pmin(pmax(round(rnorm(n, p[10], 1.5)), 1), 20),
+    pct_uso_bonos = pmin(pmax(rnorm(n, p[11], 7), 0), 100),
+    indice_persecucion_perdidas = round(pmin(pmax(rnorm(n, p[12], 0.07), 0), 1), 3),
+    monto_total_retirado_mxn = round(ret)
+  )
+}
+#                    edad antig dep# depMXN apMXN ap#  ses# durMin %noct jueg %bono persec
+a1 <- gen_apostador(320, c(40, 430,  3,  1100,  65,  35,  7, 30, 22,  5, 22, 0.15), 0.50)
+a2 <- gen_apostador(130, c(46, 920,  8, 28000, 850,  95, 16, 48, 32,  5, 15, 0.28), 0.55)
+a3 <- gen_apostador(130, c(31, 600, 22, 16000, 230, 330, 42, 95, 68,  4, 22, 0.78), 0.20)
+a4 <- gen_apostador(120, c(27, 230,  6,  4500,  42, 240, 18, 16, 18, 11, 94, 0.08), 1.08)
+apostadores <- bind_rows(a1, a2, a3, a4)
+# Variable colineal intencional: la perdida neta se construye como
+# depositado - retirado, asi que queda determinada por otras dos columnas.
+apostadores <- apostadores %>%
+  mutate(perdida_neta_mxn = monto_total_depositado_mxn - monto_total_retirado_mxn)
+# desordenar filas para no revelar los perfiles latentes
+apostadores <- apostadores[sample(nrow(apostadores)), ]
+apostadores <- apostadores %>%
+  mutate(
+    id_usuario = sprintf("US%05d", seq_len(n())),
+    pct_apuestas_nocturnas = round(pct_apuestas_nocturnas, 1),
+    pct_uso_bonos = round(pct_uso_bonos, 1),
+    monto_promedio_apuesta_mxn = poner_na(monto_promedio_apuesta_mxn, 0.04)
+  ) %>%
+  relocate(id_usuario)
+write_csv(apostadores, file.path(base_dir, "Sesión 18 Aprendizaje no supervisado/ejercicio_3/datos.csv"))
+cat("\nS18-ej3 apostadores:", nrow(apostadores), "filas,", ncol(apostadores), "columnas\n")
+
+# =============================================================================
 # S19 - EJ1: CLIENTES PROMETEDORES EN CASINO EN LINEA (desbalanceada ~93/7)
 # =============================================================================
 set.seed(1901)

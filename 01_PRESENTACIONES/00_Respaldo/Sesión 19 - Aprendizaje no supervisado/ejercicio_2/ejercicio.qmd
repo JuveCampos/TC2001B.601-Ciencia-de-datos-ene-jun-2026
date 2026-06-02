@@ -1,0 +1,315 @@
+---
+title: "Ejercicio 2: tipologías de municipios (PCA + clustering)"
+subtitle: "SESIÓN 19 — APRENDIZAJE NO SUPERVISADO"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+format:
+  html:
+    toc: true
+    toc-title: "Contenido"
+    toc-location: left
+    toc-depth: 2
+    number-sections: false
+    code-tools: true
+    code-copy: true
+    theme: cosmo
+    highlight-style: github
+    fig-width: 8
+    fig-height: 5
+    fig-align: center
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+## Idea central
+
+En el aprendizaje **NO supervisado** NO hay variable objetivo. **No** partimos
+en entrenamiento/prueba: no hay acierto que medir. El objetivo es **descubrir
+estructura**.
+
+**Caso de política pública:** una secretaría de desarrollo tiene 400
+municipios descritos por indicadores de urbanización, economía, educación,
+servicios y rezago. No existe una clasificación oficial previa. ¿Podemos
+agrupar los municipios en **tipologías** comparables para diseñar
+intervenciones diferenciadas? *(Datos ficticios, nombres genéricos.)*
+
+Mismas técnicas y mismo ecosistema **tidymodels** que en el ejercicio anterior:
+`recipes::step_pca()` para el PCA y `tidyclust` para el clustering.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(tidyclust)
+tidymodels_prefer()
+```
+
+## 1. Carga y exploración
+
+```{r}
+municipios <- read_csv("datos.csv")
+glimpse(municipios)
+```
+
+`municipio` es un **identificador** (nombre genérico): no es un indicador, se
+excluye. Revisamos NAs (PCA y distancias no los toleran):
+
+```{r}
+colSums(is.na(municipios))
+```
+
+**Colinealidad.** `indice_rezago_social` se construyó a partir de escolaridad,
+conectividad y agua, así que está muy correlacionado con ellas. No lo
+eliminamos: el PCA lo absorbe.
+
+```{r}
+municipios %>%
+  select(where(is.numeric)) %>%
+  drop_na() %>%
+  cor() %>%
+  round(2) %>%
+  .[c("escolaridad_prom_anios", "pct_viviendas_internet",
+      "pct_agua_entubada"), "indice_rezago_social", drop = FALSE]
+```
+
+> **¿Por qué normalizar (z-score)?** Conviven porcentajes (0–100), años,
+> tasas (por mil) y pesos (PIB en cientos de miles, densidad en miles). PCA y
+> clustering son **sensibles a la escala**: sin normalizar, el PIB y la
+> densidad dominarían las distancias y las tipologías reflejarían las
+> **unidades**, no el perfil socioeconómico.
+
+## 2. Receta de preprocesamiento
+
+```{r}
+receta <- recipe(~ ., data = municipios) %>%
+  update_role(municipio, new_role = "id") %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_normalize(all_numeric_predictors())
+
+datos_norm <- receta %>% prep() %>% bake(new_data = NULL)
+datos_norm %>%
+  select(where(is.numeric)) %>%
+  summarise(across(everything(), list(media = mean, desv = sd))) %>%
+  glimpse()
+```
+
+## 3. PCA
+
+```{r}
+receta_pca <- recipe(~ ., data = municipios) %>%
+  update_role(municipio, new_role = "id") %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_pca(all_numeric_predictors(), num_comp = 11, id = "pca")
+
+pca_prep <- prep(receta_pca)
+```
+
+### 3a. Varianza explicada (scree plot)
+
+```{r}
+varianza <- tidy(pca_prep, id = "pca", type = "variance") %>%
+  filter(terms %in% c("percent variance", "cumulative percent variance")) %>%
+  mutate(terms = recode(terms,
+                        "percent variance" = "individual",
+                        "cumulative percent variance" = "acumulada"))
+
+varianza %>%
+  filter(terms == "individual", component <= 11) %>%
+  ggplot(aes(component, value)) +
+  geom_col(fill = "#1e4c7d") +
+  geom_text(aes(label = paste0(round(value), "%")), vjust = -0.4, size = 3) +
+  scale_x_continuous(breaks = 1:11) +
+  labs(title = "Varianza explicada por componente (scree plot)",
+       x = "Componente principal", y = "% de varianza") +
+  theme_minimal(base_size = 12)
+```
+
+### 3b. Cargas (loadings)
+
+Estos datos tienen **dos ejes** casi independientes; las cargas lo revelan: uno
+suele ser **desarrollo** (escolaridad, internet, agua, PIB, rezago invertido) y
+otro **estructura económica** (servicios/urbano vs. primario/rural e indígena).
+
+```{r}
+cargas <- tidy(pca_prep, id = "pca", type = "coef") %>%
+  filter(component %in% c("PC1", "PC2"))
+
+cargas %>%
+  mutate(terms = fct_reorder(terms, value)) %>%
+  ggplot(aes(value, terms, fill = value > 0)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ component) +
+  scale_fill_manual(values = c(`TRUE` = "#1e4c7d", `FALSE` = "#d62828")) +
+  labs(title = "Cargas de las variables en PC1 y PC2",
+       x = "Peso (carga)", y = NULL) +
+  theme_minimal(base_size = 11)
+```
+
+### 3c. Proyección en PC1-PC2
+
+```{r}
+scores <- bake(pca_prep, new_data = NULL) %>%
+  rename(PC1 = PC01, PC2 = PC02)
+
+scores %>%
+  ggplot(aes(PC1, PC2)) +
+  geom_point(alpha = 0.5, color = "#1e4c7d") +
+  labs(title = "Los 400 municipios proyectados en PC1-PC2",
+       subtitle = "Cada punto es un municipio") +
+  theme_minimal(base_size = 12)
+```
+
+## 4. ¿Cuántas tipologías? Elección de k
+
+`num_clusters = tune()` + `tune_cluster()` con dos diagnósticos:
+`sse_within_total` (codo) y `silhouette_avg` (más alta = mejor).
+
+> **`nstart` importa.** k-means depende del arranque aleatorio de los
+> centroides. Con un solo arranque (`nstart = 1`, el valor por defecto) puede
+> caer en un óptimo local y confundir tipologías. Usamos `nstart = 25`.
+
+```{r}
+receta_clust <- recipe(~ ., data = municipios) %>%
+  update_role(municipio, new_role = "id") %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_normalize(all_numeric_predictors())
+
+km_spec <- k_means(num_clusters = tune()) %>%
+  set_engine("stats", nstart = 25)
+
+wf_km <- workflow() %>% add_recipe(receta_clust) %>% add_model(km_spec)
+
+metricas_clust <- cluster_metric_set(sse_within_total, silhouette_avg)
+rejilla_k <- tibble(num_clusters = 1:8)
+set.seed(123)
+folds <- vfold_cv(municipios, v = 5)
+
+set.seed(123)
+afinado <- tune_cluster(wf_km, resamples = folds,
+                        grid = rejilla_k, metrics = metricas_clust)
+metricas_k <- collect_metrics(afinado)
+metricas_k
+```
+
+**Método del codo:**
+
+```{r}
+metricas_k %>%
+  filter(.metric == "sse_within_total") %>%
+  ggplot(aes(num_clusters, mean)) +
+  geom_line(color = "#1e4c7d") + geom_point(size = 2, color = "#1e4c7d") +
+  scale_x_continuous(breaks = 1:8) +
+  labs(title = "Método del codo (inercia intra-grupo)",
+       x = "Número de tipologías (k)", y = "WSS promedio") +
+  theme_minimal(base_size = 12)
+```
+
+**Método de la silueta:**
+
+```{r}
+metricas_k %>%
+  filter(.metric == "silhouette_avg", num_clusters >= 2) %>%
+  ggplot(aes(num_clusters, mean)) +
+  geom_line(color = "#2d7a7a") + geom_point(size = 2, color = "#2d7a7a") +
+  scale_x_continuous(breaks = 2:8) +
+  labs(title = "Método de la silueta (promedio por k)",
+       x = "Número de tipologías (k)", y = "Silueta promedio") +
+  theme_minimal(base_size = 12)
+```
+
+> A diferencia del ejercicio de apostadores, aquí los diagnósticos **coinciden**:
+> el codo se aplana en k = 4 y la silueta es máxima en k = 4. Cuando ambos
+> apuntan al mismo valor, la elección es clara.
+
+```{r}
+k_elegido <- 4
+```
+
+## 5. K-means final
+
+```{r}
+km_final <- k_means(num_clusters = k_elegido) %>%
+  set_engine("stats", nstart = 25)
+wf_final <- workflow() %>% add_recipe(receta_clust) %>% add_model(km_final)
+
+set.seed(123)
+ajuste_km <- fit(wf_final, data = municipios)
+
+asignacion <- extract_cluster_assignment(ajuste_km)
+table(asignacion$.cluster)
+```
+
+```{r}
+extract_centroids(ajuste_km)
+```
+
+### 5a. Las tipologías sobre PC1-PC2
+
+```{r}
+scores_grupos <- scores %>% bind_cols(cluster = asignacion$.cluster)
+
+scores_grupos %>%
+  ggplot(aes(PC1, PC2, color = cluster)) +
+  geom_point(alpha = 0.7) +
+  scale_color_manual(values = c("#1e4c7d", "#2d7a7a", "#c97b2a", "#7d3c66")) +
+  labs(title = paste0("k-means (k = ", k_elegido, ") sobre PC1-PC2"),
+       color = "Tipología") +
+  theme_minimal(base_size = 12)
+```
+
+### 5b. Perfilado en unidades originales
+
+```{r}
+municipios_grupos <- municipios %>% bind_cols(cluster = asignacion$.cluster)
+
+perfil <- municipios_grupos %>%
+  group_by(cluster) %>%
+  summarise(
+    n = n(),
+    pct_urbano = mean(pct_urbano),
+    escolaridad_prom_anios = mean(escolaridad_prom_anios),
+    pct_viviendas_internet = mean(pct_viviendas_internet),
+    pct_ocupados_primario = mean(pct_ocupados_primario),
+    pct_poblacion_indigena = mean(pct_poblacion_indigena),
+    tasa_mort_infantil = mean(tasa_mort_infantil),
+    pib_per_capita_mxn = mean(pib_per_capita_mxn, na.rm = TRUE),
+    indice_rezago_social = mean(indice_rezago_social)
+  ) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 1)))
+perfil
+```
+
+**Interpretación.** Las tipologías cruzan dos ejes (desarrollo × estructura
+económica): *urbano desarrollado* (servicios, desarrollo alto),
+*agroindustrial próspero* (desarrollo alto pero sector primario), *urbano
+popular* (urbano/servicios pero desarrollo bajo) y *rural marginado* (primario,
+baja escolaridad, mortalidad y rezago altos → prioridad). Cada tipología pide
+una política distinta.
+
+## 6. Clustering jerárquico (comparación)
+
+```{r}
+hc_spec <- hier_clust(num_clusters = k_elegido,
+                      linkage_method = "ward.D2") %>%
+  set_engine("stats")
+
+wf_hc <- workflow() %>% add_recipe(receta_clust) %>% add_model(hc_spec)
+ajuste_hc <- fit(wf_hc, data = municipios)
+asignacion_hc <- extract_cluster_assignment(ajuste_hc)
+
+table(kmeans = asignacion$.cluster, jerarquico = asignacion_hc$.cluster)
+```
+
+Las etiquetas son **arbitrarias**: no miramos la diagonal, sino si cada grupo
+de un método cae mayormente en **un solo** grupo del otro. Aquí la
+correspondencia es casi perfecta: ambos métodos descubren las **mismas cuatro
+tipologías**, lo que da mucha confianza en el resultado.
