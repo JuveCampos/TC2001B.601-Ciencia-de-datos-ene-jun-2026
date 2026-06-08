@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jorge Juvenal Campos Ferreira — TC2001B.601">
+
+<title>Regresión: precio de viviendas – Ejercicios de ML — TC2001B</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../regresion/05_costo_medico/ejercicio.html" rel="next">
+<link href="../../regresion/03_clinicas_respiratorias/ejercicio.html" rel="prev">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-558cd62f7dc8349c63cf1bc6991a2be3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1e27162cf48e9f5c466ba5bc80fcf22d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Sin resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Ejercicios de ML — TC2001B</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Buscar"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Navegación de palanca" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="../../index.html" aria-current="page"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../regresion/01_energia_hogares/ejercicio.html"> 
+<span class="menu-text">Regresión</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../clasificacion/03_aprobacion_credito/ejercicio.html"> 
+<span class="menu-text">Clasificación</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Alternar modo lector">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../regresion/01_energia_hogares/ejercicio.html">Regresión</a></li><li class="breadcrumb-item"><a href="../../regresion/04_precio_viviendas/ejercicio.html">4 · Precio de viviendas — lineal vs.&nbsp;random forest</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inicio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Regresión</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../regresion/01_energia_hogares/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 · Energía — lineal vs.&nbsp;árbol</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../regresion/02_calidad_aire/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 · Calidad del aire — lineal vs.&nbsp;random forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../regresion/03_clinicas_respiratorias/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 · Clínicas respiratorias — lineal vs.&nbsp;XGBoost</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../regresion/04_precio_viviendas/ejercicio.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">4 · Precio de viviendas — lineal vs.&nbsp;random forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../regresion/05_costo_medico/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 · Costo médico (log) — lineal vs.&nbsp;XGBoost</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Clasificación</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/01_desercion_estudiantil/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 · Deserción — logística vs.&nbsp;KNN</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/02_cancelacion_hoteles/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 · Hoteles — logística vs.&nbsp;árbol</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/03_aprobacion_credito/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 · Crédito — logística vs.&nbsp;KNN</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/04_potabilidad_agua/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4 · Agua — logística vs.&nbsp;KNN</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/05_aprobacion_seguro/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 · Seguro — logística vs.&nbsp;XGBoost</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/06_clientes_casino/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6 · Casino (desbalance) — logística vs.&nbsp;random forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/07_fraude_tarjetas/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7 · Fraude (desbalance) — logística vs.&nbsp;XGBoost</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta página</h2>
+   
+  <ul>
+  <li><a href="#cargar-librerías" id="toc-cargar-librerías" class="nav-link active" data-scroll-target="#cargar-librerías">1. Cargar librerías</a></li>
+  <li><a href="#cargar-los-datos" id="toc-cargar-los-datos" class="nav-link" data-scroll-target="#cargar-los-datos">2. Cargar los datos</a></li>
+  <li><a href="#explorar-los-datos" id="toc-explorar-los-datos" class="nav-link" data-scroll-target="#explorar-los-datos">3. Explorar los datos</a></li>
+  <li><a href="#partición-entrenamiento-prueba" id="toc-partición-entrenamiento-prueba" class="nav-link" data-scroll-target="#partición-entrenamiento-prueba">4. Partición entrenamiento / prueba</a></li>
+  <li><a href="#receta-de-preprocesamiento-compartida-por-ambos-modelos" id="toc-receta-de-preprocesamiento-compartida-por-ambos-modelos" class="nav-link" data-scroll-target="#receta-de-preprocesamiento-compartida-por-ambos-modelos">5. Receta de preprocesamiento (compartida por ambos modelos)</a></li>
+  <li><a href="#especificación-de-los-modelos" id="toc-especificación-de-los-modelos" class="nav-link" data-scroll-target="#especificación-de-los-modelos">6. Especificación de los modelos</a></li>
+  <li><a href="#validación-cruzada-y-tuning-de-hiperparámetros" id="toc-validación-cruzada-y-tuning-de-hiperparámetros" class="nav-link" data-scroll-target="#validación-cruzada-y-tuning-de-hiperparámetros">7. Validación cruzada y tuning de hiperparámetros</a></li>
+  <li><a href="#implementar-el-workflow-final-de-cada-modelo" id="toc-implementar-el-workflow-final-de-cada-modelo" class="nav-link" data-scroll-target="#implementar-el-workflow-final-de-cada-modelo">8. Implementar el workflow final de cada modelo</a></li>
+  <li><a href="#entrenar-y-evaluar-con-last_fit-sobre-la-prueba" id="toc-entrenar-y-evaluar-con-last_fit-sobre-la-prueba" class="nav-link" data-scroll-target="#entrenar-y-evaluar-con-last_fit-sobre-la-prueba">9. Entrenar y evaluar con last_fit() sobre la prueba</a></li>
+  <li><a href="#pruebas-del-modelo-métricas-y-comparación" id="toc-pruebas-del-modelo-métricas-y-comparación" class="nav-link" data-scroll-target="#pruebas-del-modelo-métricas-y-comparación">10. Pruebas del modelo: métricas y comparación</a></li>
+  <li><a href="#veredicto-cuál-es-el-mejor-modelo" id="toc-veredicto-cuál-es-el-mejor-modelo" class="nav-link" data-scroll-target="#veredicto-cuál-es-el-mejor-modelo">Veredicto: ¿cuál es el mejor modelo?</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../regresion/01_energia_hogares/ejercicio.html">Regresión</a></li><li class="breadcrumb-item"><a href="../../regresion/04_precio_viviendas/ejercicio.html">4 · Precio de viviendas — lineal vs.&nbsp;random forest</a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">Regresión: precio de viviendas</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Código</button></div></div>
+<p class="subtitle lead">EJERCICIO DE REGRESIÓN — Regresión lineal vs.&nbsp;random forest</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Autor/a</div>
+    <div class="quarto-title-meta-contents">
+             <p>Jorge Juvenal Campos Ferreira — TC2001B.601 </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Fecha de publicación</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">7 de junio de 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen =</span> <span class="dv">999</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Objetivo.</strong> Predecir el <code>precio</code> de una vivienda a partir de sus características físicas y de ubicación. Compararemos dos modelos sobre el mismo flujo de trabajo: una <strong>regresión lineal</strong> (modelo base, interpretable) y un <strong>random forest</strong> (ensamble de árboles por <em>bagging</em>, que capta no linealidades e interacciones). El conjunto de datos combina variables numéricas con variables categóricas (colonia, estilo), así que la receta tendrá que codificarlas como variables <em>dummy</em>. Recorreremos el flujo completo de <code>tidymodels</code>: partición de los datos, receta de preprocesamiento, <code>workflow()</code>, validación cruzada, ajuste de hiperparámetros y una evaluación honesta con <code>last_fit()</code>. Al final daremos un <strong>veredicto claro</strong> sobre cuál modelo conviene.</p>
+<section id="cargar-librerías" class="level2">
+<h2 class="anchored" data-anchor-id="cargar-librerías">1. Cargar librerías</h2>
+<p>Agrupamos todas las librerías al inicio (buena práctica de reproducibilidad). <code>tidyverse</code> da el lenguaje de manipulación de datos; <code>tidymodels</code> es el marco de modelado; <code>readxl</code> lee el archivo de Excel; <code>ranger</code> es el motor que ajusta el random forest; <code>corrplot</code> dibuja la matriz de correlación.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(corrplot)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ranger)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><code>tidymodels_prefer()</code> resuelve los conflictos de nombres a favor de tidymodels (por ejemplo, que <code>spec()</code> sea la de yardstick y no la de otro paquete).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>tidymodels<span class="sc">::</span><span class="fu">tidymodels_prefer</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="cargar-los-datos" class="level2">
+<h2 class="anchored" data-anchor-id="cargar-los-datos">2. Cargar los datos</h2>
+<p>Los datos vienen en un archivo de Excel, así que los leemos con <code>read_excel()</code>. A diferencia de otros conjuntos, aquí no hay una columna identificadora (tipo <code>id</code>) que debamos remover. Las variables de texto (como <code>colonia</code> y <code>estilo</code>) se dejan como están; la receta las convertirá en variables <em>dummy</em> más adelante.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Los datos vienen en Excel. No hay columna identificadora que remover.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>viviendas <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"precio_viviendas_2.xlsx"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><code>glimpse()</code> nos da un vistazo rápido a los tipos y valores de cada columna. Conviene fijarse en cuáles son numéricas y cuáles son categóricas (texto).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(viviendas)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 800
+Columns: 11
+$ m2_construidos    &lt;dbl&gt; 217, 182, 226, 256, 202, 170, 204, 175, 159, 222, 15…
+$ recamaras         &lt;dbl&gt; 3, 2, 3, 5, 5, 2, 3, 5, 2, 3, 2, 2, 2, 3, 5, 4, 5, 2…
+$ banos             &lt;dbl&gt; 2.8, 2.2, 3.1, 3.6, 3.8, 1.5, 2.8, 3.0, 2.0, 3.3, 2.…
+$ cochera_m2        &lt;dbl&gt; 48.1, 39.5, 43.7, 55.6, 42.2, 31.1, 43.4, 36.6, 33.4…
+$ m2_terreno        &lt;dbl&gt; 146, 353, 274, 216, 187, 141, 193, 169, 106, 347, 16…
+$ anio_construccion &lt;dbl&gt; 2002, 1984, 1984, 1968, 1996, 1990, 2000, 1994, 1970…
+$ colonia           &lt;chr&gt; "Norte", "Poniente", "Sur", "Poniente", "Norte", "Su…
+$ estilo            &lt;chr&gt; "Colonial", "Moderno", NA, "Colonial", "Colonial", "…
+$ tiene_alberca     &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no"…
+$ inspeccion        &lt;chr&gt; "aprobado", "aprobado", "aprobado", "aprobado", "apr…
+$ precio            &lt;dbl&gt; 3370190, 3050204, 3797343, 3588065, 3480137, 2654649…</code></pre>
+</div>
+</div>
+</section>
+<section id="explorar-los-datos" class="level2">
+<h2 class="anchored" data-anchor-id="explorar-los-datos">3. Explorar los datos</h2>
+<p>Antes de modelar conviene entender la variable objetivo y las relaciones entre predictores. Tres revisiones mínimas: la <strong>distribución de la objetivo</strong> (¿hay asimetría o valores extremos?), los <strong>datos faltantes</strong> (¿qué tendremos que imputar?) y la <strong>colinealidad</strong> (¿hay predictores que miden casi lo mismo?).</p>
+<p>Primero, el histograma del precio. Los precios de vivienda suelen tener una cola derecha larga (unas pocas casas muy caras): buscamos si la distribución es aproximadamente simétrica o muy sesgada.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>viviendas <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> precio)) <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">30</span>, <span class="at">fill =</span> <span class="st">"#1e4c7d"</span>, <span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribución del precio de las viviendas"</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Precio (MXN)"</span>, <span class="at">y =</span> <span class="st">"Frecuencia"</span>) <span class="sc">+</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ejercicio_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><code>summary()</code> resume cada variable y, de paso, nos dice cuántos <code>NA</code> tiene cada columna.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(viviendas)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> m2_construidos    recamaras         banos         cochera_m2   
+ Min.   :  4.0   Min.   :1.000   Min.   :1.000   Min.   : 5.50  
+ 1st Qu.:138.8   1st Qu.:3.000   1st Qu.:2.400   1st Qu.:29.88  
+ Median :179.0   Median :3.000   Median :2.700   Median :37.10  
+ Mean   :179.9   Mean   :3.449   Mean   :2.766   Mean   :37.47  
+ 3rd Qu.:218.0   3rd Qu.:4.000   3rd Qu.:3.200   3rd Qu.:44.80  
+ Max.   :376.0   Max.   :6.000   Max.   :4.800   Max.   :76.30  
+                                 NA's   :14                     
+   m2_terreno     anio_construccion   colonia             estilo         
+ Min.   :  78.0   Min.   :1955      Length:800         Length:800        
+ 1st Qu.: 186.2   1st Qu.:1971      Class :character   Class :character  
+ Median : 238.0   Median :1988      Mode  :character   Mode  :character  
+ Mean   : 262.1   Mean   :1987                                           
+ 3rd Qu.: 316.0   3rd Qu.:2003                                           
+ Max.   :1126.0   Max.   :2020                                           
+ NA's   :54       NA's   :37                                             
+ tiene_alberca       inspeccion            precio       
+ Length:800         Length:800         Min.   : 658884  
+ Class :character   Class :character   1st Qu.:2613565  
+ Mode  :character   Mode  :character   Median :3084846  
+                                       Mean   :3108479  
+                                       3rd Qu.:3628371  
+                                       Max.   :5806235  
+                                                        </code></pre>
+</div>
+</div>
+<p>Contamos los <code>NA</code> por columna de forma explícita: esto guía qué pasos de imputación necesitará la receta.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>viviendas <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(.)))) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">everything</span>(), <span class="at">names_to =</span> <span class="st">"variable"</span>, <span class="at">values_to =</span> <span class="st">"n_na"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_na))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">variable</th>
+<th style="text-align: right;">n_na</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">m2_terreno</td>
+<td style="text-align: right;">54</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">anio_construccion</td>
+<td style="text-align: right;">37</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">estilo</td>
+<td style="text-align: right;">34</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">banos</td>
+<td style="text-align: right;">14</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">m2_construidos</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">recamaras</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cochera_m2</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">colonia</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tiene_alberca</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">inspeccion</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">precio</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>La matriz de correlación nos deja ver colinealidad entre predictores numéricos (por ejemplo, <code>m2_construidos</code> y <code>m2_terreno</code> suelen moverse juntas). Si dos variables miden casi lo mismo, la regresión lineal sufre (infla la varianza de los coeficientes); por eso más adelante filtraremos con <code>step_corr()</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Colinealidad entre las variables numéricas (p. ej. m2_construidos y</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># m2_terreno).</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>matriz_correlacion <span class="ot">&lt;-</span> viviendas <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.numeric)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cor</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="dv">2</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>matriz_correlacion <span class="sc">%&gt;%</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">corrplot</span>(<span class="at">method =</span> <span class="st">"circle"</span>, <span class="at">addCoef.col =</span> <span class="st">"black"</span>, <span class="at">tl.cex =</span> <span class="fl">0.8</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ejercicio_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="partición-entrenamiento-prueba" class="level2">
+<h2 class="anchored" data-anchor-id="partición-entrenamiento-prueba">4. Partición entrenamiento / prueba</h2>
+<p>Dividimos los datos en <strong>entrenamiento</strong> (75%) y <strong>prueba</strong> (25%). La base de prueba se “guarda en una caja fuerte”: no la tocamos hasta el final, para obtener una estimación honesta del desempeño en datos nuevos. Estratificamos por la objetivo para que ambas particiones cubran rangos de precio parecidos (en regresión, <code>initial_split</code> estratifica por cuantiles).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>viviendas_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(viviendas, <span class="at">prop =</span> <span class="fl">0.75</span>, <span class="at">strata =</span> precio)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>viviendas_entrenamiento <span class="ot">&lt;-</span> viviendas_split <span class="sc">%&gt;%</span> <span class="fu">training</span>()</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>viviendas_prueba <span class="ot">&lt;-</span> viviendas_split <span class="sc">%&gt;%</span> <span class="fu">testing</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">entrenamiento =</span> <span class="fu">nrow</span>(viviendas_entrenamiento),</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">prueba =</span> <span class="fu">nrow</span>(viviendas_prueba))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>entrenamiento        prueba 
+          600           200 </code></pre>
+</div>
+</div>
+</section>
+<section id="receta-de-preprocesamiento-compartida-por-ambos-modelos" class="level2">
+<h2 class="anchored" data-anchor-id="receta-de-preprocesamiento-compartida-por-ambos-modelos">5. Receta de preprocesamiento (compartida por ambos modelos)</h2>
+<p>Usamos <strong>una sola receta</strong> para que los dos modelos sean comparables: ambos verán exactamente la misma representación de los datos. Como hay variables categóricas (colonia, estilo, etc.), un paso clave aquí es <code>step_dummy</code>, que las convierte en columnas 0/1; sin esa codificación, ni la regresión lineal ni el random forest podrían usarlas.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+¿Qué es una receta y por qué importa el orden de los pasos?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Una <strong>receta</strong> (<code>recipe</code>) encadena pasos de preprocesamiento (<code>step_*</code>) que se <em>aprenden</em> solo con el entrenamiento y luego se aplican igual a la prueba (esto evita fuga de información). El orden importa: imputamos los <code>NA</code> <strong>primero</strong>, porque pasos como <code>step_corr</code> o <code>step_normalize</code> no toleran faltantes; normalizamos antes de crear <em>dummies</em> para que estas queden en 0/1; y dejamos <code>step_zv</code> al final como red de seguridad.</p>
+</div>
+</div>
+</div>
+<p>El papel de <code>step_dummy</code> merece una nota aparte, porque es lo que distingue a este conjunto de datos: tiene variables de texto (colonia, estilo) que ningún modelo numérico puede usar tal cual.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+¿Qué hace step_dummy con las variables categóricas?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Variables como <code>colonia</code> o <code>estilo</code> son texto, y los modelos solo operan con números. <code>step_dummy</code> convierte cada categoría en columnas indicadoras 0/1 (<em>one-hot</em> con una categoría de referencia). Así, una <code>colonia</code> con 5 valores se vuelve 4 columnas binarias. Es indispensable para la regresión lineal y también lo usamos aquí para el random forest, de modo que <strong>ambos modelos vean exactamente la misma matriz de predictores</strong> y la comparación sea limpia.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Receta única comparable:</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">#  1. Imputar numéricos (mediana) y nominales (moda).</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  2. step_nzv: quitar casi-constantes.</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#  3. step_corr: filtrar colinealidad numérica (umbral 0.85).</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">#  4. step_normalize: estandarizar numéricos.</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">#  5. step_dummy: codificar colonia, estilo, tiene_alberca, inspeccion.</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">#  6. step_zv: por seguridad.</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>receta_viviendas <span class="ot">&lt;-</span> <span class="fu">recipe</span>(precio <span class="sc">~</span> ., <span class="at">data =</span> viviendas_entrenamiento) <span class="sc">%&gt;%</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_impute_median</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_impute_mode</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_nzv</span>(<span class="fu">all_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_corr</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.85</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Conviene “hornear” la receta una vez para ver cómo quedan las variables tras el preprocesamiento (solo es inspección; el <code>workflow</code> lo hará por nosotros después). Fíjate cómo las categóricas se expandieron en varias columnas <em>dummy</em>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>receta_viviendas <span class="sc">%&gt;%</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">prep</span>(<span class="at">training =</span> viviendas_entrenamiento) <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bake</span>(<span class="at">new_data =</span> <span class="cn">NULL</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">glimpse</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 600
+Columns: 12
+$ m2_construidos    &lt;dbl&gt; -0.3388427, -1.6999385, -0.4036567, -1.2786469, -0.8…
+$ recamaras         &lt;dbl&gt; -1.2506089, -1.2506089, -1.2506089, 0.4224465, 0.422…
+$ banos             &lt;dbl&gt; -1.2754060, -1.1136892, -0.6285390, 0.5034781, 0.018…
+$ m2_terreno        &lt;dbl&gt; -1.44018482, 0.81617176, -0.65736723, -0.31661134, -…
+$ anio_construccion &lt;dbl&gt; -0.95412731, 0.64110691, 0.96015375, 0.58793243, 0.4…
+$ precio            &lt;dbl&gt; 2379943, 1731176, 2607709, 2096274, 2576822, 1877924…
+$ colonia_Norte     &lt;dbl&gt; 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0…
+$ colonia_Poniente  &lt;dbl&gt; 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0…
+$ colonia_Sur       &lt;dbl&gt; 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0…
+$ estilo_Moderno    &lt;dbl&gt; 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1…
+$ estilo_Rustico    &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0…
+$ tiene_alberca_si  &lt;dbl&gt; 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0…</code></pre>
+</div>
+</div>
+</section>
+<section id="especificación-de-los-modelos" class="level2">
+<h2 class="anchored" data-anchor-id="especificación-de-los-modelos">6. Especificación de los modelos</h2>
+<p>Definimos los dos modelos con <code>parsnip</code>. El primero es la <strong>regresión lineal</strong>: no tiene hiperparámetros que ajustar.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>modelo_lineal <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>El segundo es el <strong>random forest</strong>, donde sí ajustaremos dos hiperparámetros (<code>mtry</code> y <code>min_n</code>). Pedimos <code>importance = "impurity"</code> al motor para poder graficar después la importancia de variables.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+¿Qué es un random forest (bagging)?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Un <strong>random forest</strong> promedia cientos de árboles, cada uno entrenado sobre una muestra <em>bootstrap</em> de los datos y con un subconjunto aleatorio de predictores en cada corte. Promediar muchos árboles ruidosos pero poco sesgados <strong>reduce la varianza</strong> sin aumentar el sesgo, lo que suele dar mejores predicciones que un solo árbol. Ajustamos <code>mtry</code> (cuántos predictores se consideran en cada corte) y <code>min_n</code> (mínimo de observaciones por nodo); <code>trees = 500</code> fija el número de árboles. <code>tune()</code> marca <code>mtry</code> y <code>min_n</code> como “a determinar por validación cruzada”.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>modelo_rf <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">mtry =</span> <span class="fu">tune</span>(),</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">min_n =</span> <span class="fu">tune</span>(),</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">trees =</span> <span class="dv">500</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"ranger"</span>, <span class="at">importance =</span> <span class="st">"impurity"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Cada modelo se empaqueta con la <strong>misma</strong> receta en su propio <code>workflow</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+¿Qué es un workflow?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Un <strong>workflow</strong> empaqueta en un solo objeto la receta de preprocesamiento y el modelo. Al hacer <code>fit()</code> aplica internamente <code>prep</code> + <code>bake</code> + <code>fit</code>, y al <code>predict()</code> repite el mismo preprocesamiento sobre los datos nuevos sin que tengamos que recordarlo. Es la pieza estándar para validación cruzada y tuning.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>workflow_lineal <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_viviendas) <span class="sc">%&gt;%</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_lineal)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>workflow_rf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_viviendas) <span class="sc">%&gt;%</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_rf)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="validación-cruzada-y-tuning-de-hiperparámetros" class="level2">
+<h2 class="anchored" data-anchor-id="validación-cruzada-y-tuning-de-hiperparámetros">7. Validación cruzada y tuning de hiperparámetros</h2>
+<p>Para comparar los modelos y elegir los hiperparámetros del random forest <strong>sin tocar la prueba</strong>, usamos validación cruzada sobre el entrenamiento.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+¿Qué es la validación cruzada (k-fold)?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Partimos el entrenamiento en <code>v</code> partes (folds) del mismo tamaño. En cada ronda entrenamos con <code>v − 1</code> folds y evaluamos en el fold restante, rotando cuál se deja fuera; luego promediamos el desempeño. Así estimamos qué tan bien generaliza el modelo <strong>usando solo el entrenamiento</strong>, y reservamos la prueba para el final.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>folds_cv <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(viviendas_entrenamiento, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">strata =</span> precio)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Definimos las métricas de regresión que vigilaremos.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+RMSE, MAE y R²
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>RMSE</strong> (raíz del error cuadrático medio): error típico en las unidades de la objetivo; penaliza más los errores grandes. Es la métrica de decisión.</li>
+<li><strong>MAE</strong> (error absoluto medio): error típico, más robusto a valores extremos.</li>
+<li><strong>R²</strong>: proporción de la variación de la objetivo que el modelo explica (1 = perfecto; 0 = no mejor que predecir la media).</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>metricas_regresion <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(rmse, rsq, mae)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>La regresión lineal <strong>no se tunea</strong>; estimamos su desempeño en CV con <code>fit_resamples()</code>. Esto la pone en igualdad de condiciones que el random forest.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+fit_resamples() vs.&nbsp;tune_grid()
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Cuando un modelo <strong>no</strong> tiene hiperparámetros que ajustar (regresión lineal), <code>fit_resamples()</code> solo lo evalúa en cada fold. Cuando <strong>sí</strong> los tiene (el random forest), <code>tune_grid()</code> prueba varias combinaciones de hiperparámetros en la validación cruzada y nos deja elegir la mejor.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>cv_lineal <span class="ot">&lt;-</span> workflow_lineal <span class="sc">%&gt;%</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_resamples</span>(<span class="at">resamples =</span> folds_cv, <span class="at">metrics =</span> metricas_regresion)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(cv_lineal)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 16%">
+<col style="width: 22%">
+<col style="width: 4%">
+<col style="width: 20%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">.metric</th>
+<th style="text-align: left;">.estimator</th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">std_err</th>
+<th style="text-align: left;">.config</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">mae</td>
+<td style="text-align: left;">standard</td>
+<td style="text-align: right;">214696.8877761</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">17126.3722536</td>
+<td style="text-align: left;">pre0_mod0_post0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rmse</td>
+<td style="text-align: left;">standard</td>
+<td style="text-align: right;">270403.3162853</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">20936.7601942</td>
+<td style="text-align: left;">pre0_mod0_post0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rsq</td>
+<td style="text-align: left;">standard</td>
+<td style="text-align: right;">0.8927836</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.0148171</td>
+<td style="text-align: left;">pre0_mod0_post0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>Para el random forest construimos una grilla de hiperparámetros: combinaciones de <code>mtry</code> (entre 2 y 6 predictores por corte) y <code>min_n</code> (entre 2 y 40 observaciones por nodo), con <code>levels = 4</code> para 4 × 4 = 16 candidatos.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>grilla_rf <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mtry</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">6</span>)),</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">min_n</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">40</span>)),</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">levels =</span> <span class="dv">4</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>tuning_rf <span class="ot">&lt;-</span> workflow_rf <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> folds_cv,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">grid =</span> grilla_rf,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">metrics =</span> metricas_regresion)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>La siguiente gráfica resume el tuning: muestra el RMSE de validación cruzada según <code>mtry</code>, con una línea por valor de <code>min_n</code>. Buscamos la combinación con menor RMSE.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>tuning_rf <span class="sc">%&gt;%</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"rmse"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mtry, <span class="at">y =</span> mean, <span class="at">color =</span> <span class="fu">factor</span>(min_n))) <span class="sc">+</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"RMSE en validación cruzada — random forest"</span>,</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"mtry (predictores por corte)"</span>, <span class="at">y =</span> <span class="st">"RMSE promedio"</span>,</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">"min_n"</span>) <span class="sc">+</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ejercicio_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>mejor_rf <span class="ot">&lt;-</span> tuning_rf <span class="sc">%&gt;%</span> <span class="fu">select_best</span>(<span class="at">metric =</span> <span class="st">"rmse"</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>mejor_rf</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">mtry</th>
+<th style="text-align: right;">min_n</th>
+<th style="text-align: left;">.config</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: left;">pre0_mod14_post0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+<section id="implementar-el-workflow-final-de-cada-modelo" class="level2">
+<h2 class="anchored" data-anchor-id="implementar-el-workflow-final-de-cada-modelo">8. Implementar el workflow final de cada modelo</h2>
+<p>La regresión lineal ya está lista. Al random forest le <strong>inyectamos</strong> los hiperparámetros ganadores con <code>finalize_workflow()</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>workflow_rf_final <span class="ot">&lt;-</span> workflow_rf <span class="sc">%&gt;%</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(mejor_rf)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="entrenar-y-evaluar-con-last_fit-sobre-la-prueba" class="level2">
+<h2 class="anchored" data-anchor-id="entrenar-y-evaluar-con-last_fit-sobre-la-prueba">9. Entrenar y evaluar con last_fit() sobre la prueba</h2>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+¿Qué hace last_fit()?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><code>last_fit()</code> toma el split original, <strong>reentrena</strong> el modelo final sobre TODO el entrenamiento y lo evalúa <strong>una sola vez</strong> sobre la base de prueba reservada. Es el paso que da la estimación honesta del desempeño en datos que el modelo nunca vio.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>ajuste_lineal <span class="ot">&lt;-</span> workflow_lineal <span class="sc">%&gt;%</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">last_fit</span>(<span class="at">split =</span> viviendas_split, <span class="at">metrics =</span> metricas_regresion)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>ajuste_rf <span class="ot">&lt;-</span> workflow_rf_final <span class="sc">%&gt;%</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">last_fit</span>(<span class="at">split =</span> viviendas_split, <span class="at">metrics =</span> metricas_regresion)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="pruebas-del-modelo-métricas-y-comparación" class="level2">
+<h2 class="anchored" data-anchor-id="pruebas-del-modelo-métricas-y-comparación">10. Pruebas del modelo: métricas y comparación</h2>
+<p>Reunimos las métricas de <strong>ambos</strong> modelos en la base de prueba en una sola tabla. Esta es la comparación que nos interesa: el desempeño en datos no vistos.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>metricas_comparacion <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">collect_metrics</span>(ajuste_lineal) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Regresión lineal"</span>),</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">collect_metrics</span>(ajuste_rf) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Random forest"</span>)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(modelo, .metric, .estimate) <span class="sc">%&gt;%</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> .metric, <span class="at">values_from =</span> .estimate) <span class="sc">%&gt;%</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(rmse)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>metricas_comparacion</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">modelo</th>
+<th style="text-align: right;">rmse</th>
+<th style="text-align: right;">rsq</th>
+<th style="text-align: right;">mae</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Regresión lineal</td>
+<td style="text-align: right;">249816.2</td>
+<td style="text-align: right;">0.9022170</td>
+<td style="text-align: right;">200156.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: right;">293113.5</td>
+<td style="text-align: right;">0.8636891</td>
+<td style="text-align: right;">234919.5</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>Para visualizar la calidad de cada modelo, graficamos los valores reales contra los predichos. La diagonal roja es la predicción perfecta: entre más pegados los puntos a la línea, mejor.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>preds_lineal <span class="ot">&lt;-</span> <span class="fu">collect_predictions</span>(ajuste_lineal) <span class="sc">%&gt;%</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Regresión lineal"</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>preds_rf <span class="ot">&lt;-</span> <span class="fu">collect_predictions</span>(ajuste_rf) <span class="sc">%&gt;%</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Random forest"</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>preds_ambos <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(preds_lineal, preds_rf)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>preds_ambos <span class="sc">%&gt;%</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> precio, <span class="at">y =</span> .pred)) <span class="sc">+</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>, <span class="at">color =</span> <span class="st">"#1e4c7d"</span>) <span class="sc">+</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">color =</span> <span class="st">"#c0392b"</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> modelo) <span class="sc">+</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Valores reales vs. predichos (base de prueba)"</span>,</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Precio real (MXN)"</span>, <span class="at">y =</span> <span class="st">"Precio predicho (MXN)"</span>) <span class="sc">+</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ejercicio_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>El gráfico de residuos (real − predicho) contra el valor predicho ayuda a detectar sesgos: buscamos una nube sin patrón alrededor del cero. Un embudo o una curva indicarían que el modelo se equivoca sistemáticamente en algún rango (común en precios: a veces se subestiman las casas más caras).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>preds_ambos <span class="sc">%&gt;%</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">residuo =</span> precio <span class="sc">-</span> .pred) <span class="sc">%&gt;%</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">y =</span> residuo)) <span class="sc">+</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>, <span class="at">color =</span> <span class="st">"#1e4c7d"</span>) <span class="sc">+</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">"#c0392b"</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> modelo) <span class="sc">+</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Residuos vs. valores predichos"</span>,</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Precio predicho (MXN)"</span>, <span class="at">y =</span> <span class="st">"Residuo (real − predicho)"</span>) <span class="sc">+</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ejercicio_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Una ventaja del random forest es que nos dice <strong>qué variables pesan más</strong> en sus predicciones. La gráfica de importancia (<code>vip</code>) ordena los predictores según cuánto reducen el error al usarse en los cortes de los árboles (importancia por <em>impurity</em>, que pedimos al motor con <code>importance = "impurity"</code>). Las barras más largas son los principales determinantes del precio; suelen aparecer arriba la superficie construida, la ubicación (colonias específicas) y el número de recámaras.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>ajuste_rf <span class="sc">%&gt;%</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extract_fit_parsnip</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  vip<span class="sc">::</span><span class="fu">vip</span>(<span class="at">num_features =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Importancia de variables — random forest"</span>) <span class="sc">+</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ejercicio_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="veredicto-cuál-es-el-mejor-modelo" class="level2">
+<h2 class="anchored" data-anchor-id="veredicto-cuál-es-el-mejor-modelo">Veredicto: ¿cuál es el mejor modelo?</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ordenamos por RMSE (menor es mejor) y medimos la diferencia relativa entre</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="co"># el mejor y el segundo, para juzgar si la ventaja es relevante o marginal.</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>tabla_final <span class="ot">&lt;-</span> metricas_comparacion <span class="sc">%&gt;%</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(rmse) <span class="sc">%&gt;%</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rmse =</span> <span class="fu">round</span>(rmse, <span class="dv">2</span>),</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">rsq =</span> <span class="fu">round</span>(rsq, <span class="dv">3</span>),</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">mae =</span> <span class="fu">round</span>(mae, <span class="dv">2</span>))</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>ganador <span class="ot">&lt;-</span> tabla_final <span class="sc">%&gt;%</span> <span class="fu">slice</span>(<span class="dv">1</span>)</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>perdedor <span class="ot">&lt;-</span> tabla_final <span class="sc">%&gt;%</span> <span class="fu">slice</span>(<span class="dv">2</span>)</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>dif_rel_pct <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> (perdedor<span class="sc">$</span>rmse <span class="sc">-</span> ganador<span class="sc">$</span>rmse) <span class="sc">/</span> perdedor<span class="sc">$</span>rmse, <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tabla comparativa final (ordenada del mejor al peor por RMSE)</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>tabla_final</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">modelo</th>
+<th style="text-align: right;">rmse</th>
+<th style="text-align: right;">rsq</th>
+<th style="text-align: right;">mae</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Regresión lineal</td>
+<td style="text-align: right;">249816.2</td>
+<td style="text-align: right;">0.902</td>
+<td style="text-align: right;">200156.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: right;">293113.5</td>
+<td style="text-align: right;">0.864</td>
+<td style="text-align: right;">234919.5</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p><strong>Modelo recomendado: Regresión lineal.</strong> Obtiene el menor RMSE en la base de prueba (249816.2 MXN) con un R² de 0.902, frente a 293113.52 MXN del random forest. Su RMSE es <strong>14.8% menor</strong>.</p>
+<blockquote class="blockquote">
+<p>La ventaja de <strong>Regresión lineal</strong> es relevante (14.8% en RMSE), por lo que es la elección clara para este problema.</p>
+</blockquote>
+<p>Recuerda el balance: la regresión lineal es la más fácil de interpretar (un coeficiente por variable, incluida cada <em>dummy</em> de colonia o estilo), mientras que el random forest captura no linealidades e interacciones (por ejemplo, que el valor del terreno dependa de la colonia) a costa de ser una “caja” menos transparente; la gráfica de importancia de variables ayuda a abrir un poco esa caja.</p>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/JuveCampos\.github\.io\/TC2001B\.601-Ciencia-de-datos-ene-jun-2026\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../regresion/03_clinicas_respiratorias/ejercicio.html" class="pagination-link" aria-label="3 · Clínicas respiratorias — lineal vs. XGBoost">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">3 · Clínicas respiratorias — lineal vs.&nbsp;XGBoost</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../regresion/05_costo_medico/ejercicio.html" class="pagination-link" aria-label="5 · Costo médico (log) — lineal vs. XGBoost">
+        <span class="nav-page-text">5 · Costo médico (log) — lineal vs.&nbsp;XGBoost</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Ejecutar el código</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb37" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Regresión: precio de viviendas"</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "EJERCICIO DE REGRESIÓN — Regresión lineal vs. random forest"</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "Jorge Juvenal Campos Ferreira — TC2001B.601"</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="an">lang:</span><span class="co"> es</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> today</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="an">execute:</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="co">  echo: true</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a><span class="co">  warning: false</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a><span class="co">  message: false</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="co">  cache: false</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen =</span> <span class="dv">999</span>)</span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>**Objetivo.** Predecir el `precio` de una vivienda a partir de sus características físicas y de ubicación. Compararemos dos modelos sobre el mismo flujo de trabajo: una **regresión lineal** (modelo base, interpretable) y un **random forest** (ensamble de árboles por *bagging*, que capta no linealidades e interacciones). El conjunto de datos combina variables numéricas con variables categóricas (colonia, estilo), así que la receta tendrá que codificarlas como variables *dummy*. Recorreremos el flujo completo de `tidymodels`: partición de los datos, receta de preprocesamiento, `workflow()`, validación cruzada, ajuste de hiperparámetros y una evaluación honesta con `last_fit()`. Al final daremos un **veredicto claro** sobre cuál modelo conviene.</span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1. Cargar librerías</span></span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>Agrupamos todas las librerías al inicio (buena práctica de reproducibilidad). <span class="in">`tidyverse`</span> da el lenguaje de manipulación de datos; <span class="in">`tidymodels`</span> es el marco de modelado; <span class="in">`readxl`</span> lee el archivo de Excel; <span class="in">`ranger`</span> es el motor que ajusta el random forest; <span class="in">`corrplot`</span> dibuja la matriz de correlación.</span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-28"><a href="#cb37-28" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-29"><a href="#cb37-29" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb37-30"><a href="#cb37-30" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb37-31"><a href="#cb37-31" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(corrplot)</span>
+<span id="cb37-32"><a href="#cb37-32" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span>
+<span id="cb37-33"><a href="#cb37-33" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ranger)</span>
+<span id="cb37-34"><a href="#cb37-34" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-35"><a href="#cb37-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-36"><a href="#cb37-36" aria-hidden="true" tabindex="-1"></a><span class="in">`tidymodels_prefer()`</span> resuelve los conflictos de nombres a favor de tidymodels (por ejemplo, que <span class="in">`spec()`</span> sea la de yardstick y no la de otro paquete).</span>
+<span id="cb37-37"><a href="#cb37-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-40"><a href="#cb37-40" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-41"><a href="#cb37-41" aria-hidden="true" tabindex="-1"></a>tidymodels<span class="sc">::</span><span class="fu">tidymodels_prefer</span>()</span>
+<span id="cb37-42"><a href="#cb37-42" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-43"><a href="#cb37-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-44"><a href="#cb37-44" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2. Cargar los datos</span></span>
+<span id="cb37-45"><a href="#cb37-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-46"><a href="#cb37-46" aria-hidden="true" tabindex="-1"></a>Los datos vienen en un archivo de Excel, así que los leemos con <span class="in">`read_excel()`</span>. A diferencia de otros conjuntos, aquí no hay una columna identificadora (tipo <span class="in">`id`</span>) que debamos remover. Las variables de texto (como <span class="in">`colonia`</span> y <span class="in">`estilo`</span>) se dejan como están; la receta las convertirá en variables *dummy* más adelante.</span>
+<span id="cb37-47"><a href="#cb37-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-50"><a href="#cb37-50" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-51"><a href="#cb37-51" aria-hidden="true" tabindex="-1"></a><span class="co"># Los datos vienen en Excel. No hay columna identificadora que remover.</span></span>
+<span id="cb37-52"><a href="#cb37-52" aria-hidden="true" tabindex="-1"></a>viviendas <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"precio_viviendas_2.xlsx"</span>)</span>
+<span id="cb37-53"><a href="#cb37-53" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-54"><a href="#cb37-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-55"><a href="#cb37-55" aria-hidden="true" tabindex="-1"></a><span class="in">`glimpse()`</span> nos da un vistazo rápido a los tipos y valores de cada columna. Conviene fijarse en cuáles son numéricas y cuáles son categóricas (texto).</span>
+<span id="cb37-56"><a href="#cb37-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-59"><a href="#cb37-59" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-60"><a href="#cb37-60" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(viviendas)</span>
+<span id="cb37-61"><a href="#cb37-61" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-62"><a href="#cb37-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-63"><a href="#cb37-63" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3. Explorar los datos</span></span>
+<span id="cb37-64"><a href="#cb37-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-65"><a href="#cb37-65" aria-hidden="true" tabindex="-1"></a>Antes de modelar conviene entender la variable objetivo y las relaciones entre predictores. Tres revisiones mínimas: la **distribución de la objetivo** (¿hay asimetría o valores extremos?), los **datos faltantes** (¿qué tendremos que imputar?) y la **colinealidad** (¿hay predictores que miden casi lo mismo?).</span>
+<span id="cb37-66"><a href="#cb37-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-67"><a href="#cb37-67" aria-hidden="true" tabindex="-1"></a>Primero, el histograma del precio. Los precios de vivienda suelen tener una cola derecha larga (unas pocas casas muy caras): buscamos si la distribución es aproximadamente simétrica o muy sesgada.</span>
+<span id="cb37-68"><a href="#cb37-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-71"><a href="#cb37-71" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-72"><a href="#cb37-72" aria-hidden="true" tabindex="-1"></a>viviendas <span class="sc">%&gt;%</span></span>
+<span id="cb37-73"><a href="#cb37-73" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> precio)) <span class="sc">+</span></span>
+<span id="cb37-74"><a href="#cb37-74" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">30</span>, <span class="at">fill =</span> <span class="st">"#1e4c7d"</span>, <span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb37-75"><a href="#cb37-75" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribución del precio de las viviendas"</span>,</span>
+<span id="cb37-76"><a href="#cb37-76" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Precio (MXN)"</span>, <span class="at">y =</span> <span class="st">"Frecuencia"</span>) <span class="sc">+</span></span>
+<span id="cb37-77"><a href="#cb37-77" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb37-78"><a href="#cb37-78" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-79"><a href="#cb37-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-80"><a href="#cb37-80" aria-hidden="true" tabindex="-1"></a><span class="in">`summary()`</span> resume cada variable y, de paso, nos dice cuántos <span class="in">`NA`</span> tiene cada columna.</span>
+<span id="cb37-81"><a href="#cb37-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-84"><a href="#cb37-84" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-85"><a href="#cb37-85" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(viviendas)</span>
+<span id="cb37-86"><a href="#cb37-86" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-87"><a href="#cb37-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-88"><a href="#cb37-88" aria-hidden="true" tabindex="-1"></a>Contamos los <span class="in">`NA`</span> por columna de forma explícita: esto guía qué pasos de imputación necesitará la receta.</span>
+<span id="cb37-89"><a href="#cb37-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-92"><a href="#cb37-92" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-93"><a href="#cb37-93" aria-hidden="true" tabindex="-1"></a>viviendas <span class="sc">%&gt;%</span></span>
+<span id="cb37-94"><a href="#cb37-94" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(.)))) <span class="sc">%&gt;%</span></span>
+<span id="cb37-95"><a href="#cb37-95" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">everything</span>(), <span class="at">names_to =</span> <span class="st">"variable"</span>, <span class="at">values_to =</span> <span class="st">"n_na"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-96"><a href="#cb37-96" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_na))</span>
+<span id="cb37-97"><a href="#cb37-97" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-98"><a href="#cb37-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-99"><a href="#cb37-99" aria-hidden="true" tabindex="-1"></a>La matriz de correlación nos deja ver colinealidad entre predictores numéricos (por ejemplo, <span class="in">`m2_construidos`</span> y <span class="in">`m2_terreno`</span> suelen moverse juntas). Si dos variables miden casi lo mismo, la regresión lineal sufre (infla la varianza de los coeficientes); por eso más adelante filtraremos con <span class="in">`step_corr()`</span>.</span>
+<span id="cb37-100"><a href="#cb37-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-103"><a href="#cb37-103" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-104"><a href="#cb37-104" aria-hidden="true" tabindex="-1"></a><span class="co"># Colinealidad entre las variables numéricas (p. ej. m2_construidos y</span></span>
+<span id="cb37-105"><a href="#cb37-105" aria-hidden="true" tabindex="-1"></a><span class="co"># m2_terreno).</span></span>
+<span id="cb37-106"><a href="#cb37-106" aria-hidden="true" tabindex="-1"></a>matriz_correlacion <span class="ot">&lt;-</span> viviendas <span class="sc">%&gt;%</span></span>
+<span id="cb37-107"><a href="#cb37-107" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.numeric)) <span class="sc">%&gt;%</span></span>
+<span id="cb37-108"><a href="#cb37-108" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb37-109"><a href="#cb37-109" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cor</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb37-110"><a href="#cb37-110" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="dv">2</span>)</span>
+<span id="cb37-111"><a href="#cb37-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-112"><a href="#cb37-112" aria-hidden="true" tabindex="-1"></a>matriz_correlacion <span class="sc">%&gt;%</span></span>
+<span id="cb37-113"><a href="#cb37-113" aria-hidden="true" tabindex="-1"></a>  <span class="fu">corrplot</span>(<span class="at">method =</span> <span class="st">"circle"</span>, <span class="at">addCoef.col =</span> <span class="st">"black"</span>, <span class="at">tl.cex =</span> <span class="fl">0.8</span>)</span>
+<span id="cb37-114"><a href="#cb37-114" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-115"><a href="#cb37-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-116"><a href="#cb37-116" aria-hidden="true" tabindex="-1"></a><span class="fu">## 4. Partición entrenamiento / prueba</span></span>
+<span id="cb37-117"><a href="#cb37-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-118"><a href="#cb37-118" aria-hidden="true" tabindex="-1"></a>Dividimos los datos en **entrenamiento** (75%) y **prueba** (25%). La base de prueba se "guarda en una caja fuerte": no la tocamos hasta el final, para obtener una estimación honesta del desempeño en datos nuevos. Estratificamos por la objetivo para que ambas particiones cubran rangos de precio parecidos (en regresión, <span class="in">`initial_split`</span> estratifica por cuantiles).</span>
+<span id="cb37-119"><a href="#cb37-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-122"><a href="#cb37-122" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-123"><a href="#cb37-123" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb37-124"><a href="#cb37-124" aria-hidden="true" tabindex="-1"></a>viviendas_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(viviendas, <span class="at">prop =</span> <span class="fl">0.75</span>, <span class="at">strata =</span> precio)</span>
+<span id="cb37-125"><a href="#cb37-125" aria-hidden="true" tabindex="-1"></a>viviendas_entrenamiento <span class="ot">&lt;-</span> viviendas_split <span class="sc">%&gt;%</span> <span class="fu">training</span>()</span>
+<span id="cb37-126"><a href="#cb37-126" aria-hidden="true" tabindex="-1"></a>viviendas_prueba <span class="ot">&lt;-</span> viviendas_split <span class="sc">%&gt;%</span> <span class="fu">testing</span>()</span>
+<span id="cb37-127"><a href="#cb37-127" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-128"><a href="#cb37-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-131"><a href="#cb37-131" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-132"><a href="#cb37-132" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">entrenamiento =</span> <span class="fu">nrow</span>(viviendas_entrenamiento),</span>
+<span id="cb37-133"><a href="#cb37-133" aria-hidden="true" tabindex="-1"></a>  <span class="at">prueba =</span> <span class="fu">nrow</span>(viviendas_prueba))</span>
+<span id="cb37-134"><a href="#cb37-134" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-135"><a href="#cb37-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-136"><a href="#cb37-136" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5. Receta de preprocesamiento (compartida por ambos modelos)</span></span>
+<span id="cb37-137"><a href="#cb37-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-138"><a href="#cb37-138" aria-hidden="true" tabindex="-1"></a>Usamos **una sola receta** para que los dos modelos sean comparables: ambos verán exactamente la misma representación de los datos. Como hay variables categóricas (colonia, estilo, etc.), un paso clave aquí es <span class="in">`step_dummy`</span>, que las convierte en columnas 0/1; sin esa codificación, ni la regresión lineal ni el random forest podrían usarlas.</span>
+<span id="cb37-139"><a href="#cb37-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-140"><a href="#cb37-140" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb37-141"><a href="#cb37-141" aria-hidden="true" tabindex="-1"></a><span class="fu">## ¿Qué es una receta y por qué importa el orden de los pasos?</span></span>
+<span id="cb37-142"><a href="#cb37-142" aria-hidden="true" tabindex="-1"></a>Una **receta** (`recipe`) encadena pasos de preprocesamiento (`step_*`) que se *aprenden* solo con el entrenamiento y luego se aplican igual a la prueba (esto evita fuga de información). El orden importa: imputamos los `NA` **primero**, porque pasos como <span class="in">`step_corr`</span> o <span class="in">`step_normalize`</span> no toleran faltantes; normalizamos antes de crear *dummies* para que estas queden en 0/1; y dejamos <span class="in">`step_zv`</span> al final como red de seguridad.</span>
+<span id="cb37-143"><a href="#cb37-143" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb37-144"><a href="#cb37-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-145"><a href="#cb37-145" aria-hidden="true" tabindex="-1"></a>El papel de <span class="in">`step_dummy`</span> merece una nota aparte, porque es lo que distingue a este conjunto de datos: tiene variables de texto (colonia, estilo) que ningún modelo numérico puede usar tal cual.</span>
+<span id="cb37-146"><a href="#cb37-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-147"><a href="#cb37-147" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb37-148"><a href="#cb37-148" aria-hidden="true" tabindex="-1"></a><span class="fu">## ¿Qué hace step_dummy con las variables categóricas?</span></span>
+<span id="cb37-149"><a href="#cb37-149" aria-hidden="true" tabindex="-1"></a>Variables como <span class="in">`colonia`</span> o <span class="in">`estilo`</span> son texto, y los modelos solo operan con números. <span class="in">`step_dummy`</span> convierte cada categoría en columnas indicadoras 0/1 (*one-hot* con una categoría de referencia). Así, una `colonia` con 5 valores se vuelve 4 columnas binarias. Es indispensable para la regresión lineal y también lo usamos aquí para el random forest, de modo que **ambos modelos vean exactamente la misma matriz de predictores** y la comparación sea limpia.</span>
+<span id="cb37-150"><a href="#cb37-150" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb37-151"><a href="#cb37-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-154"><a href="#cb37-154" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-155"><a href="#cb37-155" aria-hidden="true" tabindex="-1"></a><span class="co"># Receta única comparable:</span></span>
+<span id="cb37-156"><a href="#cb37-156" aria-hidden="true" tabindex="-1"></a><span class="co">#  1. Imputar numéricos (mediana) y nominales (moda).</span></span>
+<span id="cb37-157"><a href="#cb37-157" aria-hidden="true" tabindex="-1"></a><span class="co">#  2. step_nzv: quitar casi-constantes.</span></span>
+<span id="cb37-158"><a href="#cb37-158" aria-hidden="true" tabindex="-1"></a><span class="co">#  3. step_corr: filtrar colinealidad numérica (umbral 0.85).</span></span>
+<span id="cb37-159"><a href="#cb37-159" aria-hidden="true" tabindex="-1"></a><span class="co">#  4. step_normalize: estandarizar numéricos.</span></span>
+<span id="cb37-160"><a href="#cb37-160" aria-hidden="true" tabindex="-1"></a><span class="co">#  5. step_dummy: codificar colonia, estilo, tiene_alberca, inspeccion.</span></span>
+<span id="cb37-161"><a href="#cb37-161" aria-hidden="true" tabindex="-1"></a><span class="co">#  6. step_zv: por seguridad.</span></span>
+<span id="cb37-162"><a href="#cb37-162" aria-hidden="true" tabindex="-1"></a>receta_viviendas <span class="ot">&lt;-</span> <span class="fu">recipe</span>(precio <span class="sc">~</span> ., <span class="at">data =</span> viviendas_entrenamiento) <span class="sc">%&gt;%</span></span>
+<span id="cb37-163"><a href="#cb37-163" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_impute_median</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb37-164"><a href="#cb37-164" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_impute_mode</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb37-165"><a href="#cb37-165" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_nzv</span>(<span class="fu">all_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb37-166"><a href="#cb37-166" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_corr</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.85</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-167"><a href="#cb37-167" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb37-168"><a href="#cb37-168" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb37-169"><a href="#cb37-169" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span>
+<span id="cb37-170"><a href="#cb37-170" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-171"><a href="#cb37-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-172"><a href="#cb37-172" aria-hidden="true" tabindex="-1"></a>Conviene "hornear" la receta una vez para ver cómo quedan las variables tras el preprocesamiento (solo es inspección; el <span class="in">`workflow`</span> lo hará por nosotros después). Fíjate cómo las categóricas se expandieron en varias columnas *dummy*.</span>
+<span id="cb37-173"><a href="#cb37-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-176"><a href="#cb37-176" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-177"><a href="#cb37-177" aria-hidden="true" tabindex="-1"></a>receta_viviendas <span class="sc">%&gt;%</span></span>
+<span id="cb37-178"><a href="#cb37-178" aria-hidden="true" tabindex="-1"></a>  <span class="fu">prep</span>(<span class="at">training =</span> viviendas_entrenamiento) <span class="sc">%&gt;%</span></span>
+<span id="cb37-179"><a href="#cb37-179" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bake</span>(<span class="at">new_data =</span> <span class="cn">NULL</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-180"><a href="#cb37-180" aria-hidden="true" tabindex="-1"></a>  <span class="fu">glimpse</span>()</span>
+<span id="cb37-181"><a href="#cb37-181" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-182"><a href="#cb37-182" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-183"><a href="#cb37-183" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6. Especificación de los modelos</span></span>
+<span id="cb37-184"><a href="#cb37-184" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-185"><a href="#cb37-185" aria-hidden="true" tabindex="-1"></a>Definimos los dos modelos con <span class="in">`parsnip`</span>. El primero es la **regresión lineal**: no tiene hiperparámetros que ajustar.</span>
+<span id="cb37-186"><a href="#cb37-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-189"><a href="#cb37-189" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-190"><a href="#cb37-190" aria-hidden="true" tabindex="-1"></a>modelo_lineal <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb37-191"><a href="#cb37-191" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-192"><a href="#cb37-192" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span>
+<span id="cb37-193"><a href="#cb37-193" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-194"><a href="#cb37-194" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-195"><a href="#cb37-195" aria-hidden="true" tabindex="-1"></a>El segundo es el **random forest**, donde sí ajustaremos dos hiperparámetros (<span class="in">`mtry`</span> y <span class="in">`min_n`</span>). Pedimos <span class="in">`importance = "impurity"`</span> al motor para poder graficar después la importancia de variables.</span>
+<span id="cb37-196"><a href="#cb37-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-197"><a href="#cb37-197" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb37-198"><a href="#cb37-198" aria-hidden="true" tabindex="-1"></a><span class="fu">## ¿Qué es un random forest (bagging)?</span></span>
+<span id="cb37-199"><a href="#cb37-199" aria-hidden="true" tabindex="-1"></a>Un **random forest** promedia cientos de árboles, cada uno entrenado sobre una muestra *bootstrap* de los datos y con un subconjunto aleatorio de predictores en cada corte. Promediar muchos árboles ruidosos pero poco sesgados **reduce la varianza** sin aumentar el sesgo, lo que suele dar mejores predicciones que un solo árbol. Ajustamos <span class="in">`mtry`</span> (cuántos predictores se consideran en cada corte) y <span class="in">`min_n`</span> (mínimo de observaciones por nodo); <span class="in">`trees = 500`</span> fija el número de árboles. <span class="in">`tune()`</span> marca <span class="in">`mtry`</span> y <span class="in">`min_n`</span> como "a determinar por validación cruzada".</span>
+<span id="cb37-200"><a href="#cb37-200" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb37-201"><a href="#cb37-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-204"><a href="#cb37-204" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-205"><a href="#cb37-205" aria-hidden="true" tabindex="-1"></a>modelo_rf <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(</span>
+<span id="cb37-206"><a href="#cb37-206" aria-hidden="true" tabindex="-1"></a>    <span class="at">mtry =</span> <span class="fu">tune</span>(),</span>
+<span id="cb37-207"><a href="#cb37-207" aria-hidden="true" tabindex="-1"></a>    <span class="at">min_n =</span> <span class="fu">tune</span>(),</span>
+<span id="cb37-208"><a href="#cb37-208" aria-hidden="true" tabindex="-1"></a>    <span class="at">trees =</span> <span class="dv">500</span></span>
+<span id="cb37-209"><a href="#cb37-209" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb37-210"><a href="#cb37-210" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"ranger"</span>, <span class="at">importance =</span> <span class="st">"impurity"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-211"><a href="#cb37-211" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span>
+<span id="cb37-212"><a href="#cb37-212" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-213"><a href="#cb37-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-214"><a href="#cb37-214" aria-hidden="true" tabindex="-1"></a>Cada modelo se empaqueta con la **misma** receta en su propio <span class="in">`workflow`</span>.</span>
+<span id="cb37-215"><a href="#cb37-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-216"><a href="#cb37-216" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb37-217"><a href="#cb37-217" aria-hidden="true" tabindex="-1"></a><span class="fu">## ¿Qué es un workflow?</span></span>
+<span id="cb37-218"><a href="#cb37-218" aria-hidden="true" tabindex="-1"></a>Un **workflow** empaqueta en un solo objeto la receta de preprocesamiento y el modelo. Al hacer <span class="in">`fit()`</span> aplica internamente <span class="in">`prep`</span> + <span class="in">`bake`</span> + <span class="in">`fit`</span>, y al <span class="in">`predict()`</span> repite el mismo preprocesamiento sobre los datos nuevos sin que tengamos que recordarlo. Es la pieza estándar para validación cruzada y tuning.</span>
+<span id="cb37-219"><a href="#cb37-219" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb37-220"><a href="#cb37-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-223"><a href="#cb37-223" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-224"><a href="#cb37-224" aria-hidden="true" tabindex="-1"></a>workflow_lineal <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb37-225"><a href="#cb37-225" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_viviendas) <span class="sc">%&gt;%</span></span>
+<span id="cb37-226"><a href="#cb37-226" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_lineal)</span>
+<span id="cb37-227"><a href="#cb37-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-228"><a href="#cb37-228" aria-hidden="true" tabindex="-1"></a>workflow_rf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb37-229"><a href="#cb37-229" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_viviendas) <span class="sc">%&gt;%</span></span>
+<span id="cb37-230"><a href="#cb37-230" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_rf)</span>
+<span id="cb37-231"><a href="#cb37-231" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-232"><a href="#cb37-232" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-233"><a href="#cb37-233" aria-hidden="true" tabindex="-1"></a><span class="fu">## 7. Validación cruzada y tuning de hiperparámetros</span></span>
+<span id="cb37-234"><a href="#cb37-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-235"><a href="#cb37-235" aria-hidden="true" tabindex="-1"></a>Para comparar los modelos y elegir los hiperparámetros del random forest **sin tocar la prueba**, usamos validación cruzada sobre el entrenamiento.</span>
+<span id="cb37-236"><a href="#cb37-236" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-237"><a href="#cb37-237" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb37-238"><a href="#cb37-238" aria-hidden="true" tabindex="-1"></a><span class="fu">## ¿Qué es la validación cruzada (k-fold)?</span></span>
+<span id="cb37-239"><a href="#cb37-239" aria-hidden="true" tabindex="-1"></a>Partimos el entrenamiento en <span class="in">`v`</span> partes (folds) del mismo tamaño. En cada ronda entrenamos con <span class="in">`v − 1`</span> folds y evaluamos en el fold restante, rotando cuál se deja fuera; luego promediamos el desempeño. Así estimamos qué tan bien generaliza el modelo **usando solo el entrenamiento**, y reservamos la prueba para el final.</span>
+<span id="cb37-240"><a href="#cb37-240" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb37-241"><a href="#cb37-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-244"><a href="#cb37-244" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-245"><a href="#cb37-245" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb37-246"><a href="#cb37-246" aria-hidden="true" tabindex="-1"></a>folds_cv <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(viviendas_entrenamiento, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">strata =</span> precio)</span>
+<span id="cb37-247"><a href="#cb37-247" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-248"><a href="#cb37-248" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-249"><a href="#cb37-249" aria-hidden="true" tabindex="-1"></a>Definimos las métricas de regresión que vigilaremos.</span>
+<span id="cb37-250"><a href="#cb37-250" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-251"><a href="#cb37-251" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb37-252"><a href="#cb37-252" aria-hidden="true" tabindex="-1"></a><span class="fu">## RMSE, MAE y R²</span></span>
+<span id="cb37-253"><a href="#cb37-253" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**RMSE** (raíz del error cuadrático medio): error típico en las unidades de la objetivo; penaliza más los errores grandes. Es la métrica de decisión.</span>
+<span id="cb37-254"><a href="#cb37-254" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**MAE** (error absoluto medio): error típico, más robusto a valores extremos.</span>
+<span id="cb37-255"><a href="#cb37-255" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**R²**: proporción de la variación de la objetivo que el modelo explica (1 = perfecto; 0 = no mejor que predecir la media).</span>
+<span id="cb37-256"><a href="#cb37-256" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb37-257"><a href="#cb37-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-260"><a href="#cb37-260" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-261"><a href="#cb37-261" aria-hidden="true" tabindex="-1"></a>metricas_regresion <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(rmse, rsq, mae)</span>
+<span id="cb37-262"><a href="#cb37-262" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-263"><a href="#cb37-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-264"><a href="#cb37-264" aria-hidden="true" tabindex="-1"></a>La regresión lineal **no se tunea**; estimamos su desempeño en CV con <span class="in">`fit_resamples()`</span>. Esto la pone en igualdad de condiciones que el random forest.</span>
+<span id="cb37-265"><a href="#cb37-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-266"><a href="#cb37-266" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb37-267"><a href="#cb37-267" aria-hidden="true" tabindex="-1"></a><span class="fu">## fit_resamples() vs. tune_grid()</span></span>
+<span id="cb37-268"><a href="#cb37-268" aria-hidden="true" tabindex="-1"></a>Cuando un modelo **no** tiene hiperparámetros que ajustar (regresión lineal), `fit_resamples()` solo lo evalúa en cada fold. Cuando **sí** los tiene (el random forest), <span class="in">`tune_grid()`</span> prueba varias combinaciones de hiperparámetros en la validación cruzada y nos deja elegir la mejor.</span>
+<span id="cb37-269"><a href="#cb37-269" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb37-270"><a href="#cb37-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-273"><a href="#cb37-273" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-274"><a href="#cb37-274" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb37-275"><a href="#cb37-275" aria-hidden="true" tabindex="-1"></a>cv_lineal <span class="ot">&lt;-</span> workflow_lineal <span class="sc">%&gt;%</span></span>
+<span id="cb37-276"><a href="#cb37-276" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_resamples</span>(<span class="at">resamples =</span> folds_cv, <span class="at">metrics =</span> metricas_regresion)</span>
+<span id="cb37-277"><a href="#cb37-277" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-278"><a href="#cb37-278" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(cv_lineal)</span>
+<span id="cb37-279"><a href="#cb37-279" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-280"><a href="#cb37-280" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-281"><a href="#cb37-281" aria-hidden="true" tabindex="-1"></a>Para el random forest construimos una grilla de hiperparámetros: combinaciones de <span class="in">`mtry`</span> (entre 2 y 6 predictores por corte) y <span class="in">`min_n`</span> (entre 2 y 40 observaciones por nodo), con <span class="in">`levels = 4`</span> para 4 × 4 = 16 candidatos.</span>
+<span id="cb37-282"><a href="#cb37-282" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-285"><a href="#cb37-285" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-286"><a href="#cb37-286" aria-hidden="true" tabindex="-1"></a>grilla_rf <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
+<span id="cb37-287"><a href="#cb37-287" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mtry</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">6</span>)),</span>
+<span id="cb37-288"><a href="#cb37-288" aria-hidden="true" tabindex="-1"></a>    <span class="fu">min_n</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">40</span>)),</span>
+<span id="cb37-289"><a href="#cb37-289" aria-hidden="true" tabindex="-1"></a>    <span class="at">levels =</span> <span class="dv">4</span></span>
+<span id="cb37-290"><a href="#cb37-290" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb37-291"><a href="#cb37-291" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-292"><a href="#cb37-292" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-295"><a href="#cb37-295" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-296"><a href="#cb37-296" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb37-297"><a href="#cb37-297" aria-hidden="true" tabindex="-1"></a>tuning_rf <span class="ot">&lt;-</span> workflow_rf <span class="sc">%&gt;%</span></span>
+<span id="cb37-298"><a href="#cb37-298" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> folds_cv,</span>
+<span id="cb37-299"><a href="#cb37-299" aria-hidden="true" tabindex="-1"></a>            <span class="at">grid =</span> grilla_rf,</span>
+<span id="cb37-300"><a href="#cb37-300" aria-hidden="true" tabindex="-1"></a>            <span class="at">metrics =</span> metricas_regresion)</span>
+<span id="cb37-301"><a href="#cb37-301" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-302"><a href="#cb37-302" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-303"><a href="#cb37-303" aria-hidden="true" tabindex="-1"></a>La siguiente gráfica resume el tuning: muestra el RMSE de validación cruzada según <span class="in">`mtry`</span>, con una línea por valor de <span class="in">`min_n`</span>. Buscamos la combinación con menor RMSE.</span>
+<span id="cb37-304"><a href="#cb37-304" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-307"><a href="#cb37-307" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-308"><a href="#cb37-308" aria-hidden="true" tabindex="-1"></a>tuning_rf <span class="sc">%&gt;%</span></span>
+<span id="cb37-309"><a href="#cb37-309" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb37-310"><a href="#cb37-310" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"rmse"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-311"><a href="#cb37-311" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mtry, <span class="at">y =</span> mean, <span class="at">color =</span> <span class="fu">factor</span>(min_n))) <span class="sc">+</span></span>
+<span id="cb37-312"><a href="#cb37-312" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb37-313"><a href="#cb37-313" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb37-314"><a href="#cb37-314" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"RMSE en validación cruzada — random forest"</span>,</span>
+<span id="cb37-315"><a href="#cb37-315" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"mtry (predictores por corte)"</span>, <span class="at">y =</span> <span class="st">"RMSE promedio"</span>,</span>
+<span id="cb37-316"><a href="#cb37-316" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">"min_n"</span>) <span class="sc">+</span></span>
+<span id="cb37-317"><a href="#cb37-317" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb37-318"><a href="#cb37-318" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-319"><a href="#cb37-319" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-322"><a href="#cb37-322" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-323"><a href="#cb37-323" aria-hidden="true" tabindex="-1"></a>mejor_rf <span class="ot">&lt;-</span> tuning_rf <span class="sc">%&gt;%</span> <span class="fu">select_best</span>(<span class="at">metric =</span> <span class="st">"rmse"</span>)</span>
+<span id="cb37-324"><a href="#cb37-324" aria-hidden="true" tabindex="-1"></a>mejor_rf</span>
+<span id="cb37-325"><a href="#cb37-325" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-326"><a href="#cb37-326" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-327"><a href="#cb37-327" aria-hidden="true" tabindex="-1"></a><span class="fu">## 8. Implementar el workflow final de cada modelo</span></span>
+<span id="cb37-328"><a href="#cb37-328" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-329"><a href="#cb37-329" aria-hidden="true" tabindex="-1"></a>La regresión lineal ya está lista. Al random forest le **inyectamos** los hiperparámetros ganadores con <span class="in">`finalize_workflow()`</span>.</span>
+<span id="cb37-330"><a href="#cb37-330" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-333"><a href="#cb37-333" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-334"><a href="#cb37-334" aria-hidden="true" tabindex="-1"></a>workflow_rf_final <span class="ot">&lt;-</span> workflow_rf <span class="sc">%&gt;%</span></span>
+<span id="cb37-335"><a href="#cb37-335" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(mejor_rf)</span>
+<span id="cb37-336"><a href="#cb37-336" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-337"><a href="#cb37-337" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-338"><a href="#cb37-338" aria-hidden="true" tabindex="-1"></a><span class="fu">## 9. Entrenar y evaluar con last_fit() sobre la prueba</span></span>
+<span id="cb37-339"><a href="#cb37-339" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-340"><a href="#cb37-340" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb37-341"><a href="#cb37-341" aria-hidden="true" tabindex="-1"></a><span class="fu">## ¿Qué hace last_fit()?</span></span>
+<span id="cb37-342"><a href="#cb37-342" aria-hidden="true" tabindex="-1"></a><span class="in">`last_fit()`</span> toma el split original, **reentrena** el modelo final sobre TODO el entrenamiento y lo evalúa **una sola vez** sobre la base de prueba reservada. Es el paso que da la estimación honesta del desempeño en datos que el modelo nunca vio.</span>
+<span id="cb37-343"><a href="#cb37-343" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb37-344"><a href="#cb37-344" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-347"><a href="#cb37-347" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-348"><a href="#cb37-348" aria-hidden="true" tabindex="-1"></a>ajuste_lineal <span class="ot">&lt;-</span> workflow_lineal <span class="sc">%&gt;%</span></span>
+<span id="cb37-349"><a href="#cb37-349" aria-hidden="true" tabindex="-1"></a>  <span class="fu">last_fit</span>(<span class="at">split =</span> viviendas_split, <span class="at">metrics =</span> metricas_regresion)</span>
+<span id="cb37-350"><a href="#cb37-350" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-351"><a href="#cb37-351" aria-hidden="true" tabindex="-1"></a>ajuste_rf <span class="ot">&lt;-</span> workflow_rf_final <span class="sc">%&gt;%</span></span>
+<span id="cb37-352"><a href="#cb37-352" aria-hidden="true" tabindex="-1"></a>  <span class="fu">last_fit</span>(<span class="at">split =</span> viviendas_split, <span class="at">metrics =</span> metricas_regresion)</span>
+<span id="cb37-353"><a href="#cb37-353" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-354"><a href="#cb37-354" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-355"><a href="#cb37-355" aria-hidden="true" tabindex="-1"></a><span class="fu">## 10. Pruebas del modelo: métricas y comparación</span></span>
+<span id="cb37-356"><a href="#cb37-356" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-357"><a href="#cb37-357" aria-hidden="true" tabindex="-1"></a>Reunimos las métricas de **ambos** modelos en la base de prueba en una sola tabla. Esta es la comparación que nos interesa: el desempeño en datos no vistos.</span>
+<span id="cb37-358"><a href="#cb37-358" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-361"><a href="#cb37-361" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-362"><a href="#cb37-362" aria-hidden="true" tabindex="-1"></a>metricas_comparacion <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb37-363"><a href="#cb37-363" aria-hidden="true" tabindex="-1"></a>    <span class="fu">collect_metrics</span>(ajuste_lineal) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Regresión lineal"</span>),</span>
+<span id="cb37-364"><a href="#cb37-364" aria-hidden="true" tabindex="-1"></a>    <span class="fu">collect_metrics</span>(ajuste_rf) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Random forest"</span>)</span>
+<span id="cb37-365"><a href="#cb37-365" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb37-366"><a href="#cb37-366" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(modelo, .metric, .estimate) <span class="sc">%&gt;%</span></span>
+<span id="cb37-367"><a href="#cb37-367" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> .metric, <span class="at">values_from =</span> .estimate) <span class="sc">%&gt;%</span></span>
+<span id="cb37-368"><a href="#cb37-368" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(rmse)</span>
+<span id="cb37-369"><a href="#cb37-369" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-370"><a href="#cb37-370" aria-hidden="true" tabindex="-1"></a>metricas_comparacion</span>
+<span id="cb37-371"><a href="#cb37-371" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-372"><a href="#cb37-372" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-373"><a href="#cb37-373" aria-hidden="true" tabindex="-1"></a>Para visualizar la calidad de cada modelo, graficamos los valores reales contra los predichos. La diagonal roja es la predicción perfecta: entre más pegados los puntos a la línea, mejor.</span>
+<span id="cb37-374"><a href="#cb37-374" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-377"><a href="#cb37-377" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-378"><a href="#cb37-378" aria-hidden="true" tabindex="-1"></a>preds_lineal <span class="ot">&lt;-</span> <span class="fu">collect_predictions</span>(ajuste_lineal) <span class="sc">%&gt;%</span></span>
+<span id="cb37-379"><a href="#cb37-379" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Regresión lineal"</span>)</span>
+<span id="cb37-380"><a href="#cb37-380" aria-hidden="true" tabindex="-1"></a>preds_rf <span class="ot">&lt;-</span> <span class="fu">collect_predictions</span>(ajuste_rf) <span class="sc">%&gt;%</span></span>
+<span id="cb37-381"><a href="#cb37-381" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Random forest"</span>)</span>
+<span id="cb37-382"><a href="#cb37-382" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-383"><a href="#cb37-383" aria-hidden="true" tabindex="-1"></a>preds_ambos <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(preds_lineal, preds_rf)</span>
+<span id="cb37-384"><a href="#cb37-384" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-385"><a href="#cb37-385" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-388"><a href="#cb37-388" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-389"><a href="#cb37-389" aria-hidden="true" tabindex="-1"></a>preds_ambos <span class="sc">%&gt;%</span></span>
+<span id="cb37-390"><a href="#cb37-390" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> precio, <span class="at">y =</span> .pred)) <span class="sc">+</span></span>
+<span id="cb37-391"><a href="#cb37-391" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>, <span class="at">color =</span> <span class="st">"#1e4c7d"</span>) <span class="sc">+</span></span>
+<span id="cb37-392"><a href="#cb37-392" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">color =</span> <span class="st">"#c0392b"</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb37-393"><a href="#cb37-393" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> modelo) <span class="sc">+</span></span>
+<span id="cb37-394"><a href="#cb37-394" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Valores reales vs. predichos (base de prueba)"</span>,</span>
+<span id="cb37-395"><a href="#cb37-395" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Precio real (MXN)"</span>, <span class="at">y =</span> <span class="st">"Precio predicho (MXN)"</span>) <span class="sc">+</span></span>
+<span id="cb37-396"><a href="#cb37-396" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb37-397"><a href="#cb37-397" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-398"><a href="#cb37-398" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-399"><a href="#cb37-399" aria-hidden="true" tabindex="-1"></a>El gráfico de residuos (real − predicho) contra el valor predicho ayuda a detectar sesgos: buscamos una nube sin patrón alrededor del cero. Un embudo o una curva indicarían que el modelo se equivoca sistemáticamente en algún rango (común en precios: a veces se subestiman las casas más caras).</span>
+<span id="cb37-400"><a href="#cb37-400" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-403"><a href="#cb37-403" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-404"><a href="#cb37-404" aria-hidden="true" tabindex="-1"></a>preds_ambos <span class="sc">%&gt;%</span></span>
+<span id="cb37-405"><a href="#cb37-405" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">residuo =</span> precio <span class="sc">-</span> .pred) <span class="sc">%&gt;%</span></span>
+<span id="cb37-406"><a href="#cb37-406" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">y =</span> residuo)) <span class="sc">+</span></span>
+<span id="cb37-407"><a href="#cb37-407" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>, <span class="at">color =</span> <span class="st">"#1e4c7d"</span>) <span class="sc">+</span></span>
+<span id="cb37-408"><a href="#cb37-408" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">"#c0392b"</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb37-409"><a href="#cb37-409" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> modelo) <span class="sc">+</span></span>
+<span id="cb37-410"><a href="#cb37-410" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Residuos vs. valores predichos"</span>,</span>
+<span id="cb37-411"><a href="#cb37-411" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Precio predicho (MXN)"</span>, <span class="at">y =</span> <span class="st">"Residuo (real − predicho)"</span>) <span class="sc">+</span></span>
+<span id="cb37-412"><a href="#cb37-412" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb37-413"><a href="#cb37-413" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-414"><a href="#cb37-414" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-415"><a href="#cb37-415" aria-hidden="true" tabindex="-1"></a>Una ventaja del random forest es que nos dice **qué variables pesan más** en sus predicciones. La gráfica de importancia (<span class="in">`vip`</span>) ordena los predictores según cuánto reducen el error al usarse en los cortes de los árboles (importancia por *impurity*, que pedimos al motor con <span class="in">`importance = "impurity"`</span>). Las barras más largas son los principales determinantes del precio; suelen aparecer arriba la superficie construida, la ubicación (colonias específicas) y el número de recámaras.</span>
+<span id="cb37-416"><a href="#cb37-416" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-419"><a href="#cb37-419" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-420"><a href="#cb37-420" aria-hidden="true" tabindex="-1"></a>ajuste_rf <span class="sc">%&gt;%</span></span>
+<span id="cb37-421"><a href="#cb37-421" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extract_fit_parsnip</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb37-422"><a href="#cb37-422" aria-hidden="true" tabindex="-1"></a>  vip<span class="sc">::</span><span class="fu">vip</span>(<span class="at">num_features =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb37-423"><a href="#cb37-423" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Importancia de variables — random forest"</span>) <span class="sc">+</span></span>
+<span id="cb37-424"><a href="#cb37-424" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb37-425"><a href="#cb37-425" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-426"><a href="#cb37-426" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-427"><a href="#cb37-427" aria-hidden="true" tabindex="-1"></a><span class="fu">## Veredicto: ¿cuál es el mejor modelo?</span></span>
+<span id="cb37-428"><a href="#cb37-428" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-431"><a href="#cb37-431" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-432"><a href="#cb37-432" aria-hidden="true" tabindex="-1"></a><span class="co"># Ordenamos por RMSE (menor es mejor) y medimos la diferencia relativa entre</span></span>
+<span id="cb37-433"><a href="#cb37-433" aria-hidden="true" tabindex="-1"></a><span class="co"># el mejor y el segundo, para juzgar si la ventaja es relevante o marginal.</span></span>
+<span id="cb37-434"><a href="#cb37-434" aria-hidden="true" tabindex="-1"></a>tabla_final <span class="ot">&lt;-</span> metricas_comparacion <span class="sc">%&gt;%</span></span>
+<span id="cb37-435"><a href="#cb37-435" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(rmse) <span class="sc">%&gt;%</span></span>
+<span id="cb37-436"><a href="#cb37-436" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rmse =</span> <span class="fu">round</span>(rmse, <span class="dv">2</span>),</span>
+<span id="cb37-437"><a href="#cb37-437" aria-hidden="true" tabindex="-1"></a>         <span class="at">rsq =</span> <span class="fu">round</span>(rsq, <span class="dv">3</span>),</span>
+<span id="cb37-438"><a href="#cb37-438" aria-hidden="true" tabindex="-1"></a>         <span class="at">mae =</span> <span class="fu">round</span>(mae, <span class="dv">2</span>))</span>
+<span id="cb37-439"><a href="#cb37-439" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-440"><a href="#cb37-440" aria-hidden="true" tabindex="-1"></a>ganador <span class="ot">&lt;-</span> tabla_final <span class="sc">%&gt;%</span> <span class="fu">slice</span>(<span class="dv">1</span>)</span>
+<span id="cb37-441"><a href="#cb37-441" aria-hidden="true" tabindex="-1"></a>perdedor <span class="ot">&lt;-</span> tabla_final <span class="sc">%&gt;%</span> <span class="fu">slice</span>(<span class="dv">2</span>)</span>
+<span id="cb37-442"><a href="#cb37-442" aria-hidden="true" tabindex="-1"></a>dif_rel_pct <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> (perdedor<span class="sc">$</span>rmse <span class="sc">-</span> ganador<span class="sc">$</span>rmse) <span class="sc">/</span> perdedor<span class="sc">$</span>rmse, <span class="dv">1</span>)</span>
+<span id="cb37-443"><a href="#cb37-443" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-444"><a href="#cb37-444" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-447"><a href="#cb37-447" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-448"><a href="#cb37-448" aria-hidden="true" tabindex="-1"></a><span class="co"># Tabla comparativa final (ordenada del mejor al peor por RMSE)</span></span>
+<span id="cb37-449"><a href="#cb37-449" aria-hidden="true" tabindex="-1"></a>tabla_final</span>
+<span id="cb37-450"><a href="#cb37-450" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-451"><a href="#cb37-451" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-452"><a href="#cb37-452" aria-hidden="true" tabindex="-1"></a>**Modelo recomendado: `r ganador$modelo`.** Obtiene el menor RMSE en la base de prueba (`r ganador$rmse` MXN) con un R² de `r ganador$rsq`, frente a `r perdedor$rmse` MXN del `r tolower(perdedor$modelo)`. Su RMSE es **`r dif_rel_pct`% menor**.</span>
+<span id="cb37-453"><a href="#cb37-453" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-456"><a href="#cb37-456" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb37-457"><a href="#cb37-457" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb37-458"><a href="#cb37-458" aria-hidden="true" tabindex="-1"></a><span class="co">#| results: asis</span></span>
+<span id="cb37-459"><a href="#cb37-459" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (dif_rel_pct <span class="sc">&lt;</span> <span class="dv">3</span>) {</span>
+<span id="cb37-460"><a href="#cb37-460" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"&gt; **Matiz:** la diferencia entre ambos modelos es pequeña (menos de 3% en RMSE), así que en la práctica son comparables. Conviene quedarse con la **regresión lineal** por ser más simple e interpretable, salvo que el random forest aporte reglas o importancia de variables útiles para comunicar."</span>)</span>
+<span id="cb37-461"><a href="#cb37-461" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb37-462"><a href="#cb37-462" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">paste0</span>(<span class="st">"&gt; La ventaja de **"</span>, ganador<span class="sc">$</span>modelo, <span class="st">"** es relevante ("</span>, dif_rel_pct, <span class="st">"% en RMSE), por lo que es la elección clara para este problema."</span>))</span>
+<span id="cb37-463"><a href="#cb37-463" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb37-464"><a href="#cb37-464" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb37-465"><a href="#cb37-465" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-466"><a href="#cb37-466" aria-hidden="true" tabindex="-1"></a>Recuerda el balance: la regresión lineal es la más fácil de interpretar (un coeficiente por variable, incluida cada *dummy* de colonia o estilo), mientras que el random forest captura no linealidades e interacciones (por ejemplo, que el valor del terreno dependa de la colonia) a costa de ser una "caja" menos transparente; la gráfica de importancia de variables ayuda a abrir un poco esa caja.</span>
+</code><button title="Copiar al portapapeles" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>TC2001B.601 — Ciencia de datos para la toma de decisiones I</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Jorge Juvenal Campos Ferreira · Tecnológico de Monterrey</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

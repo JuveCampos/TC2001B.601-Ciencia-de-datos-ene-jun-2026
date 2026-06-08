@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jorge Juvenal Campos Ferreira — TC2001B.601">
+
+<title>Regresión: consumo eléctrico residencial – Ejercicios de ML — TC2001B</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../regresion/02_calidad_aire/ejercicio.html" rel="next">
+<link href="../../index.html" rel="prev">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-558cd62f7dc8349c63cf1bc6991a2be3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1e27162cf48e9f5c466ba5bc80fcf22d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Sin resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Ejercicios de ML — TC2001B</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Buscar"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Navegación de palanca" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="../../index.html" aria-current="page"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../regresion/01_energia_hogares/ejercicio.html"> 
+<span class="menu-text">Regresión</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../clasificacion/03_aprobacion_credito/ejercicio.html"> 
+<span class="menu-text">Clasificación</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Alternar modo lector">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../regresion/01_energia_hogares/ejercicio.html">Regresión</a></li><li class="breadcrumb-item"><a href="../../regresion/01_energia_hogares/ejercicio.html">1 · Energía — lineal vs.&nbsp;árbol</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inicio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Regresión</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../regresion/01_energia_hogares/ejercicio.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">1 · Energía — lineal vs.&nbsp;árbol</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../regresion/02_calidad_aire/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 · Calidad del aire — lineal vs.&nbsp;random forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../regresion/03_clinicas_respiratorias/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 · Clínicas respiratorias — lineal vs.&nbsp;XGBoost</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../regresion/04_precio_viviendas/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4 · Precio de viviendas — lineal vs.&nbsp;random forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../regresion/05_costo_medico/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 · Costo médico (log) — lineal vs.&nbsp;XGBoost</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Clasificación</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/01_desercion_estudiantil/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 · Deserción — logística vs.&nbsp;KNN</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/02_cancelacion_hoteles/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 · Hoteles — logística vs.&nbsp;árbol</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/03_aprobacion_credito/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 · Crédito — logística vs.&nbsp;KNN</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/04_potabilidad_agua/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4 · Agua — logística vs.&nbsp;KNN</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/05_aprobacion_seguro/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 · Seguro — logística vs.&nbsp;XGBoost</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/06_clientes_casino/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6 · Casino (desbalance) — logística vs.&nbsp;random forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../clasificacion/07_fraude_tarjetas/ejercicio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7 · Fraude (desbalance) — logística vs.&nbsp;XGBoost</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta página</h2>
+   
+  <ul>
+  <li><a href="#cargar-librerías" id="toc-cargar-librerías" class="nav-link active" data-scroll-target="#cargar-librerías">1. Cargar librerías</a></li>
+  <li><a href="#cargar-los-datos" id="toc-cargar-los-datos" class="nav-link" data-scroll-target="#cargar-los-datos">2. Cargar los datos</a></li>
+  <li><a href="#explorar-los-datos" id="toc-explorar-los-datos" class="nav-link" data-scroll-target="#explorar-los-datos">3. Explorar los datos</a></li>
+  <li><a href="#partición-entrenamiento-prueba" id="toc-partición-entrenamiento-prueba" class="nav-link" data-scroll-target="#partición-entrenamiento-prueba">4. Partición entrenamiento / prueba</a></li>
+  <li><a href="#receta-de-preprocesamiento-compartida-por-ambos-modelos" id="toc-receta-de-preprocesamiento-compartida-por-ambos-modelos" class="nav-link" data-scroll-target="#receta-de-preprocesamiento-compartida-por-ambos-modelos">5. Receta de preprocesamiento (compartida por ambos modelos)</a></li>
+  <li><a href="#especificación-de-los-modelos" id="toc-especificación-de-los-modelos" class="nav-link" data-scroll-target="#especificación-de-los-modelos">6. Especificación de los modelos</a></li>
+  <li><a href="#validación-cruzada-y-tuning-de-hiperparámetros" id="toc-validación-cruzada-y-tuning-de-hiperparámetros" class="nav-link" data-scroll-target="#validación-cruzada-y-tuning-de-hiperparámetros">7. Validación cruzada y tuning de hiperparámetros</a></li>
+  <li><a href="#implementar-el-workflow-final-de-cada-modelo" id="toc-implementar-el-workflow-final-de-cada-modelo" class="nav-link" data-scroll-target="#implementar-el-workflow-final-de-cada-modelo">8. Implementar el workflow final de cada modelo</a></li>
+  <li><a href="#entrenar-y-evaluar-con-last_fit-sobre-la-prueba" id="toc-entrenar-y-evaluar-con-last_fit-sobre-la-prueba" class="nav-link" data-scroll-target="#entrenar-y-evaluar-con-last_fit-sobre-la-prueba">9. Entrenar y evaluar con last_fit() sobre la prueba</a></li>
+  <li><a href="#pruebas-del-modelo-métricas-y-comparación" id="toc-pruebas-del-modelo-métricas-y-comparación" class="nav-link" data-scroll-target="#pruebas-del-modelo-métricas-y-comparación">10. Pruebas del modelo: métricas y comparación</a></li>
+  <li><a href="#veredicto-cuál-es-el-mejor-modelo" id="toc-veredicto-cuál-es-el-mejor-modelo" class="nav-link" data-scroll-target="#veredicto-cuál-es-el-mejor-modelo">Veredicto: ¿cuál es el mejor modelo?</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../regresion/01_energia_hogares/ejercicio.html">Regresión</a></li><li class="breadcrumb-item"><a href="../../regresion/01_energia_hogares/ejercicio.html">1 · Energía — lineal vs.&nbsp;árbol</a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">Regresión: consumo eléctrico residencial</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Código</button></div></div>
+<p class="subtitle lead">EJERCICIO DE REGRESIÓN — Regresión lineal vs.&nbsp;árbol de regresión</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Autor/a</div>
+    <div class="quarto-title-meta-contents">
+             <p>Jorge Juvenal Campos Ferreira — TC2001B.601 </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Fecha de publicación</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">7 de junio de 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen =</span> <span class="dv">999</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Objetivo.</strong> Predecir el consumo eléctrico mensual de un hogar (<code>consumo_kwh</code>) a partir de sus características físicas y de uso. Compararemos dos modelos sobre el mismo flujo de trabajo: una <strong>regresión lineal</strong> (modelo base, interpretable) y un <strong>árbol de regresión</strong> (capta relaciones no lineales y umbrales). Recorreremos el flujo completo de <code>tidymodels</code>: partición de los datos, receta de preprocesamiento, <code>workflow()</code>, validación cruzada, ajuste de hiperparámetros y una evaluación honesta con <code>last_fit()</code>. Al final daremos un <strong>veredicto claro</strong> sobre cuál modelo conviene.</p>
+<section id="cargar-librerías" class="level2">
+<h2 class="anchored" data-anchor-id="cargar-librerías">1. Cargar librerías</h2>
+<p>Agrupamos todas las librerías al inicio (buena práctica de reproducibilidad). <code>tidyverse</code> da el lenguaje de manipulación de datos; <code>tidymodels</code> es el marco de modelado; <code>rpart</code> es el motor que ajusta el árbol de regresión; <code>corrplot</code> dibuja la matriz de correlación.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(corrplot)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rpart)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><code>tidymodels_prefer()</code> resuelve los conflictos de nombres a favor de tidymodels (por ejemplo, que <code>spec()</code> sea la de yardstick y no la de otro paquete).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>tidymodels<span class="sc">::</span><span class="fu">tidymodels_prefer</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="cargar-los-datos" class="level2">
+<h2 class="anchored" data-anchor-id="cargar-los-datos">2. Cargar los datos</h2>
+<p>Leemos el CSV y removemos <code>hogar_id</code>: es un identificador único por fila, no aporta poder predictivo y, si lo dejáramos, solo metería ruido. Las dos variables de texto (<code>aislamiento</code>, <code>tarifa_horaria</code>) las dejamos como están; la receta las convertirá en variables <em>dummy</em> más adelante.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>energia <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"datos.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>hogar_id)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><code>glimpse()</code> nos da un vistazo rápido a tipos y valores de cada columna.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(energia)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 420
+Columns: 8
+$ consumo_kwh      &lt;dbl&gt; 458.3364, 267.0903, 383.4330, 355.8243, 481.6234, 374…
+$ temp_promedio_c  &lt;dbl&gt; 27.60295, 19.60155, 25.69619, 24.57626, 21.66680, 12.…
+$ grados_calor     &lt;dbl&gt; 5.6029454, 0.0000000, 3.6961906, 2.5762561, 0.0000000…
+$ metros_cuadrados &lt;dbl&gt; 127.71559, 98.69214, 152.72687, 58.73435, 89.31725, 1…
+$ ocupantes        &lt;dbl&gt; 4, 1, 2, 3, 5, 3, 3, 2, 4, 5, 1, 3, 4, 6, 2, 2, 2, 1,…
+$ antiguedad_anios &lt;dbl&gt; 41, 17, 24, 27, 34, 9, 25, 26, 7, 7, 40, 34, 16, 27, …
+$ aislamiento      &lt;chr&gt; "medio", "basico", "medio", "medio", "basico", "basic…
+$ tarifa_horaria   &lt;chr&gt; "fija", "fija", "fija", "variable", "fija", "fija", "…</code></pre>
+</div>
+</div>
+</section>
+<section id="explorar-los-datos" class="level2">
+<h2 class="anchored" data-anchor-id="explorar-los-datos">3. Explorar los datos</h2>
+<p>Antes de modelar conviene entender la variable objetivo y las relaciones entre predictores. Tres revisiones mínimas: la <strong>distribución de la objetivo</strong> (¿hay asimetría o valores extremos?), los <strong>datos faltantes</strong> (¿qué tendremos que imputar?) y la <strong>colinealidad</strong> (¿hay predictores que miden casi lo mismo?).</p>
+<p>Primero, el histograma del consumo. Buscamos si la distribución es aproximadamente simétrica (cómodo para la regresión lineal) o muy sesgada.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>energia <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> consumo_kwh)) <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">30</span>, <span class="at">fill =</span> <span class="st">"#1e4c7d"</span>, <span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribución del consumo eléctrico mensual"</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Consumo (kWh)"</span>, <span class="at">y =</span> <span class="st">"Frecuencia"</span>) <span class="sc">+</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ejercicio_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><code>summary()</code> resume cada variable y, de paso, nos dice cuántos <code>NA</code> tiene cada columna.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(energia)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  consumo_kwh    temp_promedio_c  grados_calor    metros_cuadrados
+ Min.   :137.3   Min.   :12.27   Min.   : 0.000   Min.   : 33.50  
+ 1st Qu.:313.0   1st Qu.:21.62   1st Qu.: 0.000   1st Qu.: 72.36  
+ Median :368.8   Median :25.09   Median : 3.087   Median : 93.72  
+ Mean   :373.2   Mean   :25.10   Mean   : 3.897   Mean   : 99.32  
+ 3rd Qu.:440.0   3rd Qu.:28.11   3rd Qu.: 6.113   3rd Qu.:116.34  
+ Max.   :655.8   Max.   :38.19   Max.   :16.194   Max.   :304.16  
+   ocupantes     antiguedad_anios aislamiento        tarifa_horaria    
+ Min.   :1.000   Min.   : 0.00    Length:420         Length:420        
+ 1st Qu.:2.000   1st Qu.:15.00    Class :character   Class :character  
+ Median :3.000   Median :24.00    Mode  :character   Mode  :character  
+ Mean   :3.114   Mean   :23.79                                         
+ 3rd Qu.:4.000   3rd Qu.:33.00                                         
+ Max.   :6.000   Max.   :58.00                                         </code></pre>
+</div>
+</div>
+<p>Contamos los <code>NA</code> por columna de forma explícita: esto guía qué pasos de imputación necesitará la receta.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>energia <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(.)))) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">everything</span>(), <span class="at">names_to =</span> <span class="st">"variable"</span>, <span class="at">values_to =</span> <span class="st">"n_na"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_na))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">variable</th>
+<th style="text-align: right;">n_na</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">consumo_kwh</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">temp_promedio_c</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">grados_calor</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">metros_cuadrados</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ocupantes</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">antiguedad_anios</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">aislamiento</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tarifa_horaria</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>La matriz de correlación nos deja ver colinealidad entre predictores numéricos (por ejemplo, <code>temp_promedio_c</code> y <code>grados_calor</code> suelen moverse juntas). Si dos variables miden casi lo mismo, la regresión lineal sufre (infla la varianza de los coeficientes); por eso más adelante filtraremos con <code>step_corr()</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>matriz_correlacion <span class="ot">&lt;-</span> energia <span class="sc">%&gt;%</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.numeric)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cor</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="dv">2</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>matriz_correlacion <span class="sc">%&gt;%</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">corrplot</span>(<span class="at">method =</span> <span class="st">"circle"</span>, <span class="at">addCoef.col =</span> <span class="st">"black"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ejercicio_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="partición-entrenamiento-prueba" class="level2">
+<h2 class="anchored" data-anchor-id="partición-entrenamiento-prueba">4. Partición entrenamiento / prueba</h2>
+<p>Dividimos los datos en <strong>entrenamiento</strong> (75%) y <strong>prueba</strong> (25%). La base de prueba se “guarda en una caja fuerte”: no la tocamos hasta el final, para obtener una estimación honesta del desempeño en datos nuevos. Estratificamos por la objetivo para que ambas particiones cubran rangos de consumo parecidos (en regresión, <code>initial_split</code> estratifica por cuantiles).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>energia_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(energia, <span class="at">prop =</span> <span class="fl">0.75</span>, <span class="at">strata =</span> consumo_kwh)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>energia_entrenamiento <span class="ot">&lt;-</span> energia_split <span class="sc">%&gt;%</span> <span class="fu">training</span>()</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>energia_prueba <span class="ot">&lt;-</span> energia_split <span class="sc">%&gt;%</span> <span class="fu">testing</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">entrenamiento =</span> <span class="fu">nrow</span>(energia_entrenamiento),</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">prueba =</span> <span class="fu">nrow</span>(energia_prueba))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>entrenamiento        prueba 
+          312           108 </code></pre>
+</div>
+</div>
+</section>
+<section id="receta-de-preprocesamiento-compartida-por-ambos-modelos" class="level2">
+<h2 class="anchored" data-anchor-id="receta-de-preprocesamiento-compartida-por-ambos-modelos">5. Receta de preprocesamiento (compartida por ambos modelos)</h2>
+<p>Usamos <strong>una sola receta</strong> para que los dos modelos sean comparables: ambos verán exactamente la misma representación de los datos.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+¿Qué es una receta y por qué importa el orden de los pasos?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Una <strong>receta</strong> (<code>recipe</code>) encadena pasos de preprocesamiento (<code>step_*</code>) que se <em>aprenden</em> solo con el entrenamiento y luego se aplican igual a la prueba (esto evita fuga de información). El orden importa: imputamos los <code>NA</code> <strong>primero</strong>, porque pasos como <code>step_corr</code> o <code>step_normalize</code> no toleran faltantes; normalizamos antes de crear <em>dummies</em> para que estas queden en 0/1; y dejamos <code>step_zv</code> al final como red de seguridad.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>receta_energia <span class="ot">&lt;-</span> <span class="fu">recipe</span>(consumo_kwh <span class="sc">~</span> ., <span class="at">data =</span> energia_entrenamiento) <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_impute_median</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">%&gt;%</span>   <span class="co"># imputar NAs numéricos</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_impute_mode</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span>      <span class="co"># imputar NAs categóricos</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_nzv</span>(<span class="fu">all_predictors</span>()) <span class="sc">%&gt;%</span>                      <span class="co"># quitar casi-constantes</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_corr</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.85</span>) <span class="sc">%&gt;%</span>  <span class="co"># colinealidad</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">%&gt;%</span>        <span class="co"># estandarizar</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span>            <span class="co"># codificar categóricas</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())                           <span class="co"># red de seguridad</span></span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Conviene “hornear” la receta una vez para ver cómo quedan las variables tras el preprocesamiento (solo es inspección; el <code>workflow</code> lo hará por nosotros después).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>receta_energia <span class="sc">%&gt;%</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">prep</span>(<span class="at">training =</span> energia_entrenamiento) <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bake</span>(<span class="at">new_data =</span> <span class="cn">NULL</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">glimpse</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 312
+Columns: 8
+$ grados_calor            &lt;dbl&gt; -1.04182867, -0.79042605, -1.04182867, 1.51040…
+$ metros_cuadrados        &lt;dbl&gt; 0.02828771, -0.58884675, 0.88733487, -1.573441…
+$ ocupantes               &lt;dbl&gt; -1.51667628, -1.51667628, -0.79642818, -0.7964…
+$ antiguedad_anios        &lt;dbl&gt; -0.49157422, 1.29181132, -0.10388171, -0.72418…
+$ consumo_kwh             &lt;dbl&gt; 267.0903, 274.0353, 305.4181, 261.7358, 298.06…
+$ aislamiento_basico      &lt;dbl&gt; 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0…
+$ aislamiento_medio       &lt;dbl&gt; 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1…
+$ tarifa_horaria_variable &lt;dbl&gt; 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1…</code></pre>
+</div>
+</div>
+</section>
+<section id="especificación-de-los-modelos" class="level2">
+<h2 class="anchored" data-anchor-id="especificación-de-los-modelos">6. Especificación de los modelos</h2>
+<p>Definimos los dos modelos con <code>parsnip</code>. El primero es la <strong>regresión lineal</strong>: no tiene hiperparámetros que ajustar.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>modelo_lineal <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>El segundo es el <strong>árbol de regresión</strong>, donde sí ajustaremos dos hiperparámetros.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+¿Qué es un árbol de regresión?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Un <strong>árbol de regresión</strong> parte el espacio de predictores con reglas tipo “si <code>metros_cuadrados</code> &gt; X y <code>aislamiento</code> = bueno, entonces…”, y predice el promedio de cada hoja. Capta no linealidades y umbrales que la regresión lineal no ve, pero un solo árbol es <strong>inestable</strong> (cambia mucho con pequeñas variaciones de los datos). Ajustamos <code>cost_complexity</code> (poda: penaliza árboles grandes) y <code>tree_depth</code> (profundidad máxima) para regularizarlo. <code>tune()</code> marca esos valores como “a determinar por validación cruzada”.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>modelo_arbol <span class="ot">&lt;-</span> <span class="fu">decision_tree</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">cost_complexity =</span> <span class="fu">tune</span>(),</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">tree_depth =</span> <span class="fu">tune</span>()</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"rpart"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Cada modelo se empaqueta con la <strong>misma</strong> receta en su propio <code>workflow</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+¿Qué es un workflow?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Un <strong>workflow</strong> empaqueta en un solo objeto la receta de preprocesamiento y el modelo. Al hacer <code>fit()</code> aplica internamente <code>prep</code> + <code>bake</code> + <code>fit</code>, y al <code>predict()</code> repite el mismo preprocesamiento sobre los datos nuevos sin que tengamos que recordarlo. Es la pieza estándar para validación cruzada y tuning.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>workflow_lineal <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_energia) <span class="sc">%&gt;%</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_lineal)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>workflow_arbol <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_energia) <span class="sc">%&gt;%</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_arbol)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="validación-cruzada-y-tuning-de-hiperparámetros" class="level2">
+<h2 class="anchored" data-anchor-id="validación-cruzada-y-tuning-de-hiperparámetros">7. Validación cruzada y tuning de hiperparámetros</h2>
+<p>Para comparar los modelos y elegir los hiperparámetros del árbol <strong>sin tocar la prueba</strong>, usamos validación cruzada sobre el entrenamiento.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+¿Qué es la validación cruzada (k-fold)?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Partimos el entrenamiento en <code>v</code> partes (folds) del mismo tamaño. En cada ronda entrenamos con <code>v − 1</code> folds y evaluamos en el fold restante, rotando cuál se deja fuera; luego promediamos el desempeño. Así estimamos qué tan bien generaliza el modelo <strong>usando solo el entrenamiento</strong>, y reservamos la prueba para el final.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>folds_cv <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(energia_entrenamiento, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">strata =</span> consumo_kwh)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Definimos las métricas de regresión que vigilaremos.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+RMSE, MAE y R²
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>RMSE</strong> (raíz del error cuadrático medio): error típico en las unidades de la objetivo; penaliza más los errores grandes. Es la métrica de decisión.</li>
+<li><strong>MAE</strong> (error absoluto medio): error típico, más robusto a valores extremos.</li>
+<li><strong>R²</strong>: proporción de la variación de la objetivo que el modelo explica (1 = perfecto; 0 = no mejor que predecir la media).</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>metricas_regresion <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(rmse, rsq, mae)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>La regresión lineal <strong>no se tunea</strong>; estimamos su desempeño en CV con <code>fit_resamples()</code>. Esto la pone en igualdad de condiciones que el árbol.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+fit_resamples() vs.&nbsp;tune_grid()
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Cuando un modelo <strong>no</strong> tiene hiperparámetros que ajustar (regresión lineal), <code>fit_resamples()</code> solo lo evalúa en cada fold. Cuando <strong>sí</strong> los tiene (el árbol), <code>tune_grid()</code> prueba varias combinaciones de hiperparámetros en la validación cruzada y nos deja elegir la mejor.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>cv_lineal <span class="ot">&lt;-</span> workflow_lineal <span class="sc">%&gt;%</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_resamples</span>(<span class="at">resamples =</span> folds_cv, <span class="at">metrics =</span> metricas_regresion)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(cv_lineal)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">.metric</th>
+<th style="text-align: left;">.estimator</th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">std_err</th>
+<th style="text-align: left;">.config</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">mae</td>
+<td style="text-align: left;">standard</td>
+<td style="text-align: right;">37.2224572</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">1.5138717</td>
+<td style="text-align: left;">pre0_mod0_post0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rmse</td>
+<td style="text-align: left;">standard</td>
+<td style="text-align: right;">46.5809653</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">1.8709439</td>
+<td style="text-align: left;">pre0_mod0_post0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rsq</td>
+<td style="text-align: left;">standard</td>
+<td style="text-align: right;">0.7367461</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.0225192</td>
+<td style="text-align: left;">pre0_mod0_post0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>Para el árbol construimos una grilla de hiperparámetros: combinaciones de <code>cost_complexity</code> y <code>tree_depth</code> (<code>levels = 4</code> da 4 × 4 = 16 candidatos).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>grilla_arbol <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(<span class="fu">cost_complexity</span>(),</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>                             <span class="fu">tree_depth</span>(),</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">levels =</span> <span class="dv">4</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>tuning_arbol <span class="ot">&lt;-</span> workflow_arbol <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> folds_cv,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">grid =</span> grilla_arbol,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">metrics =</span> metricas_regresion)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>La siguiente gráfica resume el tuning: muestra el RMSE de validación cruzada según la profundidad del árbol, con una línea por nivel de poda. Buscamos la combinación con menor RMSE.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>tuning_arbol <span class="sc">%&gt;%</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"rmse"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> tree_depth, <span class="at">y =</span> mean,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">color =</span> <span class="fu">factor</span>(<span class="fu">round</span>(cost_complexity, <span class="dv">5</span>)))) <span class="sc">+</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"RMSE en validación cruzada — árbol de regresión"</span>,</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Profundidad del árbol"</span>, <span class="at">y =</span> <span class="st">"RMSE promedio"</span>,</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">"cost_complexity"</span>) <span class="sc">+</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ejercicio_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>mejor_arbol <span class="ot">&lt;-</span> tuning_arbol <span class="sc">%&gt;%</span> <span class="fu">select_best</span>(<span class="at">metric =</span> <span class="st">"rmse"</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>mejor_arbol</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">cost_complexity</th>
+<th style="text-align: right;">tree_depth</th>
+<th style="text-align: left;">.config</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: left;">pre0_mod03_post0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+<section id="implementar-el-workflow-final-de-cada-modelo" class="level2">
+<h2 class="anchored" data-anchor-id="implementar-el-workflow-final-de-cada-modelo">8. Implementar el workflow final de cada modelo</h2>
+<p>La regresión lineal ya está lista. Al árbol le <strong>inyectamos</strong> los hiperparámetros ganadores con <code>finalize_workflow()</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>workflow_arbol_final <span class="ot">&lt;-</span> workflow_arbol <span class="sc">%&gt;%</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(mejor_arbol)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="entrenar-y-evaluar-con-last_fit-sobre-la-prueba" class="level2">
+<h2 class="anchored" data-anchor-id="entrenar-y-evaluar-con-last_fit-sobre-la-prueba">9. Entrenar y evaluar con last_fit() sobre la prueba</h2>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+¿Qué hace last_fit()?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><code>last_fit()</code> toma el split original, <strong>reentrena</strong> el modelo final sobre TODO el entrenamiento y lo evalúa <strong>una sola vez</strong> sobre la base de prueba reservada. Es el paso que da la estimación honesta del desempeño en datos que el modelo nunca vio.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>ajuste_lineal <span class="ot">&lt;-</span> workflow_lineal <span class="sc">%&gt;%</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">last_fit</span>(<span class="at">split =</span> energia_split, <span class="at">metrics =</span> metricas_regresion)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>ajuste_arbol <span class="ot">&lt;-</span> workflow_arbol_final <span class="sc">%&gt;%</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">last_fit</span>(<span class="at">split =</span> energia_split, <span class="at">metrics =</span> metricas_regresion)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="pruebas-del-modelo-métricas-y-comparación" class="level2">
+<h2 class="anchored" data-anchor-id="pruebas-del-modelo-métricas-y-comparación">10. Pruebas del modelo: métricas y comparación</h2>
+<p>Reunimos las métricas de <strong>ambos</strong> modelos en la base de prueba en una sola tabla. Esta es la comparación que nos interesa: el desempeño en datos no vistos.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>metricas_comparacion <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">collect_metrics</span>(ajuste_lineal) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Regresión lineal"</span>),</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">collect_metrics</span>(ajuste_arbol) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Árbol de regresión"</span>)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(modelo, .metric, .estimate) <span class="sc">%&gt;%</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> .metric, <span class="at">values_from =</span> .estimate) <span class="sc">%&gt;%</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(rmse)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>metricas_comparacion</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">modelo</th>
+<th style="text-align: right;">rmse</th>
+<th style="text-align: right;">rsq</th>
+<th style="text-align: right;">mae</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Regresión lineal</td>
+<td style="text-align: right;">43.84808</td>
+<td style="text-align: right;">0.7942473</td>
+<td style="text-align: right;">35.34263</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Árbol de regresión</td>
+<td style="text-align: right;">65.14123</td>
+<td style="text-align: right;">0.5733230</td>
+<td style="text-align: right;">52.74761</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>Para visualizar la calidad de cada modelo, graficamos los valores reales contra los predichos. La diagonal roja es la predicción perfecta: entre más pegados los puntos a la línea, mejor.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>preds_lineal <span class="ot">&lt;-</span> <span class="fu">collect_predictions</span>(ajuste_lineal) <span class="sc">%&gt;%</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Regresión lineal"</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>preds_arbol <span class="ot">&lt;-</span> <span class="fu">collect_predictions</span>(ajuste_arbol) <span class="sc">%&gt;%</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Árbol de regresión"</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>preds_ambos <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(preds_lineal, preds_arbol)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>preds_ambos <span class="sc">%&gt;%</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> consumo_kwh, <span class="at">y =</span> .pred)) <span class="sc">+</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>, <span class="at">color =</span> <span class="st">"#1e4c7d"</span>) <span class="sc">+</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">color =</span> <span class="st">"#c0392b"</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> modelo) <span class="sc">+</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Valores reales vs. predichos (base de prueba)"</span>,</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Consumo real (kWh)"</span>, <span class="at">y =</span> <span class="st">"Consumo predicho (kWh)"</span>) <span class="sc">+</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ejercicio_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>El gráfico de residuos (real − predicho) contra el valor predicho ayuda a detectar sesgos: buscamos una nube sin patrón alrededor del cero. Un embudo o una curva indicarían que el modelo se equivoca sistemáticamente en algún rango.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>preds_ambos <span class="sc">%&gt;%</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">residuo =</span> consumo_kwh <span class="sc">-</span> .pred) <span class="sc">%&gt;%</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">y =</span> residuo)) <span class="sc">+</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>, <span class="at">color =</span> <span class="st">"#1e4c7d"</span>) <span class="sc">+</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">"#c0392b"</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> modelo) <span class="sc">+</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Residuos vs. valores predichos"</span>,</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Consumo predicho (kWh)"</span>, <span class="at">y =</span> <span class="st">"Residuo (real − predicho)"</span>) <span class="sc">+</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ejercicio_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="veredicto-cuál-es-el-mejor-modelo" class="level2">
+<h2 class="anchored" data-anchor-id="veredicto-cuál-es-el-mejor-modelo">Veredicto: ¿cuál es el mejor modelo?</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ordenamos por RMSE (menor es mejor) y medimos la diferencia relativa entre</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="co"># el mejor y el segundo, para juzgar si la ventaja es relevante o marginal.</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>tabla_final <span class="ot">&lt;-</span> metricas_comparacion <span class="sc">%&gt;%</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(rmse) <span class="sc">%&gt;%</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rmse =</span> <span class="fu">round</span>(rmse, <span class="dv">2</span>),</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">rsq =</span> <span class="fu">round</span>(rsq, <span class="dv">3</span>),</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">mae =</span> <span class="fu">round</span>(mae, <span class="dv">2</span>))</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>ganador <span class="ot">&lt;-</span> tabla_final <span class="sc">%&gt;%</span> <span class="fu">slice</span>(<span class="dv">1</span>)</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>perdedor <span class="ot">&lt;-</span> tabla_final <span class="sc">%&gt;%</span> <span class="fu">slice</span>(<span class="dv">2</span>)</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>dif_rel_pct <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> (perdedor<span class="sc">$</span>rmse <span class="sc">-</span> ganador<span class="sc">$</span>rmse) <span class="sc">/</span> perdedor<span class="sc">$</span>rmse, <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tabla comparativa final (ordenada del mejor al peor por RMSE)</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>tabla_final</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">modelo</th>
+<th style="text-align: right;">rmse</th>
+<th style="text-align: right;">rsq</th>
+<th style="text-align: right;">mae</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Regresión lineal</td>
+<td style="text-align: right;">43.85</td>
+<td style="text-align: right;">0.794</td>
+<td style="text-align: right;">35.34</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Árbol de regresión</td>
+<td style="text-align: right;">65.14</td>
+<td style="text-align: right;">0.573</td>
+<td style="text-align: right;">52.75</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p><strong>Modelo recomendado: Regresión lineal.</strong> Obtiene el menor RMSE en la base de prueba (43.85 kWh) con un R² de 0.794, frente a 65.14 kWh del árbol de regresión. Su RMSE es <strong>32.7% menor</strong>.</p>
+<blockquote class="blockquote">
+<p>La ventaja de <strong>Regresión lineal</strong> es relevante (32.7% en RMSE), por lo que es la elección clara para este problema.</p>
+</blockquote>
+<p>Recuerda que la regresión lineal es la más fácil de interpretar (un coeficiente por variable), mientras que el árbol capta umbrales y no linealidades a costa de mayor inestabilidad; el tuning de <code>cost_complexity</code> y <code>tree_depth</code> lo regulariza.</p>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/JuveCampos\.github\.io\/TC2001B\.601-Ciencia-de-datos-ene-jun-2026\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../index.html" class="pagination-link" aria-label="Inicio">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Inicio</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../regresion/02_calidad_aire/ejercicio.html" class="pagination-link" aria-label="2 · Calidad del aire — lineal vs. random forest">
+        <span class="nav-page-text">2 · Calidad del aire — lineal vs.&nbsp;random forest</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Ejecutar el código</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb36" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Regresión: consumo eléctrico residencial"</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "EJERCICIO DE REGRESIÓN — Regresión lineal vs. árbol de regresión"</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "Jorge Juvenal Campos Ferreira — TC2001B.601"</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="an">lang:</span><span class="co"> es</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> today</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="an">execute:</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a><span class="co">  echo: true</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a><span class="co">  warning: false</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a><span class="co">  message: false</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a><span class="co">  cache: false</span></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen =</span> <span class="dv">999</span>)</span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a>**Objetivo.** Predecir el consumo eléctrico mensual de un hogar (`consumo_kwh`) a partir de sus características físicas y de uso. Compararemos dos modelos sobre el mismo flujo de trabajo: una **regresión lineal** (modelo base, interpretable) y un **árbol de regresión** (capta relaciones no lineales y umbrales). Recorreremos el flujo completo de `tidymodels`: partición de los datos, receta de preprocesamiento, `workflow()`, validación cruzada, ajuste de hiperparámetros y una evaluación honesta con `last_fit()`. Al final daremos un **veredicto claro** sobre cuál modelo conviene.</span>
+<span id="cb36-21"><a href="#cb36-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-22"><a href="#cb36-22" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1. Cargar librerías</span></span>
+<span id="cb36-23"><a href="#cb36-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-24"><a href="#cb36-24" aria-hidden="true" tabindex="-1"></a>Agrupamos todas las librerías al inicio (buena práctica de reproducibilidad). <span class="in">`tidyverse`</span> da el lenguaje de manipulación de datos; <span class="in">`tidymodels`</span> es el marco de modelado; <span class="in">`rpart`</span> es el motor que ajusta el árbol de regresión; <span class="in">`corrplot`</span> dibuja la matriz de correlación.</span>
+<span id="cb36-25"><a href="#cb36-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-28"><a href="#cb36-28" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-29"><a href="#cb36-29" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb36-30"><a href="#cb36-30" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb36-31"><a href="#cb36-31" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(corrplot)</span>
+<span id="cb36-32"><a href="#cb36-32" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rpart)</span>
+<span id="cb36-33"><a href="#cb36-33" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-34"><a href="#cb36-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-35"><a href="#cb36-35" aria-hidden="true" tabindex="-1"></a><span class="in">`tidymodels_prefer()`</span> resuelve los conflictos de nombres a favor de tidymodels (por ejemplo, que <span class="in">`spec()`</span> sea la de yardstick y no la de otro paquete).</span>
+<span id="cb36-36"><a href="#cb36-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-39"><a href="#cb36-39" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-40"><a href="#cb36-40" aria-hidden="true" tabindex="-1"></a>tidymodels<span class="sc">::</span><span class="fu">tidymodels_prefer</span>()</span>
+<span id="cb36-41"><a href="#cb36-41" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-42"><a href="#cb36-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-43"><a href="#cb36-43" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2. Cargar los datos</span></span>
+<span id="cb36-44"><a href="#cb36-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-45"><a href="#cb36-45" aria-hidden="true" tabindex="-1"></a>Leemos el CSV y removemos <span class="in">`hogar_id`</span>: es un identificador único por fila, no aporta poder predictivo y, si lo dejáramos, solo metería ruido. Las dos variables de texto (<span class="in">`aislamiento`</span>, <span class="in">`tarifa_horaria`</span>) las dejamos como están; la receta las convertirá en variables *dummy* más adelante.</span>
+<span id="cb36-46"><a href="#cb36-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-49"><a href="#cb36-49" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-50"><a href="#cb36-50" aria-hidden="true" tabindex="-1"></a>energia <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"datos.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb36-51"><a href="#cb36-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>hogar_id)</span>
+<span id="cb36-52"><a href="#cb36-52" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-53"><a href="#cb36-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-54"><a href="#cb36-54" aria-hidden="true" tabindex="-1"></a><span class="in">`glimpse()`</span> nos da un vistazo rápido a tipos y valores de cada columna.</span>
+<span id="cb36-55"><a href="#cb36-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-58"><a href="#cb36-58" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-59"><a href="#cb36-59" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(energia)</span>
+<span id="cb36-60"><a href="#cb36-60" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-61"><a href="#cb36-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-62"><a href="#cb36-62" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3. Explorar los datos</span></span>
+<span id="cb36-63"><a href="#cb36-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-64"><a href="#cb36-64" aria-hidden="true" tabindex="-1"></a>Antes de modelar conviene entender la variable objetivo y las relaciones entre predictores. Tres revisiones mínimas: la **distribución de la objetivo** (¿hay asimetría o valores extremos?), los **datos faltantes** (¿qué tendremos que imputar?) y la **colinealidad** (¿hay predictores que miden casi lo mismo?).</span>
+<span id="cb36-65"><a href="#cb36-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-66"><a href="#cb36-66" aria-hidden="true" tabindex="-1"></a>Primero, el histograma del consumo. Buscamos si la distribución es aproximadamente simétrica (cómodo para la regresión lineal) o muy sesgada.</span>
+<span id="cb36-67"><a href="#cb36-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-70"><a href="#cb36-70" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-71"><a href="#cb36-71" aria-hidden="true" tabindex="-1"></a>energia <span class="sc">%&gt;%</span></span>
+<span id="cb36-72"><a href="#cb36-72" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> consumo_kwh)) <span class="sc">+</span></span>
+<span id="cb36-73"><a href="#cb36-73" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">30</span>, <span class="at">fill =</span> <span class="st">"#1e4c7d"</span>, <span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb36-74"><a href="#cb36-74" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribución del consumo eléctrico mensual"</span>,</span>
+<span id="cb36-75"><a href="#cb36-75" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Consumo (kWh)"</span>, <span class="at">y =</span> <span class="st">"Frecuencia"</span>) <span class="sc">+</span></span>
+<span id="cb36-76"><a href="#cb36-76" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb36-77"><a href="#cb36-77" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-78"><a href="#cb36-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-79"><a href="#cb36-79" aria-hidden="true" tabindex="-1"></a><span class="in">`summary()`</span> resume cada variable y, de paso, nos dice cuántos <span class="in">`NA`</span> tiene cada columna.</span>
+<span id="cb36-80"><a href="#cb36-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-83"><a href="#cb36-83" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-84"><a href="#cb36-84" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(energia)</span>
+<span id="cb36-85"><a href="#cb36-85" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-86"><a href="#cb36-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-87"><a href="#cb36-87" aria-hidden="true" tabindex="-1"></a>Contamos los <span class="in">`NA`</span> por columna de forma explícita: esto guía qué pasos de imputación necesitará la receta.</span>
+<span id="cb36-88"><a href="#cb36-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-91"><a href="#cb36-91" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-92"><a href="#cb36-92" aria-hidden="true" tabindex="-1"></a>energia <span class="sc">%&gt;%</span></span>
+<span id="cb36-93"><a href="#cb36-93" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(.)))) <span class="sc">%&gt;%</span></span>
+<span id="cb36-94"><a href="#cb36-94" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">everything</span>(), <span class="at">names_to =</span> <span class="st">"variable"</span>, <span class="at">values_to =</span> <span class="st">"n_na"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb36-95"><a href="#cb36-95" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_na))</span>
+<span id="cb36-96"><a href="#cb36-96" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-97"><a href="#cb36-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-98"><a href="#cb36-98" aria-hidden="true" tabindex="-1"></a>La matriz de correlación nos deja ver colinealidad entre predictores numéricos (por ejemplo, <span class="in">`temp_promedio_c`</span> y <span class="in">`grados_calor`</span> suelen moverse juntas). Si dos variables miden casi lo mismo, la regresión lineal sufre (infla la varianza de los coeficientes); por eso más adelante filtraremos con <span class="in">`step_corr()`</span>.</span>
+<span id="cb36-99"><a href="#cb36-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-102"><a href="#cb36-102" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-103"><a href="#cb36-103" aria-hidden="true" tabindex="-1"></a>matriz_correlacion <span class="ot">&lt;-</span> energia <span class="sc">%&gt;%</span></span>
+<span id="cb36-104"><a href="#cb36-104" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.numeric)) <span class="sc">%&gt;%</span></span>
+<span id="cb36-105"><a href="#cb36-105" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb36-106"><a href="#cb36-106" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cor</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb36-107"><a href="#cb36-107" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="dv">2</span>)</span>
+<span id="cb36-108"><a href="#cb36-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-109"><a href="#cb36-109" aria-hidden="true" tabindex="-1"></a>matriz_correlacion <span class="sc">%&gt;%</span></span>
+<span id="cb36-110"><a href="#cb36-110" aria-hidden="true" tabindex="-1"></a>  <span class="fu">corrplot</span>(<span class="at">method =</span> <span class="st">"circle"</span>, <span class="at">addCoef.col =</span> <span class="st">"black"</span>)</span>
+<span id="cb36-111"><a href="#cb36-111" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-112"><a href="#cb36-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-113"><a href="#cb36-113" aria-hidden="true" tabindex="-1"></a><span class="fu">## 4. Partición entrenamiento / prueba</span></span>
+<span id="cb36-114"><a href="#cb36-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-115"><a href="#cb36-115" aria-hidden="true" tabindex="-1"></a>Dividimos los datos en **entrenamiento** (75%) y **prueba** (25%). La base de prueba se "guarda en una caja fuerte": no la tocamos hasta el final, para obtener una estimación honesta del desempeño en datos nuevos. Estratificamos por la objetivo para que ambas particiones cubran rangos de consumo parecidos (en regresión, <span class="in">`initial_split`</span> estratifica por cuantiles).</span>
+<span id="cb36-116"><a href="#cb36-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-119"><a href="#cb36-119" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-120"><a href="#cb36-120" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb36-121"><a href="#cb36-121" aria-hidden="true" tabindex="-1"></a>energia_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(energia, <span class="at">prop =</span> <span class="fl">0.75</span>, <span class="at">strata =</span> consumo_kwh)</span>
+<span id="cb36-122"><a href="#cb36-122" aria-hidden="true" tabindex="-1"></a>energia_entrenamiento <span class="ot">&lt;-</span> energia_split <span class="sc">%&gt;%</span> <span class="fu">training</span>()</span>
+<span id="cb36-123"><a href="#cb36-123" aria-hidden="true" tabindex="-1"></a>energia_prueba <span class="ot">&lt;-</span> energia_split <span class="sc">%&gt;%</span> <span class="fu">testing</span>()</span>
+<span id="cb36-124"><a href="#cb36-124" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-125"><a href="#cb36-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-128"><a href="#cb36-128" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-129"><a href="#cb36-129" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">entrenamiento =</span> <span class="fu">nrow</span>(energia_entrenamiento),</span>
+<span id="cb36-130"><a href="#cb36-130" aria-hidden="true" tabindex="-1"></a>  <span class="at">prueba =</span> <span class="fu">nrow</span>(energia_prueba))</span>
+<span id="cb36-131"><a href="#cb36-131" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-132"><a href="#cb36-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-133"><a href="#cb36-133" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5. Receta de preprocesamiento (compartida por ambos modelos)</span></span>
+<span id="cb36-134"><a href="#cb36-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-135"><a href="#cb36-135" aria-hidden="true" tabindex="-1"></a>Usamos **una sola receta** para que los dos modelos sean comparables: ambos verán exactamente la misma representación de los datos.</span>
+<span id="cb36-136"><a href="#cb36-136" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-137"><a href="#cb36-137" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb36-138"><a href="#cb36-138" aria-hidden="true" tabindex="-1"></a><span class="fu">## ¿Qué es una receta y por qué importa el orden de los pasos?</span></span>
+<span id="cb36-139"><a href="#cb36-139" aria-hidden="true" tabindex="-1"></a>Una **receta** (`recipe`) encadena pasos de preprocesamiento (`step_*`) que se *aprenden* solo con el entrenamiento y luego se aplican igual a la prueba (esto evita fuga de información). El orden importa: imputamos los `NA` **primero**, porque pasos como <span class="in">`step_corr`</span> o <span class="in">`step_normalize`</span> no toleran faltantes; normalizamos antes de crear *dummies* para que estas queden en 0/1; y dejamos <span class="in">`step_zv`</span> al final como red de seguridad.</span>
+<span id="cb36-140"><a href="#cb36-140" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb36-141"><a href="#cb36-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-144"><a href="#cb36-144" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-145"><a href="#cb36-145" aria-hidden="true" tabindex="-1"></a>receta_energia <span class="ot">&lt;-</span> <span class="fu">recipe</span>(consumo_kwh <span class="sc">~</span> ., <span class="at">data =</span> energia_entrenamiento) <span class="sc">%&gt;%</span></span>
+<span id="cb36-146"><a href="#cb36-146" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_impute_median</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">%&gt;%</span>   <span class="co"># imputar NAs numéricos</span></span>
+<span id="cb36-147"><a href="#cb36-147" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_impute_mode</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span>      <span class="co"># imputar NAs categóricos</span></span>
+<span id="cb36-148"><a href="#cb36-148" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_nzv</span>(<span class="fu">all_predictors</span>()) <span class="sc">%&gt;%</span>                      <span class="co"># quitar casi-constantes</span></span>
+<span id="cb36-149"><a href="#cb36-149" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_corr</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.85</span>) <span class="sc">%&gt;%</span>  <span class="co"># colinealidad</span></span>
+<span id="cb36-150"><a href="#cb36-150" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">%&gt;%</span>        <span class="co"># estandarizar</span></span>
+<span id="cb36-151"><a href="#cb36-151" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span>            <span class="co"># codificar categóricas</span></span>
+<span id="cb36-152"><a href="#cb36-152" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())                           <span class="co"># red de seguridad</span></span>
+<span id="cb36-153"><a href="#cb36-153" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-154"><a href="#cb36-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-155"><a href="#cb36-155" aria-hidden="true" tabindex="-1"></a>Conviene "hornear" la receta una vez para ver cómo quedan las variables tras el preprocesamiento (solo es inspección; el <span class="in">`workflow`</span> lo hará por nosotros después).</span>
+<span id="cb36-156"><a href="#cb36-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-159"><a href="#cb36-159" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-160"><a href="#cb36-160" aria-hidden="true" tabindex="-1"></a>receta_energia <span class="sc">%&gt;%</span></span>
+<span id="cb36-161"><a href="#cb36-161" aria-hidden="true" tabindex="-1"></a>  <span class="fu">prep</span>(<span class="at">training =</span> energia_entrenamiento) <span class="sc">%&gt;%</span></span>
+<span id="cb36-162"><a href="#cb36-162" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bake</span>(<span class="at">new_data =</span> <span class="cn">NULL</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb36-163"><a href="#cb36-163" aria-hidden="true" tabindex="-1"></a>  <span class="fu">glimpse</span>()</span>
+<span id="cb36-164"><a href="#cb36-164" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-165"><a href="#cb36-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-166"><a href="#cb36-166" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6. Especificación de los modelos</span></span>
+<span id="cb36-167"><a href="#cb36-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-168"><a href="#cb36-168" aria-hidden="true" tabindex="-1"></a>Definimos los dos modelos con <span class="in">`parsnip`</span>. El primero es la **regresión lineal**: no tiene hiperparámetros que ajustar.</span>
+<span id="cb36-169"><a href="#cb36-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-172"><a href="#cb36-172" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-173"><a href="#cb36-173" aria-hidden="true" tabindex="-1"></a>modelo_lineal <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb36-174"><a href="#cb36-174" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb36-175"><a href="#cb36-175" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span>
+<span id="cb36-176"><a href="#cb36-176" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-177"><a href="#cb36-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-178"><a href="#cb36-178" aria-hidden="true" tabindex="-1"></a>El segundo es el **árbol de regresión**, donde sí ajustaremos dos hiperparámetros.</span>
+<span id="cb36-179"><a href="#cb36-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-180"><a href="#cb36-180" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb36-181"><a href="#cb36-181" aria-hidden="true" tabindex="-1"></a><span class="fu">## ¿Qué es un árbol de regresión?</span></span>
+<span id="cb36-182"><a href="#cb36-182" aria-hidden="true" tabindex="-1"></a>Un **árbol de regresión** parte el espacio de predictores con reglas tipo "si `metros_cuadrados` &gt; X y `aislamiento` = bueno, entonces...", y predice el promedio de cada hoja. Capta no linealidades y umbrales que la regresión lineal no ve, pero un solo árbol es **inestable** (cambia mucho con pequeñas variaciones de los datos). Ajustamos <span class="in">`cost_complexity`</span> (poda: penaliza árboles grandes) y <span class="in">`tree_depth`</span> (profundidad máxima) para regularizarlo. <span class="in">`tune()`</span> marca esos valores como "a determinar por validación cruzada".</span>
+<span id="cb36-183"><a href="#cb36-183" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb36-184"><a href="#cb36-184" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-187"><a href="#cb36-187" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-188"><a href="#cb36-188" aria-hidden="true" tabindex="-1"></a>modelo_arbol <span class="ot">&lt;-</span> <span class="fu">decision_tree</span>(</span>
+<span id="cb36-189"><a href="#cb36-189" aria-hidden="true" tabindex="-1"></a>    <span class="at">cost_complexity =</span> <span class="fu">tune</span>(),</span>
+<span id="cb36-190"><a href="#cb36-190" aria-hidden="true" tabindex="-1"></a>    <span class="at">tree_depth =</span> <span class="fu">tune</span>()</span>
+<span id="cb36-191"><a href="#cb36-191" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb36-192"><a href="#cb36-192" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"rpart"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb36-193"><a href="#cb36-193" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span>
+<span id="cb36-194"><a href="#cb36-194" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-195"><a href="#cb36-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-196"><a href="#cb36-196" aria-hidden="true" tabindex="-1"></a>Cada modelo se empaqueta con la **misma** receta en su propio <span class="in">`workflow`</span>.</span>
+<span id="cb36-197"><a href="#cb36-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-198"><a href="#cb36-198" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb36-199"><a href="#cb36-199" aria-hidden="true" tabindex="-1"></a><span class="fu">## ¿Qué es un workflow?</span></span>
+<span id="cb36-200"><a href="#cb36-200" aria-hidden="true" tabindex="-1"></a>Un **workflow** empaqueta en un solo objeto la receta de preprocesamiento y el modelo. Al hacer <span class="in">`fit()`</span> aplica internamente <span class="in">`prep`</span> + <span class="in">`bake`</span> + <span class="in">`fit`</span>, y al <span class="in">`predict()`</span> repite el mismo preprocesamiento sobre los datos nuevos sin que tengamos que recordarlo. Es la pieza estándar para validación cruzada y tuning.</span>
+<span id="cb36-201"><a href="#cb36-201" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb36-202"><a href="#cb36-202" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-205"><a href="#cb36-205" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-206"><a href="#cb36-206" aria-hidden="true" tabindex="-1"></a>workflow_lineal <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb36-207"><a href="#cb36-207" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_energia) <span class="sc">%&gt;%</span></span>
+<span id="cb36-208"><a href="#cb36-208" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_lineal)</span>
+<span id="cb36-209"><a href="#cb36-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-210"><a href="#cb36-210" aria-hidden="true" tabindex="-1"></a>workflow_arbol <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb36-211"><a href="#cb36-211" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_energia) <span class="sc">%&gt;%</span></span>
+<span id="cb36-212"><a href="#cb36-212" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_arbol)</span>
+<span id="cb36-213"><a href="#cb36-213" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-214"><a href="#cb36-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-215"><a href="#cb36-215" aria-hidden="true" tabindex="-1"></a><span class="fu">## 7. Validación cruzada y tuning de hiperparámetros</span></span>
+<span id="cb36-216"><a href="#cb36-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-217"><a href="#cb36-217" aria-hidden="true" tabindex="-1"></a>Para comparar los modelos y elegir los hiperparámetros del árbol **sin tocar la prueba**, usamos validación cruzada sobre el entrenamiento.</span>
+<span id="cb36-218"><a href="#cb36-218" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-219"><a href="#cb36-219" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb36-220"><a href="#cb36-220" aria-hidden="true" tabindex="-1"></a><span class="fu">## ¿Qué es la validación cruzada (k-fold)?</span></span>
+<span id="cb36-221"><a href="#cb36-221" aria-hidden="true" tabindex="-1"></a>Partimos el entrenamiento en <span class="in">`v`</span> partes (folds) del mismo tamaño. En cada ronda entrenamos con <span class="in">`v − 1`</span> folds y evaluamos en el fold restante, rotando cuál se deja fuera; luego promediamos el desempeño. Así estimamos qué tan bien generaliza el modelo **usando solo el entrenamiento**, y reservamos la prueba para el final.</span>
+<span id="cb36-222"><a href="#cb36-222" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb36-223"><a href="#cb36-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-226"><a href="#cb36-226" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-227"><a href="#cb36-227" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb36-228"><a href="#cb36-228" aria-hidden="true" tabindex="-1"></a>folds_cv <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(energia_entrenamiento, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">strata =</span> consumo_kwh)</span>
+<span id="cb36-229"><a href="#cb36-229" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-230"><a href="#cb36-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-231"><a href="#cb36-231" aria-hidden="true" tabindex="-1"></a>Definimos las métricas de regresión que vigilaremos.</span>
+<span id="cb36-232"><a href="#cb36-232" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-233"><a href="#cb36-233" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb36-234"><a href="#cb36-234" aria-hidden="true" tabindex="-1"></a><span class="fu">## RMSE, MAE y R²</span></span>
+<span id="cb36-235"><a href="#cb36-235" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**RMSE** (raíz del error cuadrático medio): error típico en las unidades de la objetivo; penaliza más los errores grandes. Es la métrica de decisión.</span>
+<span id="cb36-236"><a href="#cb36-236" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**MAE** (error absoluto medio): error típico, más robusto a valores extremos.</span>
+<span id="cb36-237"><a href="#cb36-237" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**R²**: proporción de la variación de la objetivo que el modelo explica (1 = perfecto; 0 = no mejor que predecir la media).</span>
+<span id="cb36-238"><a href="#cb36-238" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb36-239"><a href="#cb36-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-242"><a href="#cb36-242" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-243"><a href="#cb36-243" aria-hidden="true" tabindex="-1"></a>metricas_regresion <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(rmse, rsq, mae)</span>
+<span id="cb36-244"><a href="#cb36-244" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-245"><a href="#cb36-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-246"><a href="#cb36-246" aria-hidden="true" tabindex="-1"></a>La regresión lineal **no se tunea**; estimamos su desempeño en CV con <span class="in">`fit_resamples()`</span>. Esto la pone en igualdad de condiciones que el árbol.</span>
+<span id="cb36-247"><a href="#cb36-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-248"><a href="#cb36-248" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb36-249"><a href="#cb36-249" aria-hidden="true" tabindex="-1"></a><span class="fu">## fit_resamples() vs. tune_grid()</span></span>
+<span id="cb36-250"><a href="#cb36-250" aria-hidden="true" tabindex="-1"></a>Cuando un modelo **no** tiene hiperparámetros que ajustar (regresión lineal), `fit_resamples()` solo lo evalúa en cada fold. Cuando **sí** los tiene (el árbol), <span class="in">`tune_grid()`</span> prueba varias combinaciones de hiperparámetros en la validación cruzada y nos deja elegir la mejor.</span>
+<span id="cb36-251"><a href="#cb36-251" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb36-252"><a href="#cb36-252" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-255"><a href="#cb36-255" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-256"><a href="#cb36-256" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb36-257"><a href="#cb36-257" aria-hidden="true" tabindex="-1"></a>cv_lineal <span class="ot">&lt;-</span> workflow_lineal <span class="sc">%&gt;%</span></span>
+<span id="cb36-258"><a href="#cb36-258" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_resamples</span>(<span class="at">resamples =</span> folds_cv, <span class="at">metrics =</span> metricas_regresion)</span>
+<span id="cb36-259"><a href="#cb36-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-260"><a href="#cb36-260" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(cv_lineal)</span>
+<span id="cb36-261"><a href="#cb36-261" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-262"><a href="#cb36-262" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-263"><a href="#cb36-263" aria-hidden="true" tabindex="-1"></a>Para el árbol construimos una grilla de hiperparámetros: combinaciones de <span class="in">`cost_complexity`</span> y <span class="in">`tree_depth`</span> (<span class="in">`levels = 4`</span> da 4 × 4 = 16 candidatos).</span>
+<span id="cb36-264"><a href="#cb36-264" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-267"><a href="#cb36-267" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-268"><a href="#cb36-268" aria-hidden="true" tabindex="-1"></a>grilla_arbol <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(<span class="fu">cost_complexity</span>(),</span>
+<span id="cb36-269"><a href="#cb36-269" aria-hidden="true" tabindex="-1"></a>                             <span class="fu">tree_depth</span>(),</span>
+<span id="cb36-270"><a href="#cb36-270" aria-hidden="true" tabindex="-1"></a>                             <span class="at">levels =</span> <span class="dv">4</span>)</span>
+<span id="cb36-271"><a href="#cb36-271" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-272"><a href="#cb36-272" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-275"><a href="#cb36-275" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-276"><a href="#cb36-276" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb36-277"><a href="#cb36-277" aria-hidden="true" tabindex="-1"></a>tuning_arbol <span class="ot">&lt;-</span> workflow_arbol <span class="sc">%&gt;%</span></span>
+<span id="cb36-278"><a href="#cb36-278" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> folds_cv,</span>
+<span id="cb36-279"><a href="#cb36-279" aria-hidden="true" tabindex="-1"></a>            <span class="at">grid =</span> grilla_arbol,</span>
+<span id="cb36-280"><a href="#cb36-280" aria-hidden="true" tabindex="-1"></a>            <span class="at">metrics =</span> metricas_regresion)</span>
+<span id="cb36-281"><a href="#cb36-281" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-282"><a href="#cb36-282" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-283"><a href="#cb36-283" aria-hidden="true" tabindex="-1"></a>La siguiente gráfica resume el tuning: muestra el RMSE de validación cruzada según la profundidad del árbol, con una línea por nivel de poda. Buscamos la combinación con menor RMSE.</span>
+<span id="cb36-284"><a href="#cb36-284" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-287"><a href="#cb36-287" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-288"><a href="#cb36-288" aria-hidden="true" tabindex="-1"></a>tuning_arbol <span class="sc">%&gt;%</span></span>
+<span id="cb36-289"><a href="#cb36-289" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb36-290"><a href="#cb36-290" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"rmse"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb36-291"><a href="#cb36-291" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> tree_depth, <span class="at">y =</span> mean,</span>
+<span id="cb36-292"><a href="#cb36-292" aria-hidden="true" tabindex="-1"></a>             <span class="at">color =</span> <span class="fu">factor</span>(<span class="fu">round</span>(cost_complexity, <span class="dv">5</span>)))) <span class="sc">+</span></span>
+<span id="cb36-293"><a href="#cb36-293" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb36-294"><a href="#cb36-294" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb36-295"><a href="#cb36-295" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"RMSE en validación cruzada — árbol de regresión"</span>,</span>
+<span id="cb36-296"><a href="#cb36-296" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Profundidad del árbol"</span>, <span class="at">y =</span> <span class="st">"RMSE promedio"</span>,</span>
+<span id="cb36-297"><a href="#cb36-297" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">"cost_complexity"</span>) <span class="sc">+</span></span>
+<span id="cb36-298"><a href="#cb36-298" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb36-299"><a href="#cb36-299" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-300"><a href="#cb36-300" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-303"><a href="#cb36-303" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-304"><a href="#cb36-304" aria-hidden="true" tabindex="-1"></a>mejor_arbol <span class="ot">&lt;-</span> tuning_arbol <span class="sc">%&gt;%</span> <span class="fu">select_best</span>(<span class="at">metric =</span> <span class="st">"rmse"</span>)</span>
+<span id="cb36-305"><a href="#cb36-305" aria-hidden="true" tabindex="-1"></a>mejor_arbol</span>
+<span id="cb36-306"><a href="#cb36-306" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-307"><a href="#cb36-307" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-308"><a href="#cb36-308" aria-hidden="true" tabindex="-1"></a><span class="fu">## 8. Implementar el workflow final de cada modelo</span></span>
+<span id="cb36-309"><a href="#cb36-309" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-310"><a href="#cb36-310" aria-hidden="true" tabindex="-1"></a>La regresión lineal ya está lista. Al árbol le **inyectamos** los hiperparámetros ganadores con <span class="in">`finalize_workflow()`</span>.</span>
+<span id="cb36-311"><a href="#cb36-311" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-314"><a href="#cb36-314" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-315"><a href="#cb36-315" aria-hidden="true" tabindex="-1"></a>workflow_arbol_final <span class="ot">&lt;-</span> workflow_arbol <span class="sc">%&gt;%</span></span>
+<span id="cb36-316"><a href="#cb36-316" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(mejor_arbol)</span>
+<span id="cb36-317"><a href="#cb36-317" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-318"><a href="#cb36-318" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-319"><a href="#cb36-319" aria-hidden="true" tabindex="-1"></a><span class="fu">## 9. Entrenar y evaluar con last_fit() sobre la prueba</span></span>
+<span id="cb36-320"><a href="#cb36-320" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-321"><a href="#cb36-321" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb36-322"><a href="#cb36-322" aria-hidden="true" tabindex="-1"></a><span class="fu">## ¿Qué hace last_fit()?</span></span>
+<span id="cb36-323"><a href="#cb36-323" aria-hidden="true" tabindex="-1"></a><span class="in">`last_fit()`</span> toma el split original, **reentrena** el modelo final sobre TODO el entrenamiento y lo evalúa **una sola vez** sobre la base de prueba reservada. Es el paso que da la estimación honesta del desempeño en datos que el modelo nunca vio.</span>
+<span id="cb36-324"><a href="#cb36-324" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb36-325"><a href="#cb36-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-328"><a href="#cb36-328" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-329"><a href="#cb36-329" aria-hidden="true" tabindex="-1"></a>ajuste_lineal <span class="ot">&lt;-</span> workflow_lineal <span class="sc">%&gt;%</span></span>
+<span id="cb36-330"><a href="#cb36-330" aria-hidden="true" tabindex="-1"></a>  <span class="fu">last_fit</span>(<span class="at">split =</span> energia_split, <span class="at">metrics =</span> metricas_regresion)</span>
+<span id="cb36-331"><a href="#cb36-331" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-332"><a href="#cb36-332" aria-hidden="true" tabindex="-1"></a>ajuste_arbol <span class="ot">&lt;-</span> workflow_arbol_final <span class="sc">%&gt;%</span></span>
+<span id="cb36-333"><a href="#cb36-333" aria-hidden="true" tabindex="-1"></a>  <span class="fu">last_fit</span>(<span class="at">split =</span> energia_split, <span class="at">metrics =</span> metricas_regresion)</span>
+<span id="cb36-334"><a href="#cb36-334" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-335"><a href="#cb36-335" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-336"><a href="#cb36-336" aria-hidden="true" tabindex="-1"></a><span class="fu">## 10. Pruebas del modelo: métricas y comparación</span></span>
+<span id="cb36-337"><a href="#cb36-337" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-338"><a href="#cb36-338" aria-hidden="true" tabindex="-1"></a>Reunimos las métricas de **ambos** modelos en la base de prueba en una sola tabla. Esta es la comparación que nos interesa: el desempeño en datos no vistos.</span>
+<span id="cb36-339"><a href="#cb36-339" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-342"><a href="#cb36-342" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-343"><a href="#cb36-343" aria-hidden="true" tabindex="-1"></a>metricas_comparacion <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb36-344"><a href="#cb36-344" aria-hidden="true" tabindex="-1"></a>    <span class="fu">collect_metrics</span>(ajuste_lineal) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Regresión lineal"</span>),</span>
+<span id="cb36-345"><a href="#cb36-345" aria-hidden="true" tabindex="-1"></a>    <span class="fu">collect_metrics</span>(ajuste_arbol) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Árbol de regresión"</span>)</span>
+<span id="cb36-346"><a href="#cb36-346" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb36-347"><a href="#cb36-347" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(modelo, .metric, .estimate) <span class="sc">%&gt;%</span></span>
+<span id="cb36-348"><a href="#cb36-348" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> .metric, <span class="at">values_from =</span> .estimate) <span class="sc">%&gt;%</span></span>
+<span id="cb36-349"><a href="#cb36-349" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(rmse)</span>
+<span id="cb36-350"><a href="#cb36-350" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-351"><a href="#cb36-351" aria-hidden="true" tabindex="-1"></a>metricas_comparacion</span>
+<span id="cb36-352"><a href="#cb36-352" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-353"><a href="#cb36-353" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-354"><a href="#cb36-354" aria-hidden="true" tabindex="-1"></a>Para visualizar la calidad de cada modelo, graficamos los valores reales contra los predichos. La diagonal roja es la predicción perfecta: entre más pegados los puntos a la línea, mejor.</span>
+<span id="cb36-355"><a href="#cb36-355" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-358"><a href="#cb36-358" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-359"><a href="#cb36-359" aria-hidden="true" tabindex="-1"></a>preds_lineal <span class="ot">&lt;-</span> <span class="fu">collect_predictions</span>(ajuste_lineal) <span class="sc">%&gt;%</span></span>
+<span id="cb36-360"><a href="#cb36-360" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Regresión lineal"</span>)</span>
+<span id="cb36-361"><a href="#cb36-361" aria-hidden="true" tabindex="-1"></a>preds_arbol <span class="ot">&lt;-</span> <span class="fu">collect_predictions</span>(ajuste_arbol) <span class="sc">%&gt;%</span></span>
+<span id="cb36-362"><a href="#cb36-362" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Árbol de regresión"</span>)</span>
+<span id="cb36-363"><a href="#cb36-363" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-364"><a href="#cb36-364" aria-hidden="true" tabindex="-1"></a>preds_ambos <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(preds_lineal, preds_arbol)</span>
+<span id="cb36-365"><a href="#cb36-365" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-366"><a href="#cb36-366" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-369"><a href="#cb36-369" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-370"><a href="#cb36-370" aria-hidden="true" tabindex="-1"></a>preds_ambos <span class="sc">%&gt;%</span></span>
+<span id="cb36-371"><a href="#cb36-371" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> consumo_kwh, <span class="at">y =</span> .pred)) <span class="sc">+</span></span>
+<span id="cb36-372"><a href="#cb36-372" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>, <span class="at">color =</span> <span class="st">"#1e4c7d"</span>) <span class="sc">+</span></span>
+<span id="cb36-373"><a href="#cb36-373" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">color =</span> <span class="st">"#c0392b"</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb36-374"><a href="#cb36-374" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> modelo) <span class="sc">+</span></span>
+<span id="cb36-375"><a href="#cb36-375" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Valores reales vs. predichos (base de prueba)"</span>,</span>
+<span id="cb36-376"><a href="#cb36-376" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Consumo real (kWh)"</span>, <span class="at">y =</span> <span class="st">"Consumo predicho (kWh)"</span>) <span class="sc">+</span></span>
+<span id="cb36-377"><a href="#cb36-377" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb36-378"><a href="#cb36-378" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-379"><a href="#cb36-379" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-380"><a href="#cb36-380" aria-hidden="true" tabindex="-1"></a>El gráfico de residuos (real − predicho) contra el valor predicho ayuda a detectar sesgos: buscamos una nube sin patrón alrededor del cero. Un embudo o una curva indicarían que el modelo se equivoca sistemáticamente en algún rango.</span>
+<span id="cb36-381"><a href="#cb36-381" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-384"><a href="#cb36-384" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-385"><a href="#cb36-385" aria-hidden="true" tabindex="-1"></a>preds_ambos <span class="sc">%&gt;%</span></span>
+<span id="cb36-386"><a href="#cb36-386" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">residuo =</span> consumo_kwh <span class="sc">-</span> .pred) <span class="sc">%&gt;%</span></span>
+<span id="cb36-387"><a href="#cb36-387" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">y =</span> residuo)) <span class="sc">+</span></span>
+<span id="cb36-388"><a href="#cb36-388" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>, <span class="at">color =</span> <span class="st">"#1e4c7d"</span>) <span class="sc">+</span></span>
+<span id="cb36-389"><a href="#cb36-389" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">"#c0392b"</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb36-390"><a href="#cb36-390" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> modelo) <span class="sc">+</span></span>
+<span id="cb36-391"><a href="#cb36-391" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Residuos vs. valores predichos"</span>,</span>
+<span id="cb36-392"><a href="#cb36-392" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Consumo predicho (kWh)"</span>, <span class="at">y =</span> <span class="st">"Residuo (real − predicho)"</span>) <span class="sc">+</span></span>
+<span id="cb36-393"><a href="#cb36-393" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb36-394"><a href="#cb36-394" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-395"><a href="#cb36-395" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-396"><a href="#cb36-396" aria-hidden="true" tabindex="-1"></a><span class="fu">## Veredicto: ¿cuál es el mejor modelo?</span></span>
+<span id="cb36-397"><a href="#cb36-397" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-400"><a href="#cb36-400" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-401"><a href="#cb36-401" aria-hidden="true" tabindex="-1"></a><span class="co"># Ordenamos por RMSE (menor es mejor) y medimos la diferencia relativa entre</span></span>
+<span id="cb36-402"><a href="#cb36-402" aria-hidden="true" tabindex="-1"></a><span class="co"># el mejor y el segundo, para juzgar si la ventaja es relevante o marginal.</span></span>
+<span id="cb36-403"><a href="#cb36-403" aria-hidden="true" tabindex="-1"></a>tabla_final <span class="ot">&lt;-</span> metricas_comparacion <span class="sc">%&gt;%</span></span>
+<span id="cb36-404"><a href="#cb36-404" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(rmse) <span class="sc">%&gt;%</span></span>
+<span id="cb36-405"><a href="#cb36-405" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rmse =</span> <span class="fu">round</span>(rmse, <span class="dv">2</span>),</span>
+<span id="cb36-406"><a href="#cb36-406" aria-hidden="true" tabindex="-1"></a>         <span class="at">rsq =</span> <span class="fu">round</span>(rsq, <span class="dv">3</span>),</span>
+<span id="cb36-407"><a href="#cb36-407" aria-hidden="true" tabindex="-1"></a>         <span class="at">mae =</span> <span class="fu">round</span>(mae, <span class="dv">2</span>))</span>
+<span id="cb36-408"><a href="#cb36-408" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-409"><a href="#cb36-409" aria-hidden="true" tabindex="-1"></a>ganador <span class="ot">&lt;-</span> tabla_final <span class="sc">%&gt;%</span> <span class="fu">slice</span>(<span class="dv">1</span>)</span>
+<span id="cb36-410"><a href="#cb36-410" aria-hidden="true" tabindex="-1"></a>perdedor <span class="ot">&lt;-</span> tabla_final <span class="sc">%&gt;%</span> <span class="fu">slice</span>(<span class="dv">2</span>)</span>
+<span id="cb36-411"><a href="#cb36-411" aria-hidden="true" tabindex="-1"></a>dif_rel_pct <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> (perdedor<span class="sc">$</span>rmse <span class="sc">-</span> ganador<span class="sc">$</span>rmse) <span class="sc">/</span> perdedor<span class="sc">$</span>rmse, <span class="dv">1</span>)</span>
+<span id="cb36-412"><a href="#cb36-412" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-413"><a href="#cb36-413" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-416"><a href="#cb36-416" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-417"><a href="#cb36-417" aria-hidden="true" tabindex="-1"></a><span class="co"># Tabla comparativa final (ordenada del mejor al peor por RMSE)</span></span>
+<span id="cb36-418"><a href="#cb36-418" aria-hidden="true" tabindex="-1"></a>tabla_final</span>
+<span id="cb36-419"><a href="#cb36-419" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-420"><a href="#cb36-420" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-421"><a href="#cb36-421" aria-hidden="true" tabindex="-1"></a>**Modelo recomendado: `r ganador$modelo`.** Obtiene el menor RMSE en la base de prueba (`r ganador$rmse` kWh) con un R² de `r ganador$rsq`, frente a `r perdedor$rmse` kWh del `r tolower(perdedor$modelo)`. Su RMSE es **`r dif_rel_pct`% menor**.</span>
+<span id="cb36-422"><a href="#cb36-422" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-425"><a href="#cb36-425" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb36-426"><a href="#cb36-426" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb36-427"><a href="#cb36-427" aria-hidden="true" tabindex="-1"></a><span class="co">#| results: asis</span></span>
+<span id="cb36-428"><a href="#cb36-428" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (dif_rel_pct <span class="sc">&lt;</span> <span class="dv">3</span>) {</span>
+<span id="cb36-429"><a href="#cb36-429" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"&gt; **Matiz:** la diferencia entre ambos modelos es pequeña (menos de 3% en RMSE), así que en la práctica son comparables. Conviene quedarse con la **regresión lineal** por ser más simple e interpretable, salvo que el árbol aporte reglas útiles para comunicar."</span>)</span>
+<span id="cb36-430"><a href="#cb36-430" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb36-431"><a href="#cb36-431" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">paste0</span>(<span class="st">"&gt; La ventaja de **"</span>, ganador<span class="sc">$</span>modelo, <span class="st">"** es relevante ("</span>, dif_rel_pct, <span class="st">"% en RMSE), por lo que es la elección clara para este problema."</span>))</span>
+<span id="cb36-432"><a href="#cb36-432" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb36-433"><a href="#cb36-433" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb36-434"><a href="#cb36-434" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-435"><a href="#cb36-435" aria-hidden="true" tabindex="-1"></a>Recuerda que la regresión lineal es la más fácil de interpretar (un coeficiente por variable), mientras que el árbol capta umbrales y no linealidades a costa de mayor inestabilidad; el tuning de <span class="in">`cost_complexity`</span> y <span class="in">`tree_depth`</span> lo regulariza.</span>
+</code><button title="Copiar al portapapeles" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>TC2001B.601 — Ciencia de datos para la toma de decisiones I</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Jorge Juvenal Campos Ferreira · Tecnológico de Monterrey</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
