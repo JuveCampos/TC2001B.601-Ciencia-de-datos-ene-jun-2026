@@ -1,0 +1,384 @@
+---
+title: "Regresión: demanda de consultas respiratorias"
+subtitle: "EJERCICIO DE REGRESIÓN — Regresión lineal vs. XGBoost"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+**Objetivo.** Predecir el número semanal de consultas respiratorias (`consultas_respiratorias`) en una red de clínicas a partir de variables climáticas, epidemiológicas y de movilidad, muchas de ellas con rezagos (la humedad o la contaminación de semanas anteriores también explican la demanda actual). Compararemos dos modelos sobre el mismo flujo de trabajo: una **regresión lineal** (modelo base, interpretable) y **XGBoost** (un ensamble de árboles por *boosting*, que suele dar el mejor desempeño predictivo). Como hay muchos predictores rezagados y correlacionados entre sí, es un caso ideal para ver cómo se comporta un modelo lineal —sensible a la colinealidad— frente a uno de boosting, más robusto. Recorreremos el flujo completo de `tidymodels`: partición, receta de preprocesamiento, `workflow()`, validación cruzada, tuning de hiperparámetros y una evaluación honesta con `last_fit()`. Al final daremos un **veredicto claro** sobre cuál modelo conviene.
+
+## 1. Cargar librerías
+
+Agrupamos todas las librerías al inicio (buena práctica de reproducibilidad). `tidyverse` da el lenguaje de manipulación de datos; `tidymodels` es el marco de modelado; `corrplot` dibuja la matriz de correlación; `xgboost` es el motor que ajusta el modelo de boosting.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(corrplot)
+library(xgboost)
+```
+
+`tidymodels_prefer()` resuelve los conflictos de nombres a favor de tidymodels (por ejemplo, que ciertas funciones provengan de los paquetes de modelado y no de otro paquete cargado).
+
+```{r}
+tidymodels::tidymodels_prefer()
+```
+
+## 2. Cargar los datos
+
+Leemos el CSV y removemos la columna `semana` (la fecha): la estacionalidad y la tendencia ya están capturadas por variables numéricas como `semana_del_anio` y `tendencia`, así que la fecha cruda no aporta poder predictivo adicional. El resto de las columnas es numérico.
+
+```{r}
+# Quitamos la columna de fecha (semana): la estacionalidad y la tendencia ya
+# están capturadas por semana_del_anio y tendencia. El resto es numérico.
+clinicas <- read_csv("datos.csv") %>%
+  select(-semana)
+```
+
+`glimpse()` nos da un vistazo rápido a tipos y valores de cada columna.
+
+```{r}
+glimpse(clinicas)
+```
+
+## 3. Explorar los datos
+
+Antes de modelar conviene entender la variable objetivo y las relaciones entre predictores. Tres revisiones mínimas: la **distribución de la objetivo** (¿hay asimetría o valores extremos?), los **datos faltantes** (¿qué tendremos que imputar?) y la **colinealidad** (¿hay predictores que miden casi lo mismo?).
+
+Primero, el histograma de las consultas semanales. Buscamos si la distribución es aproximadamente simétrica (cómodo para la regresión lineal) o muy sesgada.
+
+```{r}
+clinicas %>%
+  ggplot(aes(x = consultas_respiratorias)) +
+  geom_histogram(bins = 25, fill = "#1e4c7d", color = "white") +
+  labs(title = "Distribución de consultas respiratorias semanales",
+       x = "Consultas", y = "Frecuencia") +
+  theme_minimal()
+```
+
+`summary()` resume cada variable y, de paso, nos dice cuántos `NA` tiene cada columna.
+
+```{r}
+summary(clinicas)
+```
+
+Contamos los `NA` por columna de forma explícita: esto guía qué pasos de imputación necesitará la receta.
+
+```{r}
+clinicas %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "n_na") %>%
+  arrange(desc(n_na))
+```
+
+La matriz de correlación nos deja ver la colinealidad entre predictores numéricos. Con tantas variables rezagadas esperamos correlaciones muy fuertes (por ejemplo `humedad` con `humedad_lag1`, o `pm25` con `pm25_lag1`): una variable y su rezago miden casi lo mismo. Esto es justo lo que hace sufrir a la regresión lineal —infla la varianza de los coeficientes—, por lo que más adelante filtraremos con `step_corr()`.
+
+```{r}
+# Con muchos predictores rezagados esperamos colinealidad fuerte
+# (humedad vs humedad_lag1, pm25 vs pm25_lag1, etc.).
+matriz_correlacion <- clinicas %>%
+  select(where(is.numeric)) %>%
+  drop_na() %>%
+  cor() %>%
+  round(2)
+
+matriz_correlacion %>%
+  corrplot(method = "color", tl.cex = 0.5)
+```
+
+## 4. Partición entrenamiento / prueba
+
+Dividimos los datos en **entrenamiento** (75%) y **prueba** (25%). La base de prueba se "guarda en una caja fuerte": no la tocamos hasta el final, para obtener una estimación honesta del desempeño en datos nuevos. Estratificamos por la objetivo para que ambas particiones cubran rangos de consultas parecidos (en regresión, `initial_split` estratifica por cuantiles).
+
+```{r}
+set.seed(2026)
+clinicas_split <- initial_split(clinicas, prop = 0.75,
+                                strata = consultas_respiratorias)
+clinicas_entrenamiento <- clinicas_split %>% training()
+clinicas_prueba <- clinicas_split %>% testing()
+```
+
+```{r}
+c(entrenamiento = nrow(clinicas_entrenamiento),
+  prueba = nrow(clinicas_prueba))
+```
+
+## 5. Receta de preprocesamiento (compartida por ambos modelos)
+
+Usamos **una sola receta** para que los dos modelos sean comparables: ambos verán exactamente la misma representación de los datos. Aquí el `step_corr()` es especialmente relevante: con tantos rezagos, la regresión lineal se beneficia de eliminar la colinealidad; XGBoost es más robusto a ella, pero aplicar la misma receta a ambos garantiza una comparación limpia.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es una receta y por qué importa el orden de los pasos?
+Una **receta** (`recipe`) encadena pasos de preprocesamiento (`step_*`) que se *aprenden* solo con el entrenamiento y luego se aplican igual a la prueba (esto evita fuga de información). El orden importa: imputamos los `NA` **primero**, porque pasos como `step_corr` o `step_normalize` no toleran faltantes; quitamos predictores casi constantes; filtramos colinealidad; normalizamos; y dejamos `step_zv` al final como red de seguridad.
+:::
+
+```{r}
+# Una sola receta comparable. Con tantos rezagos, step_corr es importante para
+# la regresión lineal (la colinealidad infla la varianza de los coeficientes);
+# XGBoost es más robusto a ella, pero usar la misma receta los hace comparables.
+receta_clinicas <- recipe(consultas_respiratorias ~ .,
+                          data = clinicas_entrenamiento) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_nzv(all_predictors()) %>%
+  step_corr(all_numeric_predictors(), threshold = 0.85) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+Conviene "hornear" la receta una vez para ver cómo quedan las variables tras el preprocesamiento (solo es inspección; el `workflow` lo hará por nosotros después). Fíjate en cuántos predictores sobreviven al filtro de colinealidad.
+
+```{r}
+receta_clinicas %>%
+  prep(training = clinicas_entrenamiento) %>%
+  bake(new_data = NULL) %>%
+  glimpse()
+```
+
+## 6. Especificación de los modelos
+
+Definimos los dos modelos con `parsnip`. El primero es la **regresión lineal**: no tiene hiperparámetros que ajustar.
+
+```{r}
+modelo_lineal <- linear_reg() %>%
+  set_engine("lm") %>%
+  set_mode("regression")
+```
+
+El segundo es **XGBoost**, donde sí ajustaremos varios hiperparámetros mediante validación cruzada.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es XGBoost (boosting)?
+**XGBoost** construye árboles en **secuencia**: cada árbol nuevo corrige los errores del conjunto anterior. El boosting reduce sobre todo el **sesgo** y suele dar el mejor desempeño predictivo, a costa de más hiperparámetros y mayor riesgo de sobreajuste. Aquí fijamos `trees = 500` para acotar el cómputo y ajustamos `tree_depth` (profundidad de cada árbol), `learn_rate` (qué tan agresiva es cada corrección) y `loss_reduction` (la mejora mínima exigida para abrir una nueva división). `tune()` marca esos valores como "a determinar por validación cruzada".
+:::
+
+```{r}
+# XGBoost (boosting): árboles en secuencia, cada uno corrige los errores del
+# anterior. Tuneamos profundidad, tasa de aprendizaje y la reducción mínima de
+# pérdida. trees = 500 fijo para acotar el cómputo.
+modelo_xgb <- boost_tree(
+    trees = 500,
+    tree_depth = tune(),
+    learn_rate = tune(),
+    loss_reduction = tune()
+  ) %>%
+  set_engine("xgboost") %>%
+  set_mode("regression")
+```
+
+Cada modelo se empaqueta con la **misma** receta en su propio `workflow`.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es un workflow?
+Un **workflow** empaqueta en un solo objeto la receta de preprocesamiento y el modelo. Al hacer `fit()` aplica internamente `prep` + `bake` + `fit`, y al `predict()` repite el mismo preprocesamiento sobre los datos nuevos sin que tengamos que recordarlo. Es la pieza estándar para validación cruzada y tuning.
+:::
+
+```{r}
+workflow_lineal <- workflow() %>%
+  add_recipe(receta_clinicas) %>%
+  add_model(modelo_lineal)
+
+workflow_xgb <- workflow() %>%
+  add_recipe(receta_clinicas) %>%
+  add_model(modelo_xgb)
+```
+
+## 7. Validación cruzada y tuning de hiperparámetros
+
+Para comparar los modelos y elegir los hiperparámetros de XGBoost **sin tocar la prueba**, usamos validación cruzada sobre el entrenamiento.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es la validación cruzada (k-fold)?
+Partimos el entrenamiento en `v` partes (folds) del mismo tamaño. En cada ronda entrenamos con `v − 1` folds y evaluamos en el fold restante, rotando cuál se deja fuera; luego promediamos el desempeño. Así estimamos qué tan bien generaliza el modelo **usando solo el entrenamiento**, y reservamos la prueba para el final.
+:::
+
+```{r}
+set.seed(2026)
+folds_cv <- vfold_cv(clinicas_entrenamiento, v = 5,
+                     strata = consultas_respiratorias)
+```
+
+Definimos las métricas de regresión que vigilaremos.
+
+::: {.callout-note collapse="true"}
+## RMSE, MAE y R²
+- **RMSE** (raíz del error cuadrático medio): error típico en las unidades de la objetivo; penaliza más los errores grandes. Es la métrica de decisión.
+- **MAE** (error absoluto medio): error típico, más robusto a valores extremos.
+- **R²**: proporción de la variación de la objetivo que el modelo explica (1 = perfecto; 0 = no mejor que predecir la media).
+:::
+
+```{r}
+metricas_regresion <- metric_set(rmse, rsq, mae)
+```
+
+La regresión lineal **no se tunea**; estimamos su desempeño en CV con `fit_resamples()`. Esto la pone en igualdad de condiciones que XGBoost.
+
+::: {.callout-note collapse="true"}
+## fit_resamples() vs. tune_grid()
+Cuando un modelo **no** tiene hiperparámetros que ajustar (regresión lineal), `fit_resamples()` solo lo evalúa en cada fold. Cuando **sí** los tiene (XGBoost), `tune_grid()` prueba varias combinaciones de hiperparámetros en la validación cruzada y nos deja elegir la mejor.
+:::
+
+```{r}
+set.seed(2026)
+cv_lineal <- workflow_lineal %>%
+  fit_resamples(resamples = folds_cv, metrics = metricas_regresion)
+
+collect_metrics(cv_lineal)
+```
+
+Para XGBoost dejamos que `tune_grid()` genere automáticamente 12 combinaciones de hiperparámetros (sus rangos por defecto son razonables) y las evalúe en validación cruzada.
+
+```{r}
+# grid = 12 candidatos generados automáticamente para los tres hiperparámetros
+# de XGBoost (sus rangos por defecto son conocidos).
+set.seed(2026)
+tuning_xgb <- workflow_xgb %>%
+  tune_grid(resamples = folds_cv,
+            grid = 12,
+            metrics = metricas_regresion)
+```
+
+La siguiente gráfica (`autoplot`) muestra el RMSE de validación cruzada en función de cada hiperparámetro por separado (gráficas marginales). Sirve para ver hacia dónde empuja el desempeño cada perilla; buscamos la zona de menor RMSE.
+
+```{r}
+# Vista de los hiperparámetros vs. RMSE (gráficas marginales).
+autoplot(tuning_xgb, metric = "rmse")
+```
+
+Seleccionamos la combinación de hiperparámetros con menor RMSE en la validación cruzada.
+
+```{r}
+mejor_xgb <- tuning_xgb %>% select_best(metric = "rmse")
+mejor_xgb
+```
+
+## 8. Implementar el workflow final de cada modelo
+
+La regresión lineal ya está lista. A XGBoost le **inyectamos** los hiperparámetros ganadores con `finalize_workflow()`.
+
+```{r}
+workflow_xgb_final <- workflow_xgb %>%
+  finalize_workflow(mejor_xgb)
+```
+
+## 9. Entrenar y evaluar con last_fit() sobre la prueba
+
+::: {.callout-note collapse="true"}
+## ¿Qué hace last_fit()?
+`last_fit()` toma el split original, **reentrena** el modelo final sobre TODO el entrenamiento y lo evalúa **una sola vez** sobre la base de prueba reservada. Es el paso que da la estimación honesta del desempeño en datos que el modelo nunca vio.
+:::
+
+```{r}
+ajuste_lineal <- workflow_lineal %>%
+  last_fit(split = clinicas_split, metrics = metricas_regresion)
+
+ajuste_xgb <- workflow_xgb_final %>%
+  last_fit(split = clinicas_split, metrics = metricas_regresion)
+```
+
+## 10. Pruebas del modelo: métricas y comparación
+
+Reunimos las métricas de **ambos** modelos en la base de prueba en una sola tabla. Esta es la comparación que nos interesa: el desempeño en datos no vistos.
+
+```{r}
+metricas_comparacion <- bind_rows(
+    collect_metrics(ajuste_lineal) %>% mutate(modelo = "Regresión lineal"),
+    collect_metrics(ajuste_xgb) %>% mutate(modelo = "XGBoost")
+  ) %>%
+  select(modelo, .metric, .estimate) %>%
+  pivot_wider(names_from = .metric, values_from = .estimate) %>%
+  arrange(rmse)
+
+metricas_comparacion
+```
+
+Para visualizar la calidad de cada modelo, graficamos los valores reales contra los predichos. La diagonal roja es la predicción perfecta: entre más pegados los puntos a la línea, mejor.
+
+```{r}
+preds_lineal <- collect_predictions(ajuste_lineal) %>%
+  mutate(modelo = "Regresión lineal")
+preds_xgb <- collect_predictions(ajuste_xgb) %>%
+  mutate(modelo = "XGBoost")
+
+preds_ambos <- bind_rows(preds_lineal, preds_xgb)
+```
+
+```{r}
+preds_ambos %>%
+  ggplot(aes(x = consultas_respiratorias, y = .pred)) +
+  geom_point(alpha = 0.5, color = "#1e4c7d") +
+  geom_abline(color = "#c0392b", linetype = 2) +
+  facet_wrap(~ modelo) +
+  labs(title = "Valores reales vs. predichos (base de prueba)",
+       x = "Consultas reales", y = "Consultas predichas") +
+  theme_minimal()
+```
+
+El gráfico de residuos (real − predicho) contra el valor predicho ayuda a detectar sesgos: buscamos una nube sin patrón alrededor del cero. Un embudo o una curva indicarían que el modelo se equivoca sistemáticamente en algún rango.
+
+```{r}
+preds_ambos %>%
+  mutate(residuo = consultas_respiratorias - .pred) %>%
+  ggplot(aes(x = .pred, y = residuo)) +
+  geom_point(alpha = 0.5, color = "#1e4c7d") +
+  geom_hline(yintercept = 0, color = "#c0392b", linetype = 2) +
+  facet_wrap(~ modelo) +
+  labs(title = "Residuos vs. valores predichos",
+       x = "Consultas predichas", y = "Residuo (real − predicho)") +
+  theme_minimal()
+```
+
+Una ventaja de XGBoost es que podemos ordenar los predictores por su **importancia**: cuánto contribuye cada variable a reducir el error a lo largo de todos los árboles del ensamble. La gráfica `vip` muestra las 12 variables más influyentes, lo que nos dice qué señales (clima, epidemiología, movilidad, y sus rezagos) dominan la predicción de la demanda de consultas.
+
+```{r}
+# Importancia de variables de XGBoost.
+ajuste_xgb %>%
+  extract_fit_parsnip() %>%
+  vip::vip(num_features = 12) +
+  labs(title = "Importancia de variables — XGBoost") +
+  theme_minimal()
+```
+
+## Veredicto: ¿cuál es el mejor modelo?
+
+```{r}
+# Ordenamos por RMSE (menor es mejor) y medimos la diferencia relativa entre
+# el mejor y el segundo, para juzgar si la ventaja es relevante o marginal.
+tabla_final <- metricas_comparacion %>%
+  arrange(rmse) %>%
+  mutate(rmse = round(rmse, 2),
+         rsq = round(rsq, 3),
+         mae = round(mae, 2))
+
+ganador <- tabla_final %>% slice(1)
+perdedor <- tabla_final %>% slice(2)
+dif_rel_pct <- round(100 * (perdedor$rmse - ganador$rmse) / perdedor$rmse, 1)
+```
+
+```{r}
+# Tabla comparativa final (ordenada del mejor al peor por RMSE)
+tabla_final
+```
+
+**Modelo recomendado: `r ganador$modelo`.** Obtiene el menor RMSE en la base de prueba (`r ganador$rmse` consultas) con un R² de `r ganador$rsq`, frente a `r perdedor$rmse` consultas del modelo `r tolower(perdedor$modelo)`. Su RMSE es **`r dif_rel_pct`% menor**.
+
+```{r}
+#| echo: false
+#| results: asis
+if (dif_rel_pct < 3) {
+  cat("> **Matiz:** la diferencia entre ambos modelos es pequeña (menos de 3% en RMSE), así que en la práctica son comparables. Conviene quedarse con la **regresión lineal** por ser más simple e interpretable, salvo que XGBoost aporte señales útiles a través de su importancia de variables.")
+} else {
+  cat(paste0("> La ventaja de **", ganador$modelo, "** es relevante (", dif_rel_pct, "% en RMSE), por lo que es la elección clara para este problema."))
+}
+```
+
+Recuerda el balance: con muchos predictores rezagados y correlacionados, la **regresión lineal** depende de un buen filtro de colinealidad (`step_corr`) y aun así puede quedar limitada si la relación es no lineal; es, eso sí, la más fácil de interpretar (un coeficiente por variable). **XGBoost** suele superarla en desempeño porque construye árboles que corrigen secuencialmente los errores, y su gráfica de importancia ayuda a comunicar qué factores impulsan la demanda; a cambio, tiene más hiperparámetros que ajustar y mayor riesgo de sobreajuste, controlado aquí con el tuning de `learn_rate`, `tree_depth` y `loss_reduction`.

@@ -1,0 +1,356 @@
+---
+title: "Clasificación: aprobación de crédito"
+subtitle: "EJERCICIO DE CLASIFICACIÓN — Regresión logística vs. KNN"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+**Objetivo.** Predecir si una solicitud de crédito de consumo será aprobada (`aprobado`: si/no) a partir del perfil financiero y sociodemográfico del solicitante. Compararemos dos clasificadores sobre el mismo flujo: una **regresión logística** (lineal, interpretable) y **KNN** (k-vecinos más cercanos, basado en distancias). Recorremos el flujo completo: partición, receta, `workflow()`, validación cruzada, tuning y evaluación honesta con `last_fit()`, y cerramos con una recomendación clara.
+
+## 1. Cargar librerías
+
+Cargamos todo al inicio. `kknn` es el motor que `parsnip` usa por detrás para KNN; `corrplot` dibuja la matriz de correlación.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(corrplot)
+library(kknn)
+```
+
+```{r}
+tidymodels::tidymodels_prefer()
+```
+
+## 2. Cargar los datos
+
+Removemos `id_solicitud` (identificador, no predictor) y convertimos la objetivo a `factor`. Fijamos `"si"` como **primer nivel**: `yardstick` toma el primer nivel como el evento de interés, de modo que sensibilidad, AUC y demás métricas se calculen sobre "aprobado = si".
+
+```{r}
+creditos <- read_csv("datos.csv") %>%
+  select(-id_solicitud) %>%
+  mutate(aprobado = factor(aprobado, levels = c("si", "no")))
+```
+
+```{r}
+glimpse(creditos)
+```
+
+## 3. Explorar los datos
+
+Tres revisiones mínimas antes de modelar: el **balance de clases**, los **datos faltantes** y la **colinealidad**.
+
+El balance importa porque, si una clase fuera muy rara, el *accuracy* dejaría de ser confiable (predecir siempre la mayoría daría un accuracy alto pero inútil). Aquí veremos que está casi balanceado.
+
+```{r}
+creditos %>%
+  group_by(aprobado) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(porcentaje = 100 * (n / sum(n)))
+```
+
+Contamos los `NA`: esto guía la imputación. Esperamos faltantes en `ingreso_mensual_mxn` y `score_historial`.
+
+```{r}
+creditos %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "n_na") %>%
+  arrange(desc(n_na))
+```
+
+La matriz de correlación revela colinealidad: `monto_solicitado_mxn`, `pago_mensual_estimado_mxn` y `pct_deuda_ingreso` se derivan unas de otras. En KNN, dos variables redundantes harían que esa información pese doble en la distancia; por eso luego las filtramos con `step_corr()`.
+
+```{r}
+matriz_correlacion <- creditos %>%
+  select(where(is.numeric)) %>%
+  drop_na() %>%
+  cor() %>%
+  round(2)
+
+matriz_correlacion %>%
+  corrplot(method = "circle", addCoef.col = "black")
+```
+
+## 4. Partición entrenamiento / prueba (estratificada)
+
+Separamos 75% para entrenamiento y 25% para prueba. **Estratificamos** por `aprobado` para que ambas particiones conserven la misma proporción de clases. La prueba se reserva para el final.
+
+```{r}
+set.seed(2026)
+creditos_split <- initial_split(creditos, prop = 0.75, strata = aprobado)
+creditos_entrenamiento <- creditos_split %>% training()
+creditos_prueba <- creditos_split %>% testing()
+```
+
+```{r}
+table(creditos_entrenamiento$aprobado) %>% prop.table()
+table(creditos_prueba$aprobado) %>% prop.table()
+```
+
+## 5. Receta de preprocesamiento (compartida por ambos modelos)
+
+Usamos **una sola receta** para que ambos modelos vean la misma representación de los datos.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es una receta y por qué importa el orden?
+Una **receta** encadena pasos (`step_*`) que se aprenden solo con el entrenamiento y se aplican igual a la prueba (evita fuga de información). El orden importa: imputamos primero (los pasos siguientes no toleran `NA`), filtramos colinealidad y **normalizamos**, que es indispensable para KNN.
+:::
+
+::: {.callout-note collapse="true"}
+## ¿Por qué normalizar para KNN?
+KNN clasifica por **distancia** entre observaciones. Sin estandarizar, una variable de gran escala (montos en miles de pesos) aplastaría a otras de escala pequeña (número de créditos) en el cálculo de distancias. `step_normalize` deja todas las variables en media 0 y desviación 1.
+:::
+
+Todos los predictores son numéricos, así que no hace falta `step_dummy`.
+
+```{r}
+receta_creditos <- recipe(aprobado ~ ., data = creditos_entrenamiento) %>%
+  step_impute_median(all_numeric_predictors()) %>%   # imputar NAs
+  step_nzv(all_predictors()) %>%                      # quitar casi-constantes
+  step_corr(all_numeric_predictors(), threshold = 0.7) %>%  # colinealidad
+  step_normalize(all_numeric_predictors()) %>%        # estandarizar (clave KNN)
+  step_zv(all_predictors())                           # red de seguridad
+```
+
+```{r}
+receta_creditos %>%
+  prep(training = creditos_entrenamiento) %>%
+  bake(new_data = NULL) %>%
+  glimpse()
+```
+
+## 6. Especificación de los modelos
+
+El primer modelo es la **regresión logística**: no tiene hiperparámetros que ajustar. Modela el log-odds de aprobación como combinación lineal de los predictores.
+
+```{r}
+modelo_logistico <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+```
+
+El segundo es **KNN**, donde ajustaremos el número de vecinos `k`.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es KNN y qué controla k?
+**KNN** clasifica una observación nueva según la clase mayoritaria de sus `k` vecinos más cercanos en el espacio de predictores. `k` gobierna el equilibrio sesgo-varianza: un `k` muy chico sobreajusta al ruido (frontera muy flexible), uno muy grande subajusta (frontera demasiado suave). Usamos `weight_func = "rectangular"` (voto no ponderado) para que ese equilibrio se vea con claridad y el `k` óptimo caiga en un valor intermedio.
+:::
+
+```{r}
+modelo_knn <- nearest_neighbor(
+    neighbors = tune(),
+    weight_func = "rectangular"
+  ) %>%
+  set_engine("kknn") %>%
+  set_mode("classification")
+```
+
+Empaquetamos cada modelo con la misma receta en su `workflow`.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es un workflow?
+Un **workflow** une la receta y el modelo en un objeto. `fit()` aplica internamente `prep` + `bake` + `fit`, y `predict()` repite el mismo preprocesamiento sobre datos nuevos. Es la pieza estándar para validación cruzada y tuning.
+:::
+
+```{r}
+workflow_logistico <- workflow() %>%
+  add_recipe(receta_creditos) %>%
+  add_model(modelo_logistico)
+
+workflow_knn <- workflow() %>%
+  add_recipe(receta_creditos) %>%
+  add_model(modelo_knn)
+```
+
+## 7. Validación cruzada y tuning de hiperparámetros
+
+::: {.callout-note collapse="true"}
+## ¿Qué es la validación cruzada (k-fold)?
+Partimos el entrenamiento en `v` folds. En cada ronda entrenamos con `v − 1` y validamos en el restante, rotando; promediamos el desempeño. Estima la generalización **sin tocar la prueba**, y sirve tanto para comparar modelos como para elegir hiperparámetros.
+:::
+
+```{r}
+set.seed(2026)
+folds_cv <- vfold_cv(creditos_entrenamiento, v = 5, strata = aprobado)
+```
+
+Definimos las métricas de clasificación.
+
+::: {.callout-note collapse="true"}
+## Matriz de confusión, sensibilidad, especificidad, ROC y AUC
+- **Matriz de confusión:** tabla que cruza la clase real con la predicha (verdaderos/falsos positivos y negativos).
+- **Sensibilidad (recall):** de los positivos reales, cuántos detecta el modelo.
+- **Especificidad:** de los negativos reales, cuántos clasifica bien.
+- **Curva ROC:** traza sensibilidad vs. (1 − especificidad) variando el umbral de decisión.
+- **AUC:** área bajo la curva ROC; resume la discriminación (0.5 = azar, 1 = perfecto) sin depender de un umbral fijo. Es nuestra métrica principal.
+:::
+
+```{r}
+metricas_clasificacion <- metric_set(roc_auc, accuracy, sensitivity,
+                                     yardstick::spec)
+```
+
+La logística no se tunea: estimamos su desempeño en CV con `fit_resamples()`.
+
+::: {.callout-note collapse="true"}
+## fit_resamples() vs. tune_grid()
+`fit_resamples()` evalúa en CV un modelo **sin** hiperparámetros (la logística). `tune_grid()` prueba varias combinaciones de hiperparámetros (el `k` de KNN) y nos deja elegir la mejor.
+:::
+
+```{r}
+set.seed(2026)
+cv_logistico <- workflow_logistico %>%
+  fit_resamples(resamples = folds_cv, metrics = metricas_clasificacion)
+
+collect_metrics(cv_logistico)
+```
+
+Para KNN definimos una grilla de valores de `k` y corremos la validación cruzada en cada uno.
+
+```{r}
+grilla_k <- grid_regular(neighbors(range = c(1, 101)), levels = 12)
+```
+
+```{r}
+set.seed(2026)
+tuning_knn <- workflow_knn %>%
+  tune_grid(resamples = folds_cv,
+            grid = grilla_k,
+            metrics = metricas_clasificacion)
+```
+
+La gráfica de AUC promedio vs. `k` (con barras de error ±1 error estándar) muestra el equilibrio sesgo-varianza: el AUC sube de un `k` muy chico hacia un `k` intermedio y vuelve a bajar con `k` muy grande. Elegimos el `k` del máximo.
+
+```{r}
+tuning_knn %>%
+  collect_metrics() %>%
+  filter(.metric == "roc_auc") %>%
+  ggplot(aes(x = neighbors, y = mean)) +
+  geom_line() +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean - std_err, ymax = mean + std_err),
+                width = 1.5) +
+  labs(title = "AUC promedio por valor de k (validación cruzada 5-fold)",
+       x = "k (número de vecinos)", y = "AUC promedio") +
+  theme_minimal()
+```
+
+```{r}
+mejor_k <- tuning_knn %>% select_best(metric = "roc_auc")
+mejor_k
+```
+
+## 8. Implementar el workflow final de cada modelo
+
+La logística ya está lista; al KNN le inyectamos el `k` ganador con `finalize_workflow()`.
+
+```{r}
+workflow_knn_final <- workflow_knn %>%
+  finalize_workflow(mejor_k)
+```
+
+## 9. Entrenar y evaluar con last_fit() sobre la prueba
+
+::: {.callout-note collapse="true"}
+## ¿Qué hace last_fit()?
+`last_fit()` reentrena el modelo final sobre TODO el entrenamiento y lo evalúa **una sola vez** sobre la prueba reservada. Da la estimación honesta del desempeño en datos no vistos.
+:::
+
+```{r}
+ajuste_logistico <- workflow_logistico %>%
+  last_fit(split = creditos_split, metrics = metricas_clasificacion)
+
+ajuste_knn <- workflow_knn_final %>%
+  last_fit(split = creditos_split, metrics = metricas_clasificacion)
+```
+
+## 10. Pruebas del modelo: métricas y comparación
+
+Reunimos las métricas de ambos modelos en la prueba en una sola tabla, ordenada por AUC.
+
+```{r}
+metricas_comparacion <- bind_rows(
+    collect_metrics(ajuste_logistico) %>% mutate(modelo = "Regresión logística"),
+    collect_metrics(ajuste_knn) %>% mutate(modelo = "KNN")
+  ) %>%
+  select(modelo, .metric, .estimate) %>%
+  pivot_wider(names_from = .metric, values_from = .estimate) %>%
+  arrange(desc(roc_auc))
+
+metricas_comparacion
+```
+
+Las **curvas ROC sobrepuestas** comparan visualmente la discriminación: entre más se acerque una curva a la esquina superior izquierda, mejor separa aprobados de rechazados.
+
+```{r}
+preds_logistico <- collect_predictions(ajuste_logistico) %>%
+  mutate(modelo = "Regresión logística")
+preds_knn <- collect_predictions(ajuste_knn) %>%
+  mutate(modelo = "KNN")
+
+preds_ambos <- bind_rows(preds_logistico, preds_knn)
+```
+
+```{r}
+preds_ambos %>%
+  group_by(modelo) %>%
+  roc_curve(truth = aprobado, .pred_si) %>%
+  autoplot() +
+  labs(title = "Curvas ROC en la base de prueba") +
+  theme_minimal()
+```
+
+Las **matrices de confusión** muestran en qué se equivoca cada modelo (falsos positivos vs. falsos negativos), información que el AUC resume pero no detalla.
+
+```{r}
+conf_mat(preds_logistico, truth = aprobado, estimate = .pred_class) %>%
+  autoplot(type = "heatmap") +
+  labs(title = "Matriz de confusión — Regresión logística")
+```
+
+```{r}
+conf_mat(preds_knn, truth = aprobado, estimate = .pred_class) %>%
+  autoplot(type = "heatmap") +
+  labs(title = paste0("Matriz de confusión — KNN (k = ", mejor_k$neighbors, ")"))
+```
+
+## Veredicto: ¿cuál es el mejor modelo?
+
+```{r}
+tabla_final <- metricas_comparacion %>%
+  mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  arrange(desc(roc_auc))
+
+ganador <- tabla_final %>% slice(1)
+perdedor <- tabla_final %>% slice(2)
+dif_auc <- round(ganador$roc_auc - perdedor$roc_auc, 3)
+```
+
+```{r}
+tabla_final
+```
+
+**Modelo recomendado: `r ganador$modelo`.** Obtiene el mayor AUC en la base de prueba (`r ganador$roc_auc`), frente a `r perdedor$roc_auc` del otro modelo (diferencia de `r dif_auc`).
+
+```{r}
+#| echo: false
+#| results: asis
+if (dif_auc < 0.02) {
+  cat("> **Matiz:** la diferencia de AUC es pequeña (< 0.02), así que ambos modelos son prácticamente equivalentes. En ese caso conviene la **regresión logística** por su interpretabilidad (cada coeficiente explica el efecto de una variable sobre la aprobación).")
+} else {
+  cat(paste0("> La ventaja de **", ganador$modelo, "** es clara (", dif_auc, " de AUC), por lo que es la elección recomendada para este problema."))
+}
+```
+
+Como las clases están casi balanceadas, el *accuracy* también es informativo aquí; en problemas desbalanceados habría que mirar recall y precision en su lugar.

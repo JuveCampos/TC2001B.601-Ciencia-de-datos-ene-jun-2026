@@ -1,0 +1,395 @@
+---
+title: "Clasificación desbalanceada: clientes prometedores (casino en línea)"
+subtitle: "EJERCICIO DE CLASIFICACIÓN — Regresión logística vs. random forest (con SMOTE)"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+**Objetivo.** Detectar a los pocos clientes "prometedores" (`prometedor`: si/no) de un casino en línea para dirigirles campañas de retención. Solo ~9% lo son: es un problema **desbalanceado**, donde el accuracy engaña (predecir siempre "no" da ~91% de accuracy y recall 0). Compararemos una **regresión logística** (lineal, interpretable) con un **random forest** (cientos de árboles promediados), ambos con **SMOTE** para rebalancear el entrenamiento. Recorremos el flujo completo: partición, receta, `workflow()`, validación cruzada, tuning y evaluación honesta con `last_fit()`, y cerramos con una recomendación clara basada en la métrica correcta para el desbalance.
+
+## 1. Cargar librerías
+
+Cargamos todo al inicio. `themis` aporta los pasos de rebalanceo (entre ellos `step_smote`); `ranger` es el motor que `parsnip` usa por detrás para el random forest; `corrplot` dibuja la matriz de correlación.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(corrplot)
+library(themis)   # pasos de rebalanceo (SMOTE)
+library(ranger)
+```
+
+```{r}
+tidymodels::tidymodels_prefer()
+```
+
+## 2. Cargar los datos
+
+Removemos `id_cliente` (identificador, no predictor) y convertimos la objetivo a `factor`. Fijamos `"si"` (cliente prometedor, la clase rara) como **primer nivel**: `yardstick` toma el primer nivel como el evento de interés, de modo que recall, precision y PR-AUC se calculen sobre la clase que realmente queremos detectar.
+
+```{r}
+# Removemos id_cliente. Fijamos "si" (cliente prometedor, clase rara) como
+# PRIMER nivel del factor: yardstick toma el primer nivel como evento, así
+# recall/precision/pr_auc se calculan sobre la clase que nos interesa detectar.
+casino <- read_csv("datos.csv") %>%
+  select(-id_cliente) %>%
+  mutate(prometedor = factor(prometedor, levels = c("si", "no")))
+```
+
+```{r}
+glimpse(casino)
+```
+
+## 3. Explorar los datos
+
+Tres revisiones mínimas antes de modelar: el **balance de clases**, los **datos faltantes** y la **colinealidad**.
+
+El balance de clases es el corazón de este ejercicio. Como veremos, la clase "si" es rara (~9%). Por eso el *accuracy* deja de ser una métrica útil: un modelo que prediga siempre "no" acertaría ~91% de las veces, pero no detectaría a ningún cliente prometedor (recall 0). Más adelante elegimos métricas que sí distinguen ese caso inútil de un modelo bueno.
+
+```{r}
+# El desbalance es el corazón del ejercicio: ~90/10.
+casino %>%
+  group_by(prometedor) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(porcentaje = 100 * (n / sum(n)))
+```
+
+Contamos los `NA`: esto guía la imputación dentro de la receta.
+
+```{r}
+casino %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "n_na") %>%
+  arrange(desc(n_na))
+```
+
+La matriz de correlación revela colinealidad entre las variables numéricas de comportamiento. SMOTE crea ejemplos sintéticos interpolando entre vecinos cercanos (por distancia), así que revisar la escala y la redundancia de las variables ayuda a entender el preprocesamiento posterior.
+
+```{r}
+matriz_correlacion <- casino %>%
+  select(where(is.numeric)) %>%
+  drop_na() %>%
+  cor() %>%
+  round(2)
+
+matriz_correlacion %>%
+  corrplot(method = "circle", addCoef.col = "black", tl.cex = 0.7)
+```
+
+## 4. Partición entrenamiento / prueba (estratificada)
+
+Separamos 75% para entrenamiento y 25% para prueba. **Estratificamos** por `prometedor` para que ambas particiones conserven la proporción ~90/10. La prueba se reserva para el final y, fundamental aquí, **no se rebalancea**: conserva la distribución real para que la evaluación refleje cómo se comportará el modelo en producción.
+
+```{r}
+# Estratificamos por la objetivo para que ambas particiones conserven la
+# proporción ~90/10. La prueba NO se rebalancea: conserva la distribución real.
+set.seed(2026)
+casino_split <- initial_split(casino, prop = 0.75, strata = prometedor)
+casino_entrenamiento <- casino_split %>% training()
+casino_prueba <- casino_split %>% testing()
+```
+
+```{r}
+table(casino_entrenamiento$prometedor) %>% prop.table()
+table(casino_prueba$prometedor) %>% prop.table()
+```
+
+## 5. Receta de preprocesamiento con SMOTE (compartida por ambos modelos)
+
+Usamos **una sola receta** para que ambos modelos vean la misma representación de los datos. Aquí el orden de los pasos es especialmente delicado porque SMOTE impone requisitos sobre los datos que recibe.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es una receta y por qué importa el orden de los pasos?
+Una **receta** (`recipe`) encadena pasos de preprocesamiento (`step_*`) que se aprenden solo con el entrenamiento y se aplican igual a la prueba (esto evita fuga de información). El orden importa: se imputan los `NA` primero (los pasos siguientes no los toleran), se crean *dummies* y se normaliza antes de SMOTE, y SMOTE queda al final porque necesita todo numérico y en escala comparable.
+:::
+
+::: {.callout-note collapse="true"}
+## ¿Qué es SMOTE y por qué solo en el entrenamiento?
+Con clases desbalanceadas, **SMOTE** crea ejemplos sintéticos de la clase rara interpolando entre vecinos cercanos, hasta equilibrar. Requiere que todos los predictores sean numéricos (por eso `step_dummy` va antes) y que estén en escala comparable (por eso `step_normalize` va antes). Se aplica **solo al entrenamiento** de cada fold; la prueba conserva la distribución real para que la evaluación sea honesta.
+:::
+
+```{r}
+# El orden importa especialmente con SMOTE:
+#  1. step_impute_median / step_impute_mode: SMOTE y normalize no toleran NAs.
+#  2. step_dummy: SMOTE solo opera sobre numéricos, así que las categóricas
+#     (usa_app_movil, bono_reclamado) deben volverse dummies ANTES.
+#  3. step_normalize: para que las distancias entre vecinos de SMOTE sean
+#     comparables.
+#  4. step_smote(prometedor): crea ejemplos sintéticos de la clase rara
+#     interpolando entre vecinos. Por defecto SOLO se aplica al entrenamiento
+#     de cada fold y NO a la prueba (que conserva su distribución real).
+receta_casino <- recipe(prometedor ~ ., data = casino_entrenamiento) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_impute_mode(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_smote(prometedor)
+```
+
+Verificamos que el paso de SMOTE haga lo prometido: tras aplicarlo, el entrenamiento queda balanceado (50/50).
+
+```{r}
+# Verificamos que tras SMOTE el entrenamiento queda balanceado (50/50).
+receta_casino %>%
+  prep(training = casino_entrenamiento) %>%
+  bake(new_data = NULL) %>%
+  count(prometedor) %>%
+  mutate(porcentaje = 100 * n / sum(n))
+```
+
+## 6. Especificación de los modelos
+
+El primer modelo es la **regresión logística**: no tiene hiperparámetros que ajustar. Modela el log-odds de ser prometedor como combinación lineal de los predictores; sirve como punto de partida interpretable.
+
+```{r}
+modelo_logistico <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+```
+
+El segundo es el **random forest**, donde ajustaremos `mtry` (predictores por corte) y `min_n` (mínimo de observaciones por nodo).
+
+::: {.callout-note collapse="true"}
+## ¿Qué es un random forest (bagging)?
+Un **random forest** promedia cientos de árboles, cada uno entrenado sobre una muestra *bootstrap* y con un subconjunto aleatorio de predictores en cada corte. Promediar muchos árboles ruidosos pero poco sesgados **reduce la varianza** sin aumentar el sesgo, y suele capturar combinaciones de comportamiento que un modelo lineal no ve. Se ajustan `mtry` (predictores por corte) y `min_n` (mínimo por nodo).
+:::
+
+```{r}
+modelo_rf <- rand_forest(
+    mtry = tune(),
+    min_n = tune(),
+    trees = 500
+  ) %>%
+  set_engine("ranger", importance = "impurity") %>%
+  set_mode("classification")
+```
+
+Empaquetamos cada modelo con la misma receta en su `workflow`.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es un workflow?
+Un **workflow** empaqueta en un solo objeto la receta de preprocesamiento y el modelo. Al hacer `fit()` aplica internamente `prep` + `bake` + `fit` (incluido SMOTE sobre el entrenamiento), y al `predict()` repite el mismo preprocesamiento sobre los datos nuevos (sin SMOTE). Es la pieza estándar para validación cruzada y tuning.
+:::
+
+```{r}
+workflow_logistico <- workflow() %>%
+  add_recipe(receta_casino) %>%
+  add_model(modelo_logistico)
+
+workflow_rf <- workflow() %>%
+  add_recipe(receta_casino) %>%
+  add_model(modelo_rf)
+```
+
+## 7. Validación cruzada y tuning de hiperparámetros
+
+Estimamos el desempeño con validación cruzada estratificada, que conserva la proporción ~90/10 en cada fold de validación.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es la validación cruzada (k-fold)?
+Partimos el entrenamiento en `v` partes (folds) del mismo tamaño. En cada ronda entrenamos con `v − 1` folds (aplicando SMOTE solo a esa porción) y validamos en el restante, rotando cuál se deja fuera; luego promediamos el desempeño. Así estimamos qué tan bien generaliza el modelo **usando solo el entrenamiento**, y reservamos la prueba para el final.
+:::
+
+```{r}
+set.seed(2026)
+folds_cv <- vfold_cv(casino_entrenamiento, v = 5, strata = prometedor)
+```
+
+Definimos las métricas. Con desbalance, la métrica de decisión es **PR-AUC**; el accuracy se reporta solo como contraste.
+
+::: {.callout-note collapse="true"}
+## Recall, precision, F1 y PR-AUC (clases desbalanceadas)
+Cuando la clase de interés es rara, el *accuracy* engaña. Se usan: **recall** (cobertura: de los positivos reales, cuántos detectamos), **precision** (de las alertas, cuántas son correctas), **F1** (`f_meas`, balance de ambas) y **PR-AUC** (`pr_auc`, área bajo la curva precision-recall, más informativa que la ROC cuando los positivos son escasos). El accuracy solo se reporta como contraste.
+:::
+
+```{r}
+# Con desbalance, la métrica de decisión es pr_auc (área bajo la curva
+# precision-recall); recall, precision y f_meas complementan. El accuracy se
+# reporta solo para contraste.
+metricas_desbalance <- metric_set(pr_auc, roc_auc, recall, precision,
+                                  f_meas, accuracy)
+```
+
+La logística no se tunea: estimamos su desempeño en validación cruzada con `fit_resamples()`.
+
+::: {.callout-note collapse="true"}
+## fit_resamples() vs. tune_grid()
+Cuando un modelo **no** tiene hiperparámetros que ajustar (la regresión logística), `fit_resamples()` solo lo evalúa en cada fold. Cuando **sí** los tiene (el `mtry` y `min_n` del random forest), `tune_grid()` prueba varias combinaciones en la validación cruzada y nos deja elegir la mejor.
+:::
+
+```{r}
+set.seed(2026)
+cv_logistico <- workflow_logistico %>%
+  fit_resamples(resamples = folds_cv, metrics = metricas_desbalance)
+
+collect_metrics(cv_logistico)
+```
+
+Para el random forest definimos una grilla de combinaciones de `mtry` y `min_n`, y corremos la validación cruzada en cada una.
+
+```{r}
+grilla_rf <- grid_regular(
+    mtry(range = c(2, 6)),
+    min_n(range = c(2, 40)),
+    levels = 4
+  )
+```
+
+```{r}
+set.seed(2026)
+tuning_rf <- workflow_rf %>%
+  tune_grid(resamples = folds_cv,
+            grid = grilla_rf,
+            metrics = metricas_desbalance)
+```
+
+La gráfica muestra el PR-AUC promedio según `mtry`, con una línea por cada valor de `min_n`. Nos sirve para ubicar la combinación de hiperparámetros que maximiza la métrica de decisión antes de fijar el modelo final.
+
+```{r}
+tuning_rf %>%
+  collect_metrics() %>%
+  filter(.metric == "pr_auc") %>%
+  ggplot(aes(x = mtry, y = mean, color = factor(min_n))) +
+  geom_line() +
+  geom_point(size = 2) +
+  labs(title = "PR-AUC en validación cruzada — random forest",
+       x = "mtry (predictores por corte)", y = "PR-AUC promedio",
+       color = "min_n") +
+  theme_minimal()
+```
+
+```{r}
+mejor_rf <- tuning_rf %>% select_best(metric = "pr_auc")
+mejor_rf
+```
+
+## 8. Implementar el workflow final de cada modelo
+
+La logística ya está lista; al random forest le inyectamos los hiperparámetros ganadores con `finalize_workflow()`.
+
+```{r}
+workflow_rf_final <- workflow_rf %>%
+  finalize_workflow(mejor_rf)
+```
+
+## 9. Entrenar y evaluar con last_fit() sobre la prueba
+
+::: {.callout-note collapse="true"}
+## ¿Qué hace last_fit()?
+`last_fit()` toma el split original, **reentrena** el modelo final sobre TODO el entrenamiento (aplicando SMOTE solo a esos datos) y lo evalúa **una sola vez** sobre la base de prueba reservada, que conserva la distribución real ~90/10. Es el paso que da la estimación honesta del desempeño en datos que el modelo nunca vio.
+:::
+
+```{r}
+# last_fit reentrena sobre TODO el entrenamiento (con SMOTE) y evalúa sobre la
+# prueba, que conserva la distribución real ~90/10.
+ajuste_logistico <- workflow_logistico %>%
+  last_fit(split = casino_split, metrics = metricas_desbalance)
+
+ajuste_rf <- workflow_rf_final %>%
+  last_fit(split = casino_split, metrics = metricas_desbalance)
+```
+
+## 10. Pruebas del modelo: métricas y comparación
+
+Reunimos las métricas de ambos modelos en la prueba en una sola tabla, ordenada por **PR-AUC** (la métrica de decisión). Conviene mirar recall y precision juntos: el accuracy puede verse alto en ambos modelos sin que eso diga nada útil sobre la detección de la clase rara.
+
+```{r}
+metricas_comparacion <- bind_rows(
+    collect_metrics(ajuste_logistico) %>% mutate(modelo = "Regresión logística"),
+    collect_metrics(ajuste_rf) %>% mutate(modelo = "Random forest")
+  ) %>%
+  select(modelo, .metric, .estimate) %>%
+  pivot_wider(names_from = .metric, values_from = .estimate) %>%
+  arrange(desc(pr_auc))
+
+metricas_comparacion
+```
+
+```{r}
+preds_logistico <- collect_predictions(ajuste_logistico) %>%
+  mutate(modelo = "Regresión logística")
+preds_rf <- collect_predictions(ajuste_rf) %>%
+  mutate(modelo = "Random forest")
+
+preds_ambos <- bind_rows(preds_logistico, preds_rf)
+```
+
+La **curva precision-recall** es la gráfica más informativa con clases desbalanceadas: traza la precision contra el recall variando el umbral de decisión, y se concentra en cómo se comporta el modelo sobre la clase rara (a diferencia de la ROC, que también premia acertar la clase abundante). Entre más alta y a la derecha quede la curva, mejor; el área bajo ella es el PR-AUC.
+
+```{r}
+# Curva precision-recall: la más informativa con clases desbalanceadas.
+preds_ambos %>%
+  group_by(modelo) %>%
+  pr_curve(truth = prometedor, .pred_si) %>%
+  autoplot() +
+  labs(title = "Curvas precision-recall en la base de prueba") +
+  theme_minimal()
+```
+
+La **curva ROC** complementa: traza sensibilidad vs. (1 − especificidad) variando el umbral. Con clases muy desbalanceadas tiende a verse optimista (la clase abundante infla el resultado), por eso aquí la usamos como apoyo y no como criterio principal.
+
+```{r}
+preds_ambos %>%
+  group_by(modelo) %>%
+  roc_curve(truth = prometedor, .pred_si) %>%
+  autoplot() +
+  labs(title = "Curvas ROC en la base de prueba") +
+  theme_minimal()
+```
+
+Las **matrices de confusión** muestran en qué se equivoca cada modelo (falsos positivos vs. falsos negativos), el detalle que las métricas resumen pero no desglosan. En este problema, los **falsos negativos** (clientes prometedores que no detectamos) suelen ser el error más costoso.
+
+```{r}
+conf_mat(preds_logistico, truth = prometedor, estimate = .pred_class) %>%
+  autoplot(type = "heatmap") +
+  labs(title = "Matriz de confusión — Regresión logística")
+```
+
+```{r}
+conf_mat(preds_rf, truth = prometedor, estimate = .pred_class) %>%
+  autoplot(type = "heatmap") +
+  labs(title = "Matriz de confusión — Random forest")
+```
+
+## Veredicto: ¿cuál es el mejor modelo?
+
+En un problema desbalanceado, la métrica de decisión **no** es el accuracy (predecir siempre "no" lo dispararía sin detectar a nadie), sino el **PR-AUC**: el área bajo la curva precision-recall, que mide qué tan bien el modelo prioriza a la clase rara. Por eso ordenamos por `desc(pr_auc)` y declaramos ganador al modelo con mayor PR-AUC en la prueba.
+
+```{r}
+tabla_final <- metricas_comparacion %>%
+  mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  arrange(desc(pr_auc))
+
+ganador <- tabla_final %>% slice(1)
+perdedor <- tabla_final %>% slice(2)
+dif_pr <- round(ganador$pr_auc - perdedor$pr_auc, 3)
+```
+
+```{r}
+tabla_final
+```
+
+**Modelo recomendado: `r ganador$modelo`.** Obtiene el mayor PR-AUC en la base de prueba (`r ganador$pr_auc`), frente a `r perdedor$pr_auc` del otro modelo (diferencia de `r dif_pr`). Recuerda que el *accuracy* no es la métrica de decisión aquí: ambos modelos pueden tener accuracy alto solo por acertar a la clase abundante.
+
+```{r}
+#| echo: false
+#| results: asis
+if (dif_pr < 0.02) {
+  cat("> **Matiz:** la diferencia de PR-AUC es pequeña (< 0.02), así que ambos modelos son prácticamente equivalentes en la detección de la clase rara. En ese caso conviene la **regresión logística** por su interpretabilidad (cada coeficiente explica el efecto de una variable sobre la probabilidad de ser prometedor), salvo que el random forest aporte una ventaja clara en recall.")
+} else {
+  cat(paste0("> La ventaja de **", ganador$modelo, "** es relevante (", dif_pr, " de PR-AUC), por lo que es la elección recomendada para esta tarea de detección."))
+}
+```
+
+Para cerrar, vale la pena recordar el rol de cada pieza: **SMOTE** rebalancea solo el entrenamiento (la prueba conserva el 90/10 real), lo que evita que los modelos ignoren a la clase rara; la **regresión logística** da un punto de partida interpretable; y el **random forest** suele mejorar el recall y el PR-AUC al capturar combinaciones de comportamiento. El criterio final es siempre el mismo: en detección con clases desbalanceadas, gana el modelo con mayor **PR-AUC**, no el de mayor accuracy.

@@ -1,0 +1,363 @@
+---
+title: "Clasificación: aprobación de seguro de vida"
+subtitle: "EJERCICIO DE CLASIFICACIÓN — Regresión logística vs. XGBoost"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+**Objetivo.** Predecir si una solicitud de póliza de seguro de vida será aprobada (`aprobada`: si/no) a partir de información demográfica, clínica e historial del solicitante. Compararemos dos clasificadores sobre el mismo flujo: una **regresión logística** (lineal, interpretable) y **XGBoost** (boosting de árboles, gran capacidad predictiva). El dataset mezcla variables numéricas (edad, IMC, presión, colesterol) y categóricas (sexo, fumador, región), así que la receta tendrá que crear variables *dummy*. Recorremos el flujo completo: partición, receta, `workflow()`, validación cruzada, tuning y evaluación honesta con `last_fit()`, y cerramos con una recomendación clara.
+
+## 1. Cargar librerías
+
+Cargamos todo al inicio. `xgboost` es el motor que `parsnip` usa por detrás para el boosting; `corrplot` dibuja la matriz de correlación.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(corrplot)
+library(xgboost)
+```
+
+```{r}
+tidymodels::tidymodels_prefer()
+```
+
+## 2. Cargar los datos
+
+Removemos `id_solicitante` (identificador, no predictor) y convertimos la objetivo a `factor`. Fijamos `"si"` como **primer nivel**: `yardstick` toma el primer nivel como el evento de interés, de modo que sensibilidad, AUC y demás métricas se calculen sobre "aprobada = si".
+
+```{r}
+# Removemos id_solicitante (identificador). Convertimos la objetivo a factor
+# con "si" (aprobada) como PRIMER nivel = evento de interés.
+seguros <- read_csv("datos.csv") %>%
+  select(-id_solicitante) %>%
+  mutate(aprobada = factor(aprobada, levels = c("si", "no")))
+```
+
+```{r}
+glimpse(seguros)
+```
+
+## 3. Explorar los datos
+
+Tres revisiones mínimas antes de modelar: el **balance de clases**, los **datos faltantes** y la **colinealidad**.
+
+El balance importa porque, si una clase fuera muy rara, el *accuracy* dejaría de ser confiable (predecir siempre la mayoría daría un accuracy alto pero inútil). Aquí veremos que está razonablemente balanceado.
+
+```{r}
+seguros %>%
+  group_by(aprobada) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(porcentaje = 100 * (n / sum(n)))
+```
+
+Contamos los `NA`: esto guía la imputación. Esperamos faltantes sobre todo en variables clínicas como el colesterol.
+
+```{r}
+seguros %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "n_na") %>%
+  arrange(desc(n_na))
+```
+
+La matriz de correlación revela colinealidad clínica: edad, presión y colesterol tienden a moverse juntas. Variables redundantes inflan artificialmente el peso de esa información compartida, por eso luego las filtramos con `step_corr()`.
+
+```{r}
+# Colinealidad clínica: edad, presión y colesterol tienden a moverse juntas.
+matriz_correlacion <- seguros %>%
+  select(where(is.numeric)) %>%
+  drop_na() %>%
+  cor() %>%
+  round(2)
+
+matriz_correlacion %>%
+  corrplot(method = "circle", addCoef.col = "black", tl.cex = 0.7)
+```
+
+## 4. Partición entrenamiento / prueba (estratificada)
+
+Separamos 75% para entrenamiento y 25% para prueba. **Estratificamos** por `aprobada` para que ambas particiones conserven la misma proporción de clases. La prueba se reserva para el final.
+
+```{r}
+set.seed(2026)
+seguros_split <- initial_split(seguros, prop = 0.75, strata = aprobada)
+seguros_entrenamiento <- seguros_split %>% training()
+seguros_prueba <- seguros_split %>% testing()
+```
+
+```{r}
+table(seguros_entrenamiento$aprobada) %>% prop.table()
+table(seguros_prueba$aprobada) %>% prop.table()
+```
+
+## 5. Receta de preprocesamiento (compartida por ambos modelos)
+
+Usamos **una sola receta** para que ambos modelos vean la misma representación de los datos. Como el dataset mezcla numéricas y categóricas, el paso clave es `step_dummy`, que convierte cada categoría (sexo, fumador, región) en columnas binarias 0/1 que los modelos pueden procesar.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es una receta y por qué importa el orden de los pasos?
+Una **receta** (`recipe`) encadena pasos de preprocesamiento (`step_*`) que se aprenden solo con el entrenamiento y se aplican igual a la prueba (esto evita fuga de información). El orden importa: se imputan los `NA` primero (los pasos siguientes no los toleran), se filtra colinealidad y se normaliza antes de crear *dummies*, y `step_zv` queda al final como red de seguridad.
+:::
+
+```{r}
+# Receta única comparable:
+#  1. Imputar numéricos (mediana; colesterol tiene NAs) y nominales (moda).
+#  2. step_nzv: quitar casi-constantes.
+#  3. step_corr: filtrar colinealidad clínica.
+#  4. step_normalize: estandarizar numéricos.
+#  5. step_dummy: codificar sexo, fumador, antecedente_familiar, region.
+#  6. step_zv: por seguridad.
+receta_seguros <- recipe(aprobada ~ ., data = seguros_entrenamiento) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_impute_mode(all_nominal_predictors()) %>%
+  step_nzv(all_predictors()) %>%
+  step_corr(all_numeric_predictors(), threshold = 0.85) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+Comprobamos cómo queda la base ya horneada: todas las categóricas convertidas en columnas *dummy* y las numéricas estandarizadas.
+
+```{r}
+receta_seguros %>%
+  prep(training = seguros_entrenamiento) %>%
+  bake(new_data = NULL) %>%
+  glimpse()
+```
+
+## 6. Especificación de los modelos
+
+El primer modelo es la **regresión logística**: no tiene hiperparámetros que ajustar. Modela el log-odds de aprobación como combinación lineal de los predictores.
+
+```{r}
+modelo_logistico <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+```
+
+El segundo es **XGBoost**, donde ajustaremos tres hiperparámetros clave: profundidad de los árboles, tasa de aprendizaje y reducción de pérdida mínima por corte.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es XGBoost (boosting)?
+**XGBoost** construye árboles en **secuencia**: cada árbol nuevo corrige los errores del conjunto anterior. El boosting reduce sobre todo el **sesgo** y suele dar el mejor desempeño predictivo, a costa de más hiperparámetros y mayor riesgo de sobreajuste. Se ajustan `tree_depth`, `learn_rate` y `loss_reduction`.
+:::
+
+```{r}
+modelo_xgb <- boost_tree(
+    trees = 500,
+    tree_depth = tune(),
+    learn_rate = tune(),
+    loss_reduction = tune()
+  ) %>%
+  set_engine("xgboost") %>%
+  set_mode("classification")
+```
+
+Empaquetamos cada modelo con la misma receta en su `workflow`.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es un workflow?
+Un **workflow** empaqueta en un solo objeto la receta de preprocesamiento y el modelo. Al hacer `fit()` aplica internamente `prep` + `bake` + `fit`, y al `predict()` repite el mismo preprocesamiento sobre los datos nuevos. Es la pieza estándar para validación cruzada y tuning.
+:::
+
+```{r}
+workflow_logistico <- workflow() %>%
+  add_recipe(receta_seguros) %>%
+  add_model(modelo_logistico)
+
+workflow_xgb <- workflow() %>%
+  add_recipe(receta_seguros) %>%
+  add_model(modelo_xgb)
+```
+
+## 7. Validación cruzada y tuning de hiperparámetros
+
+::: {.callout-note collapse="true"}
+## ¿Qué es la validación cruzada (k-fold)?
+Partimos el entrenamiento en `v` partes (folds) del mismo tamaño. En cada ronda entrenamos con `v − 1` folds y validamos en el restante, rotando cuál se deja fuera; luego promediamos el desempeño. Así estimamos qué tan bien generaliza el modelo **usando solo el entrenamiento**, y reservamos la prueba para el final.
+:::
+
+```{r}
+set.seed(2026)
+folds_cv <- vfold_cv(seguros_entrenamiento, v = 5, strata = aprobada)
+```
+
+Definimos las métricas de clasificación. La principal será el AUC.
+
+::: {.callout-note collapse="true"}
+## Matriz de confusión, sensibilidad, especificidad, ROC y AUC
+- **Matriz de confusión:** tabla que cruza la clase real con la predicha (verdaderos/falsos positivos y negativos).
+- **Sensibilidad (recall):** de los positivos reales, cuántos detecta el modelo.
+- **Especificidad:** de los negativos reales, cuántos clasifica bien.
+- **Curva ROC:** traza sensibilidad vs. (1 − especificidad) variando el umbral de decisión.
+- **AUC:** área bajo la curva ROC; resume la discriminación (0.5 = azar, 1 = perfecto) sin depender de un umbral fijo. Es la métrica principal cuando las clases están balanceadas.
+:::
+
+```{r}
+metricas_clasificacion <- metric_set(roc_auc, accuracy, sensitivity,
+                                     yardstick::spec)
+```
+
+La logística no se tunea: estimamos su desempeño en CV con `fit_resamples()`.
+
+::: {.callout-note collapse="true"}
+## fit_resamples() vs. tune_grid()
+Cuando un modelo **no** tiene hiperparámetros que ajustar (regresión lineal o logística), `fit_resamples()` solo lo evalúa en cada fold. Cuando **sí** los tiene, `tune_grid()` prueba varias combinaciones de hiperparámetros en la validación cruzada y nos deja elegir la mejor.
+:::
+
+```{r}
+set.seed(2026)
+cv_logistico <- workflow_logistico %>%
+  fit_resamples(resamples = folds_cv, metrics = metricas_clasificacion)
+
+collect_metrics(cv_logistico)
+```
+
+Para XGBoost pedimos a `tune_grid()` que pruebe 12 combinaciones de hiperparámetros con la validación cruzada y escogemos la de mayor AUC.
+
+```{r}
+set.seed(2026)
+tuning_xgb <- workflow_xgb %>%
+  tune_grid(resamples = folds_cv,
+            grid = 12,
+            metrics = metricas_clasificacion)
+```
+
+La gráfica muestra cómo varía el AUC promedio según los valores de los hiperparámetros; nos ayuda a ver qué combinaciones funcionan mejor antes de quedarnos con la ganadora.
+
+```{r}
+autoplot(tuning_xgb, metric = "roc_auc")
+```
+
+```{r}
+mejor_xgb <- tuning_xgb %>% select_best(metric = "roc_auc")
+mejor_xgb
+```
+
+## 8. Implementar el workflow final de cada modelo
+
+La logística ya está lista; a XGBoost le inyectamos los hiperparámetros ganadores con `finalize_workflow()`.
+
+```{r}
+workflow_xgb_final <- workflow_xgb %>%
+  finalize_workflow(mejor_xgb)
+```
+
+## 9. Entrenar y evaluar con last_fit() sobre la prueba
+
+::: {.callout-note collapse="true"}
+## ¿Qué hace last_fit()?
+`last_fit()` toma el split original, **reentrena** el modelo final sobre TODO el entrenamiento y lo evalúa **una sola vez** sobre la base de prueba reservada. Es el paso que da la estimación honesta del desempeño en datos que el modelo nunca vio.
+:::
+
+```{r}
+ajuste_logistico <- workflow_logistico %>%
+  last_fit(split = seguros_split, metrics = metricas_clasificacion)
+
+ajuste_xgb <- workflow_xgb_final %>%
+  last_fit(split = seguros_split, metrics = metricas_clasificacion)
+```
+
+## 10. Pruebas del modelo: métricas y comparación
+
+Reunimos las métricas de ambos modelos en la prueba en una sola tabla, ordenada por AUC.
+
+```{r}
+metricas_comparacion <- bind_rows(
+    collect_metrics(ajuste_logistico) %>% mutate(modelo = "Regresión logística"),
+    collect_metrics(ajuste_xgb) %>% mutate(modelo = "XGBoost")
+  ) %>%
+  select(modelo, .metric, .estimate) %>%
+  pivot_wider(names_from = .metric, values_from = .estimate) %>%
+  arrange(desc(roc_auc))
+
+metricas_comparacion
+```
+
+Las **curvas ROC sobrepuestas** comparan visualmente la discriminación: entre más se acerque una curva a la esquina superior izquierda, mejor separa solicitudes aprobadas de rechazadas.
+
+```{r}
+preds_logistico <- collect_predictions(ajuste_logistico) %>%
+  mutate(modelo = "Regresión logística")
+preds_xgb <- collect_predictions(ajuste_xgb) %>%
+  mutate(modelo = "XGBoost")
+
+preds_ambos <- bind_rows(preds_logistico, preds_xgb)
+```
+
+```{r}
+preds_ambos %>%
+  group_by(modelo) %>%
+  roc_curve(truth = aprobada, .pred_si) %>%
+  autoplot() +
+  labs(title = "Curvas ROC en la base de prueba") +
+  theme_minimal()
+```
+
+Las **matrices de confusión** muestran en qué se equivoca cada modelo (falsos positivos vs. falsos negativos), información que el AUC resume pero no detalla.
+
+```{r}
+conf_mat(preds_logistico, truth = aprobada, estimate = .pred_class) %>%
+  autoplot(type = "heatmap") +
+  labs(title = "Matriz de confusión — Regresión logística")
+```
+
+```{r}
+conf_mat(preds_xgb, truth = aprobada, estimate = .pred_class) %>%
+  autoplot(type = "heatmap") +
+  labs(title = "Matriz de confusión — XGBoost")
+```
+
+La **gráfica de importancia de variables** (`vip`) ordena los predictores según cuánto contribuyeron a las decisiones de XGBoost. A diferencia de la logística, XGBoost no entrega coeficientes interpretables uno a uno, así que esta gráfica es la principal vía para entender qué factores de riesgo (edad, tabaquismo, IMC, antecedentes) pesan más en la aprobación.
+
+```{r}
+ajuste_xgb %>%
+  extract_fit_parsnip() %>%
+  vip::vip(num_features = 12) +
+  labs(title = "Importancia de variables — XGBoost") +
+  theme_minimal()
+```
+
+## Veredicto: ¿cuál es el mejor modelo?
+
+Las clases están razonablemente balanceadas, así que la métrica de decisión es el **AUC** (mayor es mejor). Ordenamos la tabla por AUC e identificamos al ganador.
+
+```{r}
+tabla_final <- metricas_comparacion %>%
+  mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  arrange(desc(roc_auc))
+
+ganador <- tabla_final %>% slice(1)
+perdedor <- tabla_final %>% slice(2)
+dif_auc <- round(ganador$roc_auc - perdedor$roc_auc, 3)
+```
+
+```{r}
+tabla_final
+```
+
+**Modelo recomendado: `r ganador$modelo`.** Obtiene el mayor AUC en la base de prueba (`r ganador$roc_auc`), frente a `r perdedor$roc_auc` del otro modelo (diferencia de `r dif_auc`).
+
+```{r}
+#| echo: false
+#| results: asis
+if (dif_auc < 0.02) {
+  cat("> **Matiz:** la diferencia de AUC es pequeña (< 0.02), así que ambos modelos son prácticamente equivalentes. En ese caso conviene la **regresión logística** por su interpretabilidad (cada coeficiente explica el efecto de una variable sobre la aprobación), reservando XGBoost solo si su ventaja predictiva justifica perder esa transparencia.")
+} else {
+  cat(paste0("> La ventaja de **", ganador$modelo, "** es clara (", dif_auc, " de AUC), por lo que es la elección recomendada para este problema."))
+}
+```
+
+Como las clases están razonablemente balanceadas, el *accuracy* también es informativo aquí; en problemas desbalanceados habría que mirar recall y precision en su lugar. Vale la pena recordar el contraste de fondo: la **regresión logística** ofrece interpretabilidad directa (cada coeficiente indica cómo cambia el log-odds de aprobación, p. ej. ser fumador suele reducirlo), mientras que **XGBoost** capta interacciones entre factores de riesgo y suele predecir mejor, apoyándose en la importancia de variables para interpretar qué pesa más.

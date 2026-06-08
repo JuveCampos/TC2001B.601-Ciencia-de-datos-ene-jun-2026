@@ -1,0 +1,84 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - index.qmd
+    - regresion/*/ejercicio.qmd
+    - clasificacion/*/ejercicio.qmd
+
+website:
+  title: "Ejercicios de ML — TC2001B"
+  description: "Banco de ejercicios resueltos de regresión y clasificación con tidymodels."
+  reader-mode: true
+  page-navigation: true
+  navbar:
+    background: primary
+    pinned: true
+    left:
+      - text: "Inicio"
+        href: index.qmd
+      - text: "Regresión"
+        href: regresion/01_energia_hogares/ejercicio.qmd
+      - text: "Clasificación"
+        href: clasificacion/03_aprobacion_credito/ejercicio.qmd
+  sidebar:
+    style: docked
+    search: true
+    contents:
+      - text: "Inicio"
+        href: index.qmd
+      - section: "Regresión"
+        contents:
+          - text: "1 · Energía — lineal vs. árbol"
+            href: regresion/01_energia_hogares/ejercicio.qmd
+          - text: "2 · Calidad del aire — lineal vs. random forest"
+            href: regresion/02_calidad_aire/ejercicio.qmd
+          - text: "3 · Clínicas respiratorias — lineal vs. XGBoost"
+            href: regresion/03_clinicas_respiratorias/ejercicio.qmd
+          - text: "4 · Precio de viviendas — lineal vs. random forest"
+            href: regresion/04_precio_viviendas/ejercicio.qmd
+          - text: "5 · Costo médico (log) — lineal vs. XGBoost"
+            href: regresion/05_costo_medico/ejercicio.qmd
+      - section: "Clasificación"
+        contents:
+          - text: "1 · Deserción — logística vs. KNN"
+            href: clasificacion/01_desercion_estudiantil/ejercicio.qmd
+          - text: "2 · Hoteles — logística vs. árbol"
+            href: clasificacion/02_cancelacion_hoteles/ejercicio.qmd
+          - text: "3 · Crédito — logística vs. KNN"
+            href: clasificacion/03_aprobacion_credito/ejercicio.qmd
+          - text: "4 · Agua — logística vs. KNN"
+            href: clasificacion/04_potabilidad_agua/ejercicio.qmd
+          - text: "5 · Seguro — logística vs. XGBoost"
+            href: clasificacion/05_aprobacion_seguro/ejercicio.qmd
+          - text: "6 · Casino (desbalance) — logística vs. random forest"
+            href: clasificacion/06_clientes_casino/ejercicio.qmd
+          - text: "7 · Fraude (desbalance) — logística vs. XGBoost"
+            href: clasificacion/07_fraude_tarjetas/ejercicio.qmd
+  page-footer:
+    left: "TC2001B.601 — Ciencia de datos para la toma de decisiones I"
+    right: "Jorge Juvenal Campos Ferreira · Tecnológico de Monterrey"
+
+format:
+  html:
+    theme:
+      - cosmo
+      - estilos.scss
+    toc: true
+    toc-title: "En esta página"
+    df-print: kable
+    code-tools: true
+    code-copy: true
+    highlight-style: github
+    fig-width: 8
+    fig-height: 5
+    fig-align: center
+
+lang: es
+
+execute:
+  freeze: auto
+  echo: true
+  warning: false
+  message: false
+  cache: false

@@ -1,0 +1,405 @@
+---
+title: "Regresión: contaminación por PM2.5"
+subtitle: "EJERCICIO DE REGRESIÓN — Regresión lineal vs. random forest"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+**Objetivo.** Predecir la concentración diaria de partículas finas (`pm25_ug_m3`, en µg/m³) a partir de variables meteorológicas y de tráfico. Compararemos dos modelos sobre el mismo flujo de trabajo: una **regresión lineal** (modelo base, interpretable) y un **random forest** (ensamble de árboles por *bagging*, que capta no linealidades e interacciones). Recorreremos el flujo completo de `tidymodels`: partición de los datos, receta de preprocesamiento, `workflow()`, validación cruzada, ajuste de hiperparámetros y una evaluación honesta con `last_fit()`. Al final daremos un **veredicto claro** sobre cuál modelo conviene.
+
+## 1. Cargar librerías
+
+Agrupamos todas las librerías al inicio (buena práctica de reproducibilidad). `tidyverse` da el lenguaje de manipulación de datos; `tidymodels` es el marco de modelado; `ranger` es el motor rápido que ajusta el random forest; `corrplot` dibuja la matriz de correlación.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(corrplot)
+library(ranger)
+```
+
+`tidymodels_prefer()` resuelve los conflictos de nombres a favor de tidymodels (por ejemplo, que `spec()` sea la de yardstick y no la de otro paquete).
+
+```{r}
+tidymodels::tidymodels_prefer()
+```
+
+## 2. Cargar los datos
+
+Leemos el CSV y removemos `dia`: es un índice temporal y la estacionalidad ya queda capturada por la variable categórica `estacion`, que la receta convertirá en variables *dummy* más adelante.
+
+```{r}
+# Quitamos la columna de fecha (dia): es un índice temporal y la estacionalidad
+# ya queda capturada por la variable categórica estacion. estacion se convierte
+# en dummies en la receta.
+aire <- read_csv("datos.csv") %>%
+  select(-dia)
+```
+
+`glimpse()` nos da un vistazo rápido a tipos y valores de cada columna.
+
+```{r}
+glimpse(aire)
+```
+
+## 3. Explorar los datos
+
+Antes de modelar conviene entender la variable objetivo y las relaciones entre predictores. Tres revisiones mínimas: la **distribución de la objetivo** (¿hay asimetría o valores extremos?), los **datos faltantes** (¿qué tendremos que imputar?) y la **colinealidad** (¿hay predictores que miden casi lo mismo?).
+
+Primero, el histograma de PM2.5. Buscamos si la distribución es aproximadamente simétrica (cómoda para la regresión lineal) o muy sesgada hacia valores altos (típico en contaminación, por episodios de mala calidad del aire).
+
+```{r}
+# Distribución de la objetivo.
+aire %>%
+  ggplot(aes(x = pm25_ug_m3)) +
+  geom_histogram(bins = 30, fill = "#1e4c7d", color = "white") +
+  labs(title = "Distribución de PM2.5",
+       x = "PM2.5 (µg/m³)", y = "Frecuencia") +
+  theme_minimal()
+```
+
+`summary()` resume cada variable y, de paso, nos dice cuántos `NA` tiene cada columna.
+
+```{r}
+summary(aire)
+```
+
+Contamos los `NA` por columna de forma explícita: esto guía qué pasos de imputación necesitará la receta.
+
+```{r}
+aire %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "n_na") %>%
+  arrange(desc(n_na))
+```
+
+La matriz de correlación nos deja ver colinealidad entre predictores numéricos. En contaminación urbana es esperable que el tráfico, el NO2 y el CO se muevan juntos (comparten la misma fuente: la combustión vehicular). Si dos variables miden casi lo mismo, la regresión lineal sufre (infla la varianza de los coeficientes); por eso más adelante filtraremos con `step_corr()`.
+
+```{r}
+# Colinealidad: el tráfico, el NO2 y el CO suelen moverse juntos.
+matriz_correlacion <- aire %>%
+  select(where(is.numeric)) %>%
+  drop_na() %>%
+  cor() %>%
+  round(2)
+
+matriz_correlacion %>%
+  corrplot(method = "circle", tl.cex = 0.7)
+```
+
+## 4. Partición entrenamiento / prueba
+
+Dividimos los datos en **entrenamiento** (75%) y **prueba** (25%). La base de prueba se "guarda en una caja fuerte": no la tocamos hasta el final, para obtener una estimación honesta del desempeño en datos nuevos. Estratificamos por la objetivo para que ambas particiones cubran rangos de PM2.5 parecidos (en regresión, `initial_split` estratifica por cuantiles).
+
+```{r}
+set.seed(2026)
+aire_split <- initial_split(aire, prop = 0.75, strata = pm25_ug_m3)
+aire_entrenamiento <- aire_split %>% training()
+aire_prueba <- aire_split %>% testing()
+```
+
+```{r}
+c(entrenamiento = nrow(aire_entrenamiento), prueba = nrow(aire_prueba))
+```
+
+## 5. Receta de preprocesamiento (compartida por ambos modelos)
+
+Usamos **una sola receta** para que los dos modelos sean comparables: ambos verán exactamente la misma representación de los datos.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es una receta y por qué importa el orden de los pasos?
+Una **receta** (`recipe`) encadena pasos de preprocesamiento (`step_*`) que se *aprenden* solo con el entrenamiento y luego se aplican igual a la prueba (esto evita fuga de información). El orden importa: imputamos los `NA` **primero**, porque pasos como `step_corr` o `step_normalize` no toleran faltantes; normalizamos antes de crear *dummies* para que estas queden en 0/1; y dejamos `step_zv` al final como red de seguridad.
+:::
+
+```{r}
+# Una sola receta comparable para ambos modelos:
+#  1. Imputar NAs numéricos (mediana) y nominales (moda).
+#  2. step_nzv: quitar casi-constantes.
+#  3. step_corr: filtrar colinealidad numérica (umbral 0.85).
+#  4. step_normalize: estandarizar numéricos (escala común).
+#  5. step_dummy: codificar estacion.
+#  6. step_zv: por seguridad.
+receta_aire <- recipe(pm25_ug_m3 ~ ., data = aire_entrenamiento) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_impute_mode(all_nominal_predictors()) %>%
+  step_nzv(all_predictors()) %>%
+  step_corr(all_numeric_predictors(), threshold = 0.85) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+Conviene "hornear" la receta una vez para ver cómo quedan las variables tras el preprocesamiento (solo es inspección; el `workflow` lo hará por nosotros después).
+
+```{r}
+receta_aire %>%
+  prep(training = aire_entrenamiento) %>%
+  bake(new_data = NULL) %>%
+  glimpse()
+```
+
+## 6. Especificación de los modelos
+
+Definimos los dos modelos con `parsnip`. El primero es la **regresión lineal**: no tiene hiperparámetros que ajustar.
+
+```{r}
+# Modelo 1: regresión lineal (sin hiperparámetros).
+modelo_lineal <- linear_reg() %>%
+  set_engine("lm") %>%
+  set_mode("regression")
+```
+
+El segundo es el **random forest**, donde sí ajustaremos dos hiperparámetros (`mtry` y `min_n`).
+
+::: {.callout-note collapse="true"}
+## ¿Qué es un random forest (bagging)?
+Un **random forest** promedia cientos de árboles, cada uno entrenado sobre una muestra *bootstrap* y con un subconjunto aleatorio de predictores en cada corte. Promediar muchos árboles ruidosos pero poco sesgados **reduce la varianza** sin aumentar el sesgo, y de paso capta no linealidades e interacciones que la regresión lineal no ve. Ajustamos `mtry` (cuántos predictores se consideran en cada corte) y `min_n` (mínimo de observaciones por nodo); `tune()` marca esos valores como "a determinar por validación cruzada". Fijamos `trees = 500` (suficiente para que la estimación sea estable) e `importance = "impurity"` para poder inspeccionar después qué variables pesan más.
+:::
+
+```{r}
+# Modelo 2: random forest (ranger). Tuneamos:
+#  - mtry: cuántos predictores se consideran en cada corte.
+#  - min_n: mínimo de observaciones por nodo.
+# Fijamos trees = 500 (estable). importance = "impurity" para inspeccionar
+# después qué variables pesan más.
+modelo_rf <- rand_forest(
+    mtry = tune(),
+    min_n = tune(),
+    trees = 500
+  ) %>%
+  set_engine("ranger", importance = "impurity") %>%
+  set_mode("regression")
+```
+
+Cada modelo se empaqueta con la **misma** receta en su propio `workflow`.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es un workflow?
+Un **workflow** empaqueta en un solo objeto la receta de preprocesamiento y el modelo. Al hacer `fit()` aplica internamente `prep` + `bake` + `fit`, y al `predict()` repite el mismo preprocesamiento sobre los datos nuevos sin que tengamos que recordarlo. Es la pieza estándar para validación cruzada y tuning.
+:::
+
+```{r}
+workflow_lineal <- workflow() %>%
+  add_recipe(receta_aire) %>%
+  add_model(modelo_lineal)
+
+workflow_rf <- workflow() %>%
+  add_recipe(receta_aire) %>%
+  add_model(modelo_rf)
+```
+
+## 7. Validación cruzada y tuning de hiperparámetros
+
+Para comparar los modelos y elegir los hiperparámetros del random forest **sin tocar la prueba**, usamos validación cruzada sobre el entrenamiento.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es la validación cruzada (k-fold)?
+Partimos el entrenamiento en `v` partes (folds) del mismo tamaño. En cada ronda entrenamos con `v − 1` folds y evaluamos en el fold restante, rotando cuál se deja fuera; luego promediamos el desempeño. Así estimamos qué tan bien generaliza el modelo **usando solo el entrenamiento**, y reservamos la prueba para el final.
+:::
+
+```{r}
+set.seed(2026)
+folds_cv <- vfold_cv(aire_entrenamiento, v = 5, strata = pm25_ug_m3)
+```
+
+Definimos las métricas de regresión que vigilaremos.
+
+::: {.callout-note collapse="true"}
+## RMSE, MAE y R²
+- **RMSE** (raíz del error cuadrático medio): error típico en las unidades de la objetivo (aquí, µg/m³); penaliza más los errores grandes. Es la métrica de decisión.
+- **MAE** (error absoluto medio): error típico, más robusto a valores extremos.
+- **R²**: proporción de la variación de la objetivo que el modelo explica (1 = perfecto; 0 = no mejor que predecir la media).
+:::
+
+```{r}
+metricas_regresion <- metric_set(rmse, rsq, mae)
+```
+
+La regresión lineal **no se tunea**; estimamos su desempeño en CV con `fit_resamples()`. Esto la pone en igualdad de condiciones que el random forest.
+
+::: {.callout-note collapse="true"}
+## fit_resamples() vs. tune_grid()
+Cuando un modelo **no** tiene hiperparámetros que ajustar (regresión lineal), `fit_resamples()` solo lo evalúa en cada fold. Cuando **sí** los tiene (el random forest), `tune_grid()` prueba varias combinaciones de hiperparámetros en la validación cruzada y nos deja elegir la mejor.
+:::
+
+```{r}
+# Regresión lineal: desempeño en CV con fit_resamples().
+set.seed(2026)
+cv_lineal <- workflow_lineal %>%
+  fit_resamples(resamples = folds_cv, metrics = metricas_regresion)
+
+collect_metrics(cv_lineal)
+```
+
+Para el random forest construimos una grilla de hiperparámetros: combinaciones de `mtry` (2 a 6 predictores por corte) y `min_n` (2 a 40 observaciones por nodo). Fijamos rangos explícitos para `mtry` porque su límite superior depende del número de predictores y conviene acotarlo a mano (`levels = 4` da 4 × 4 = 16 candidatos).
+
+```{r}
+# Grilla del random forest. Fijamos rangos explícitos de mtry y min_n para
+# evitar dejar el límite superior de mtry sin definir.
+grilla_rf <- grid_regular(
+    mtry(range = c(2, 6)),
+    min_n(range = c(2, 40)),
+    levels = 4
+  )
+```
+
+```{r}
+set.seed(2026)
+tuning_rf <- workflow_rf %>%
+  tune_grid(resamples = folds_cv,
+            grid = grilla_rf,
+            metrics = metricas_regresion)
+```
+
+La siguiente gráfica resume el tuning: muestra el RMSE de validación cruzada según `mtry`, con una línea por nivel de `min_n`. Buscamos la combinación con menor RMSE.
+
+```{r}
+# RMSE en CV según mtry, por nivel de min_n.
+tuning_rf %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  ggplot(aes(x = mtry, y = mean, color = factor(min_n))) +
+  geom_line() +
+  geom_point(size = 2) +
+  labs(title = "RMSE en validación cruzada — random forest",
+       x = "mtry (predictores por corte)", y = "RMSE promedio",
+       color = "min_n") +
+  theme_minimal()
+```
+
+```{r}
+mejor_rf <- tuning_rf %>% select_best(metric = "rmse")
+mejor_rf
+```
+
+## 8. Implementar el workflow final de cada modelo
+
+La regresión lineal ya está lista. Al random forest le **inyectamos** los hiperparámetros ganadores con `finalize_workflow()`.
+
+```{r}
+workflow_rf_final <- workflow_rf %>%
+  finalize_workflow(mejor_rf)
+```
+
+## 9. Entrenar y evaluar con last_fit() sobre la prueba
+
+::: {.callout-note collapse="true"}
+## ¿Qué hace last_fit()?
+`last_fit()` toma el split original, **reentrena** el modelo final sobre TODO el entrenamiento y lo evalúa **una sola vez** sobre la base de prueba reservada. Es el paso que da la estimación honesta del desempeño en datos que el modelo nunca vio.
+:::
+
+```{r}
+ajuste_lineal <- workflow_lineal %>%
+  last_fit(split = aire_split, metrics = metricas_regresion)
+
+ajuste_rf <- workflow_rf_final %>%
+  last_fit(split = aire_split, metrics = metricas_regresion)
+```
+
+## 10. Pruebas del modelo: métricas y comparación
+
+Reunimos las métricas de **ambos** modelos en la base de prueba en una sola tabla. Esta es la comparación que nos interesa: el desempeño en datos no vistos.
+
+```{r}
+metricas_comparacion <- bind_rows(
+    collect_metrics(ajuste_lineal) %>% mutate(modelo = "Regresión lineal"),
+    collect_metrics(ajuste_rf) %>% mutate(modelo = "Random forest")
+  ) %>%
+  select(modelo, .metric, .estimate) %>%
+  pivot_wider(names_from = .metric, values_from = .estimate) %>%
+  arrange(rmse)
+
+metricas_comparacion
+```
+
+Para visualizar la calidad de cada modelo, graficamos los valores reales contra los predichos. La diagonal roja es la predicción perfecta: entre más pegados los puntos a la línea, mejor.
+
+```{r}
+preds_lineal <- collect_predictions(ajuste_lineal) %>%
+  mutate(modelo = "Regresión lineal")
+preds_rf <- collect_predictions(ajuste_rf) %>%
+  mutate(modelo = "Random forest")
+
+preds_ambos <- bind_rows(preds_lineal, preds_rf)
+```
+
+```{r}
+preds_ambos %>%
+  ggplot(aes(x = pm25_ug_m3, y = .pred)) +
+  geom_point(alpha = 0.4, color = "#1e4c7d") +
+  geom_abline(color = "#c0392b", linetype = 2) +
+  facet_wrap(~ modelo) +
+  labs(title = "Valores reales vs. predichos (base de prueba)",
+       x = "PM2.5 real (µg/m³)", y = "PM2.5 predicho (µg/m³)") +
+  theme_minimal()
+```
+
+El gráfico de residuos (real − predicho) contra el valor predicho ayuda a detectar sesgos: buscamos una nube sin patrón alrededor del cero. Un embudo o una curva indicarían que el modelo se equivoca sistemáticamente en algún rango (por ejemplo, subestimar los días de mayor contaminación).
+
+```{r}
+preds_ambos %>%
+  mutate(residuo = pm25_ug_m3 - .pred) %>%
+  ggplot(aes(x = .pred, y = residuo)) +
+  geom_point(alpha = 0.4, color = "#1e4c7d") +
+  geom_hline(yintercept = 0, color = "#c0392b", linetype = 2) +
+  facet_wrap(~ modelo) +
+  labs(title = "Residuos vs. valores predichos",
+       x = "PM2.5 predicho (µg/m³)", y = "Residuo (real − predicho)") +
+  theme_minimal()
+```
+
+Una ventaja del random forest sobre un solo árbol es que, aunque es un modelo "de caja negra", podemos recuperar algo de interpretabilidad midiendo la **importancia de cada variable**. La gráfica siguiente ordena los predictores por cuánto reducen la impureza (el error) a lo largo de todos los árboles del bosque: las barras más largas son las variables que más contribuyen a la predicción de PM2.5. Esperamos ver arriba los predictores de combustión y tráfico (NO2, CO, intensidad de tráfico) y las variables meteorológicas que dispersan o concentran las partículas (viento, inversión térmica).
+
+```{r}
+# Importancia de variables del random forest: qué predictores pesan más.
+ajuste_rf %>%
+  extract_fit_parsnip() %>%
+  vip::vip(num_features = 12) +
+  labs(title = "Importancia de variables — random forest") +
+  theme_minimal()
+```
+
+## Veredicto: ¿cuál es el mejor modelo?
+
+```{r}
+# Ordenamos por RMSE (menor es mejor) y medimos la diferencia relativa entre
+# el mejor y el segundo, para juzgar si la ventaja es relevante o marginal.
+tabla_final <- metricas_comparacion %>%
+  arrange(rmse) %>%
+  mutate(rmse = round(rmse, 2),
+         rsq = round(rsq, 3),
+         mae = round(mae, 2))
+
+ganador <- tabla_final %>% slice(1)
+perdedor <- tabla_final %>% slice(2)
+dif_rel_pct <- round(100 * (perdedor$rmse - ganador$rmse) / perdedor$rmse, 1)
+```
+
+```{r}
+# Tabla comparativa final (ordenada del mejor al peor por RMSE)
+tabla_final
+```
+
+**Modelo recomendado: `r ganador$modelo`.** Obtiene el menor RMSE en la base de prueba (`r ganador$rmse` µg/m³) con un R² de `r ganador$rsq`, frente a `r perdedor$rmse` µg/m³ del `r tolower(perdedor$modelo)`. Su RMSE es **`r dif_rel_pct`% menor**.
+
+```{r}
+#| echo: false
+#| results: asis
+if (dif_rel_pct < 3) {
+  cat("> **Matiz:** la diferencia entre ambos modelos es pequeña (menos de 3% en RMSE), así que en la práctica son comparables. Conviene quedarse con la **regresión lineal** por ser más simple e interpretable, salvo que el random forest aporte mejoras útiles o reglas relevantes para comunicar.")
+} else {
+  cat(paste0("> La ventaja de **", ganador$modelo, "** es relevante (", dif_rel_pct, "% en RMSE), por lo que es la elección clara para este problema."))
+}
+```
+
+Recuerda que la regresión lineal es la más fácil de interpretar (un coeficiente por variable), mientras que el random forest promedia cientos de árboles sobre muestras *bootstrap*: reduce la varianza y captura no linealidades e interacciones (por ejemplo, el efecto del viento según haya o no inversión térmica), normalmente a costa de interpretabilidad. La gráfica de importancia de variables ayuda a recuperar parte de esa interpretabilidad perdida, mostrando qué predictores impulsan la predicción de PM2.5.

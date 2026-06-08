@@ -1,0 +1,371 @@
+---
+title: "Regresión: consumo eléctrico residencial"
+subtitle: "EJERCICIO DE REGRESIÓN — Regresión lineal vs. árbol de regresión"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+**Objetivo.** Predecir el consumo eléctrico mensual de un hogar (`consumo_kwh`) a partir de sus características físicas y de uso. Compararemos dos modelos sobre el mismo flujo de trabajo: una **regresión lineal** (modelo base, interpretable) y un **árbol de regresión** (capta relaciones no lineales y umbrales). Recorreremos el flujo completo de `tidymodels`: partición de los datos, receta de preprocesamiento, `workflow()`, validación cruzada, ajuste de hiperparámetros y una evaluación honesta con `last_fit()`. Al final daremos un **veredicto claro** sobre cuál modelo conviene.
+
+## 1. Cargar librerías
+
+Agrupamos todas las librerías al inicio (buena práctica de reproducibilidad). `tidyverse` da el lenguaje de manipulación de datos; `tidymodels` es el marco de modelado; `rpart` es el motor que ajusta el árbol de regresión; `corrplot` dibuja la matriz de correlación.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(corrplot)
+library(rpart)
+```
+
+`tidymodels_prefer()` resuelve los conflictos de nombres a favor de tidymodels (por ejemplo, que `spec()` sea la de yardstick y no la de otro paquete).
+
+```{r}
+tidymodels::tidymodels_prefer()
+```
+
+## 2. Cargar los datos
+
+Leemos el CSV y removemos `hogar_id`: es un identificador único por fila, no aporta poder predictivo y, si lo dejáramos, solo metería ruido. Las dos variables de texto (`aislamiento`, `tarifa_horaria`) las dejamos como están; la receta las convertirá en variables *dummy* más adelante.
+
+```{r}
+energia <- read_csv("datos.csv") %>%
+  select(-hogar_id)
+```
+
+`glimpse()` nos da un vistazo rápido a tipos y valores de cada columna.
+
+```{r}
+glimpse(energia)
+```
+
+## 3. Explorar los datos
+
+Antes de modelar conviene entender la variable objetivo y las relaciones entre predictores. Tres revisiones mínimas: la **distribución de la objetivo** (¿hay asimetría o valores extremos?), los **datos faltantes** (¿qué tendremos que imputar?) y la **colinealidad** (¿hay predictores que miden casi lo mismo?).
+
+Primero, el histograma del consumo. Buscamos si la distribución es aproximadamente simétrica (cómodo para la regresión lineal) o muy sesgada.
+
+```{r}
+energia %>%
+  ggplot(aes(x = consumo_kwh)) +
+  geom_histogram(bins = 30, fill = "#1e4c7d", color = "white") +
+  labs(title = "Distribución del consumo eléctrico mensual",
+       x = "Consumo (kWh)", y = "Frecuencia") +
+  theme_minimal()
+```
+
+`summary()` resume cada variable y, de paso, nos dice cuántos `NA` tiene cada columna.
+
+```{r}
+summary(energia)
+```
+
+Contamos los `NA` por columna de forma explícita: esto guía qué pasos de imputación necesitará la receta.
+
+```{r}
+energia %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "n_na") %>%
+  arrange(desc(n_na))
+```
+
+La matriz de correlación nos deja ver colinealidad entre predictores numéricos (por ejemplo, `temp_promedio_c` y `grados_calor` suelen moverse juntas). Si dos variables miden casi lo mismo, la regresión lineal sufre (infla la varianza de los coeficientes); por eso más adelante filtraremos con `step_corr()`.
+
+```{r}
+matriz_correlacion <- energia %>%
+  select(where(is.numeric)) %>%
+  drop_na() %>%
+  cor() %>%
+  round(2)
+
+matriz_correlacion %>%
+  corrplot(method = "circle", addCoef.col = "black")
+```
+
+## 4. Partición entrenamiento / prueba
+
+Dividimos los datos en **entrenamiento** (75%) y **prueba** (25%). La base de prueba se "guarda en una caja fuerte": no la tocamos hasta el final, para obtener una estimación honesta del desempeño en datos nuevos. Estratificamos por la objetivo para que ambas particiones cubran rangos de consumo parecidos (en regresión, `initial_split` estratifica por cuantiles).
+
+```{r}
+set.seed(2026)
+energia_split <- initial_split(energia, prop = 0.75, strata = consumo_kwh)
+energia_entrenamiento <- energia_split %>% training()
+energia_prueba <- energia_split %>% testing()
+```
+
+```{r}
+c(entrenamiento = nrow(energia_entrenamiento),
+  prueba = nrow(energia_prueba))
+```
+
+## 5. Receta de preprocesamiento (compartida por ambos modelos)
+
+Usamos **una sola receta** para que los dos modelos sean comparables: ambos verán exactamente la misma representación de los datos.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es una receta y por qué importa el orden de los pasos?
+Una **receta** (`recipe`) encadena pasos de preprocesamiento (`step_*`) que se *aprenden* solo con el entrenamiento y luego se aplican igual a la prueba (esto evita fuga de información). El orden importa: imputamos los `NA` **primero**, porque pasos como `step_corr` o `step_normalize` no toleran faltantes; normalizamos antes de crear *dummies* para que estas queden en 0/1; y dejamos `step_zv` al final como red de seguridad.
+:::
+
+```{r}
+receta_energia <- recipe(consumo_kwh ~ ., data = energia_entrenamiento) %>%
+  step_impute_median(all_numeric_predictors()) %>%   # imputar NAs numéricos
+  step_impute_mode(all_nominal_predictors()) %>%      # imputar NAs categóricos
+  step_nzv(all_predictors()) %>%                      # quitar casi-constantes
+  step_corr(all_numeric_predictors(), threshold = 0.85) %>%  # colinealidad
+  step_normalize(all_numeric_predictors()) %>%        # estandarizar
+  step_dummy(all_nominal_predictors()) %>%            # codificar categóricas
+  step_zv(all_predictors())                           # red de seguridad
+```
+
+Conviene "hornear" la receta una vez para ver cómo quedan las variables tras el preprocesamiento (solo es inspección; el `workflow` lo hará por nosotros después).
+
+```{r}
+receta_energia %>%
+  prep(training = energia_entrenamiento) %>%
+  bake(new_data = NULL) %>%
+  glimpse()
+```
+
+## 6. Especificación de los modelos
+
+Definimos los dos modelos con `parsnip`. El primero es la **regresión lineal**: no tiene hiperparámetros que ajustar.
+
+```{r}
+modelo_lineal <- linear_reg() %>%
+  set_engine("lm") %>%
+  set_mode("regression")
+```
+
+El segundo es el **árbol de regresión**, donde sí ajustaremos dos hiperparámetros.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es un árbol de regresión?
+Un **árbol de regresión** parte el espacio de predictores con reglas tipo "si `metros_cuadrados` > X y `aislamiento` = bueno, entonces...", y predice el promedio de cada hoja. Capta no linealidades y umbrales que la regresión lineal no ve, pero un solo árbol es **inestable** (cambia mucho con pequeñas variaciones de los datos). Ajustamos `cost_complexity` (poda: penaliza árboles grandes) y `tree_depth` (profundidad máxima) para regularizarlo. `tune()` marca esos valores como "a determinar por validación cruzada".
+:::
+
+```{r}
+modelo_arbol <- decision_tree(
+    cost_complexity = tune(),
+    tree_depth = tune()
+  ) %>%
+  set_engine("rpart") %>%
+  set_mode("regression")
+```
+
+Cada modelo se empaqueta con la **misma** receta en su propio `workflow`.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es un workflow?
+Un **workflow** empaqueta en un solo objeto la receta de preprocesamiento y el modelo. Al hacer `fit()` aplica internamente `prep` + `bake` + `fit`, y al `predict()` repite el mismo preprocesamiento sobre los datos nuevos sin que tengamos que recordarlo. Es la pieza estándar para validación cruzada y tuning.
+:::
+
+```{r}
+workflow_lineal <- workflow() %>%
+  add_recipe(receta_energia) %>%
+  add_model(modelo_lineal)
+
+workflow_arbol <- workflow() %>%
+  add_recipe(receta_energia) %>%
+  add_model(modelo_arbol)
+```
+
+## 7. Validación cruzada y tuning de hiperparámetros
+
+Para comparar los modelos y elegir los hiperparámetros del árbol **sin tocar la prueba**, usamos validación cruzada sobre el entrenamiento.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es la validación cruzada (k-fold)?
+Partimos el entrenamiento en `v` partes (folds) del mismo tamaño. En cada ronda entrenamos con `v − 1` folds y evaluamos en el fold restante, rotando cuál se deja fuera; luego promediamos el desempeño. Así estimamos qué tan bien generaliza el modelo **usando solo el entrenamiento**, y reservamos la prueba para el final.
+:::
+
+```{r}
+set.seed(2026)
+folds_cv <- vfold_cv(energia_entrenamiento, v = 5, strata = consumo_kwh)
+```
+
+Definimos las métricas de regresión que vigilaremos.
+
+::: {.callout-note collapse="true"}
+## RMSE, MAE y R²
+- **RMSE** (raíz del error cuadrático medio): error típico en las unidades de la objetivo; penaliza más los errores grandes. Es la métrica de decisión.
+- **MAE** (error absoluto medio): error típico, más robusto a valores extremos.
+- **R²**: proporción de la variación de la objetivo que el modelo explica (1 = perfecto; 0 = no mejor que predecir la media).
+:::
+
+```{r}
+metricas_regresion <- metric_set(rmse, rsq, mae)
+```
+
+La regresión lineal **no se tunea**; estimamos su desempeño en CV con `fit_resamples()`. Esto la pone en igualdad de condiciones que el árbol.
+
+::: {.callout-note collapse="true"}
+## fit_resamples() vs. tune_grid()
+Cuando un modelo **no** tiene hiperparámetros que ajustar (regresión lineal), `fit_resamples()` solo lo evalúa en cada fold. Cuando **sí** los tiene (el árbol), `tune_grid()` prueba varias combinaciones de hiperparámetros en la validación cruzada y nos deja elegir la mejor.
+:::
+
+```{r}
+set.seed(2026)
+cv_lineal <- workflow_lineal %>%
+  fit_resamples(resamples = folds_cv, metrics = metricas_regresion)
+
+collect_metrics(cv_lineal)
+```
+
+Para el árbol construimos una grilla de hiperparámetros: combinaciones de `cost_complexity` y `tree_depth` (`levels = 4` da 4 × 4 = 16 candidatos).
+
+```{r}
+grilla_arbol <- grid_regular(cost_complexity(),
+                             tree_depth(),
+                             levels = 4)
+```
+
+```{r}
+set.seed(2026)
+tuning_arbol <- workflow_arbol %>%
+  tune_grid(resamples = folds_cv,
+            grid = grilla_arbol,
+            metrics = metricas_regresion)
+```
+
+La siguiente gráfica resume el tuning: muestra el RMSE de validación cruzada según la profundidad del árbol, con una línea por nivel de poda. Buscamos la combinación con menor RMSE.
+
+```{r}
+tuning_arbol %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  ggplot(aes(x = tree_depth, y = mean,
+             color = factor(round(cost_complexity, 5)))) +
+  geom_line() +
+  geom_point(size = 2) +
+  labs(title = "RMSE en validación cruzada — árbol de regresión",
+       x = "Profundidad del árbol", y = "RMSE promedio",
+       color = "cost_complexity") +
+  theme_minimal()
+```
+
+```{r}
+mejor_arbol <- tuning_arbol %>% select_best(metric = "rmse")
+mejor_arbol
+```
+
+## 8. Implementar el workflow final de cada modelo
+
+La regresión lineal ya está lista. Al árbol le **inyectamos** los hiperparámetros ganadores con `finalize_workflow()`.
+
+```{r}
+workflow_arbol_final <- workflow_arbol %>%
+  finalize_workflow(mejor_arbol)
+```
+
+## 9. Entrenar y evaluar con last_fit() sobre la prueba
+
+::: {.callout-note collapse="true"}
+## ¿Qué hace last_fit()?
+`last_fit()` toma el split original, **reentrena** el modelo final sobre TODO el entrenamiento y lo evalúa **una sola vez** sobre la base de prueba reservada. Es el paso que da la estimación honesta del desempeño en datos que el modelo nunca vio.
+:::
+
+```{r}
+ajuste_lineal <- workflow_lineal %>%
+  last_fit(split = energia_split, metrics = metricas_regresion)
+
+ajuste_arbol <- workflow_arbol_final %>%
+  last_fit(split = energia_split, metrics = metricas_regresion)
+```
+
+## 10. Pruebas del modelo: métricas y comparación
+
+Reunimos las métricas de **ambos** modelos en la base de prueba en una sola tabla. Esta es la comparación que nos interesa: el desempeño en datos no vistos.
+
+```{r}
+metricas_comparacion <- bind_rows(
+    collect_metrics(ajuste_lineal) %>% mutate(modelo = "Regresión lineal"),
+    collect_metrics(ajuste_arbol) %>% mutate(modelo = "Árbol de regresión")
+  ) %>%
+  select(modelo, .metric, .estimate) %>%
+  pivot_wider(names_from = .metric, values_from = .estimate) %>%
+  arrange(rmse)
+
+metricas_comparacion
+```
+
+Para visualizar la calidad de cada modelo, graficamos los valores reales contra los predichos. La diagonal roja es la predicción perfecta: entre más pegados los puntos a la línea, mejor.
+
+```{r}
+preds_lineal <- collect_predictions(ajuste_lineal) %>%
+  mutate(modelo = "Regresión lineal")
+preds_arbol <- collect_predictions(ajuste_arbol) %>%
+  mutate(modelo = "Árbol de regresión")
+
+preds_ambos <- bind_rows(preds_lineal, preds_arbol)
+```
+
+```{r}
+preds_ambos %>%
+  ggplot(aes(x = consumo_kwh, y = .pred)) +
+  geom_point(alpha = 0.4, color = "#1e4c7d") +
+  geom_abline(color = "#c0392b", linetype = 2) +
+  facet_wrap(~ modelo) +
+  labs(title = "Valores reales vs. predichos (base de prueba)",
+       x = "Consumo real (kWh)", y = "Consumo predicho (kWh)") +
+  theme_minimal()
+```
+
+El gráfico de residuos (real − predicho) contra el valor predicho ayuda a detectar sesgos: buscamos una nube sin patrón alrededor del cero. Un embudo o una curva indicarían que el modelo se equivoca sistemáticamente en algún rango.
+
+```{r}
+preds_ambos %>%
+  mutate(residuo = consumo_kwh - .pred) %>%
+  ggplot(aes(x = .pred, y = residuo)) +
+  geom_point(alpha = 0.4, color = "#1e4c7d") +
+  geom_hline(yintercept = 0, color = "#c0392b", linetype = 2) +
+  facet_wrap(~ modelo) +
+  labs(title = "Residuos vs. valores predichos",
+       x = "Consumo predicho (kWh)", y = "Residuo (real − predicho)") +
+  theme_minimal()
+```
+
+## Veredicto: ¿cuál es el mejor modelo?
+
+```{r}
+# Ordenamos por RMSE (menor es mejor) y medimos la diferencia relativa entre
+# el mejor y el segundo, para juzgar si la ventaja es relevante o marginal.
+tabla_final <- metricas_comparacion %>%
+  arrange(rmse) %>%
+  mutate(rmse = round(rmse, 2),
+         rsq = round(rsq, 3),
+         mae = round(mae, 2))
+
+ganador <- tabla_final %>% slice(1)
+perdedor <- tabla_final %>% slice(2)
+dif_rel_pct <- round(100 * (perdedor$rmse - ganador$rmse) / perdedor$rmse, 1)
+```
+
+```{r}
+# Tabla comparativa final (ordenada del mejor al peor por RMSE)
+tabla_final
+```
+
+**Modelo recomendado: `r ganador$modelo`.** Obtiene el menor RMSE en la base de prueba (`r ganador$rmse` kWh) con un R² de `r ganador$rsq`, frente a `r perdedor$rmse` kWh del `r tolower(perdedor$modelo)`. Su RMSE es **`r dif_rel_pct`% menor**.
+
+```{r}
+#| echo: false
+#| results: asis
+if (dif_rel_pct < 3) {
+  cat("> **Matiz:** la diferencia entre ambos modelos es pequeña (menos de 3% en RMSE), así que en la práctica son comparables. Conviene quedarse con la **regresión lineal** por ser más simple e interpretable, salvo que el árbol aporte reglas útiles para comunicar.")
+} else {
+  cat(paste0("> La ventaja de **", ganador$modelo, "** es relevante (", dif_rel_pct, "% en RMSE), por lo que es la elección clara para este problema."))
+}
+```
+
+Recuerda que la regresión lineal es la más fácil de interpretar (un coeficiente por variable), mientras que el árbol capta umbrales y no linealidades a costa de mayor inestabilidad; el tuning de `cost_complexity` y `tree_depth` lo regulariza.

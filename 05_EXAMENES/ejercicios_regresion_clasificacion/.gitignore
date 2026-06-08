@@ -1,0 +1,8 @@
+# Caché interna de Quarto
+/.quarto/
+
+# Sitio generado (se reconstruye con `quarto render`)
+/_site/
+
+# NOTA: /_freeze/ SÍ se versiona a propósito, para que `quarto publish`
+# no tenga que re-ejecutar los modelos (xgboost, random forest, SMOTE).

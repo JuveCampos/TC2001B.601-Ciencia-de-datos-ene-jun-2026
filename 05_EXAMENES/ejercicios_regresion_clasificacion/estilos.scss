@@ -1,0 +1,72 @@
+/*-- scss:defaults --*/
+
+// Paleta del curso TC2001B
+$navy:       #1e4c7d;
+$navy-dark:  #143556;
+$rojo:       #c0392b;
+$verde:      #1a7a3a;
+$celeste:    #eaf2fa;
+
+// Fuente Ubuntu (Google Fonts) con respaldos seguros
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Ubuntu+Mono&display=swap');
+
+$font-family-sans-serif: "Ubuntu", "Helvetica Neue", Arial, sans-serif;
+$font-family-monospace:  "Ubuntu Mono", "SFMono-Regular", Menlo, monospace;
+$font-size-root:         16px;
+
+$primary:          $navy;
+$body-color:       #233140;
+$link-color:       $navy;
+$headings-font-weight: 700;
+$toc-font-size:    0.85rem;
+$code-block-bg:    #f7f9fc;
+
+/*-- scss:rules --*/
+
+// Título y subtítulo del documento
+h1.title { color: $navy; font-weight: 700; letter-spacing: -0.01em; }
+.subtitle { color: lighten($navy, 10%); font-weight: 400; }
+
+// Encabezados de sección
+h1, h2, h3, h4 { color: $navy; }
+h2 {
+  border-bottom: 2px solid #dce5ef;
+  padding-bottom: 0.3rem;
+  margin-top: 2.4rem;
+}
+
+a { text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+// Tabla de contenido lateral
+nav[role="doc-toc"] ul > li > a.active {
+  color: $navy;
+  font-weight: 600;
+  border-left: 3px solid $navy;
+  padding-left: 0.4rem;
+}
+
+// Tablas (df-print: kable)
+table.table {
+  font-size: 0.9rem;
+  margin-top: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+.table > thead {
+  background-color: $navy;
+  color: #fff;
+}
+.table > thead th { border-bottom: none; }
+.table > tbody > tr:nth-of-type(odd) > * {
+  background-color: #f3f7fb;
+}
+
+// Bloques de código
+div.sourceCode {
+  border: 1px solid #e3e9f0;
+  border-radius: 6px;
+}
+
+// Callouts con esquinas suaves
+.callout { border-radius: 6px; }
+.callout.callout-style-default .callout-title { font-weight: 600; }

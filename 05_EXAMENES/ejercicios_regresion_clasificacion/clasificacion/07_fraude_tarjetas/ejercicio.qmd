@@ -1,0 +1,387 @@
+---
+title: "Clasificación desbalanceada: detección de fraude con tarjeta"
+subtitle: "EJERCICIO DE CLASIFICACIÓN — Regresión logística vs. XGBoost (con SMOTE)"
+author: "Jorge Juvenal Campos Ferreira — TC2001B.601"
+lang: es
+date: today
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+options(scipen = 999)
+```
+
+**Objetivo.** Detectar transacciones fraudulentas (`fraude`: si/no) al momento de autorizar una compra. Solo ~4% de las transacciones son fraude: es un caso **extremo** de desbalance de clases, donde dejar pasar un fraude (un falso negativo) es mucho más caro que revisar de más una compra legítima (una falsa alarma). Este **costo asimétrico** cambia por completo cómo elegimos y evaluamos el modelo. Compararemos una **regresión logística** (lineal, interpretable) con **XGBoost** (boosting de árboles, potente), ambos con **SMOTE** para rebalancear, y evaluaremos con recall, precision, F1 y PR-AUC. Recorremos el flujo completo: partición, receta, `workflow()`, validación cruzada, tuning y evaluación honesta con `last_fit()`, y cerramos con una recomendación clara.
+
+## 1. Cargar librerías
+
+Cargamos todo al inicio. `themis` aporta `step_smote` (rebalanceo de la clase rara); `xgboost` es el motor que `parsnip` usa por detrás para el boosting; `corrplot` dibuja la matriz de correlación.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(corrplot)
+library(themis)
+library(xgboost)
+```
+
+```{r}
+tidymodels::tidymodels_prefer()
+```
+
+## 2. Cargar los datos
+
+Removemos `id_transaccion` (identificador, no predictor) y convertimos la objetivo a `factor`. Fijar `"si"` (fraude) como **primer nivel** es crítico aquí: `yardstick` toma el primer nivel como el evento de interés. Con solo ~4% de positivos, equivocar este orden haría que las métricas midieran la clase legítima y mostraran un desempeño "excelente" que en realidad ignora todo el fraude.
+
+```{r}
+# Removemos id_transaccion. Fijamos "si" (fraude, clase rara) como PRIMER
+# nivel: con solo ~4% de positivos, equivocar este orden haría que las métricas
+# midieran la clase legítima y mostraran un desempeño "excelente" que ignora
+# todo el fraude.
+fraudes <- read_csv("datos.csv") %>%
+  select(-id_transaccion) %>%
+  mutate(fraude = factor(fraude, levels = c("si", "no")))
+```
+
+```{r}
+glimpse(fraudes)
+```
+
+## 3. Explorar los datos
+
+Tres revisiones mínimas antes de modelar: el **balance de clases**, los **datos faltantes** y la **colinealidad**.
+
+El balance de clases es la pieza central de este ejercicio. Veremos un desbalance extremo (~96/4): la clase de interés (fraude) es rarísima. Esto invalida el *accuracy* como métrica de decisión y obliga a usar recall, precision y PR-AUC, además de rebalancear el entrenamiento con SMOTE.
+
+```{r}
+# Desbalance extremo: ~96/4.
+fraudes %>%
+  group_by(fraude) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(porcentaje = 100 * (n / sum(n)))
+```
+
+Contamos los `NA`: esto guía la imputación. Cualquier paso posterior (SMOTE, normalización) requiere que no haya faltantes.
+
+```{r}
+fraudes %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "n_na") %>%
+  arrange(desc(n_na))
+```
+
+La matriz de correlación revela relaciones entre predictores numéricos. A diferencia de otros ejercicios, aquí conservamos a propósito un par correlacionado (`monto_transaccion` y `monto_promedio_historico`) porque su contraste —compra actual frente a comportamiento típico— es justamente una señal antifraude valiosa; por eso usamos un umbral alto en `step_corr`.
+
+```{r}
+# monto_transaccion y monto_promedio_historico están correlacionadas (~0.77),
+# pero ambas aportan señal antifraude (compra actual vs. comportamiento típico),
+# así que aquí usamos un umbral de step_corr alto para conservarlas.
+matriz_correlacion <- fraudes %>%
+  select(where(is.numeric)) %>%
+  drop_na() %>%
+  cor() %>%
+  round(2)
+
+matriz_correlacion %>%
+  corrplot(method = "circle", addCoef.col = "black", tl.cex = 0.7)
+```
+
+## 4. Partición entrenamiento / prueba (estratificada)
+
+Separamos 75% para entrenamiento y 25% para prueba. **Estratificamos** por `fraude` para que ambas particiones conserven el mismo ~4% de positivos; sin estratificar, con una clase tan rara la prueba podría quedar casi sin fraudes. La prueba se reserva para el final y conservará la distribución real (no se le aplica SMOTE).
+
+```{r}
+set.seed(2026)
+fraudes_split <- initial_split(fraudes, prop = 0.75, strata = fraude)
+fraudes_entrenamiento <- fraudes_split %>% training()
+fraudes_prueba <- fraudes_split %>% testing()
+```
+
+```{r}
+table(fraudes_entrenamiento$fraude) %>% prop.table()
+table(fraudes_prueba$fraude) %>% prop.table()
+```
+
+## 5. Receta de preprocesamiento con SMOTE (compartida por ambos modelos)
+
+Usamos **una sola receta** para que ambos modelos vean la misma representación de los datos. Aquí el orden de los pasos es especialmente delicado porque SMOTE impone requisitos.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es una receta y por qué importa el orden de los pasos?
+Una **receta** (`recipe`) encadena pasos de preprocesamiento (`step_*`) que se aprenden solo con el entrenamiento y se aplican igual a la prueba (esto evita fuga de información). El orden importa: se imputan los `NA` primero (los pasos siguientes no los toleran), se filtra colinealidad y se normaliza antes de crear *dummies*, y `step_zv` queda al final como red de seguridad.
+:::
+
+::: {.callout-note collapse="true"}
+## ¿Qué es SMOTE y por qué solo en el entrenamiento?
+Con clases desbalanceadas, **SMOTE** crea ejemplos sintéticos de la clase rara interpolando entre vecinos cercanos, hasta equilibrar. Requiere que todos los predictores sean numéricos (por eso `step_dummy` va antes) y sin `NA`. Se aplica **solo al entrenamiento** de cada fold; la prueba conserva la distribución real para que la evaluación sea honesta.
+:::
+
+El orden aquí es: imputar (SMOTE y normalize no toleran `NA`) → crear *dummies* (SMOTE solo opera sobre numéricos) → normalizar (distancias comparables para SMOTE) → SMOTE al final.
+
+```{r}
+# Orden con SMOTE:
+#  1. Imputar (distancia_km tiene NAs); SMOTE y normalize no toleran NAs.
+#  2. step_dummy: SMOTE solo opera sobre numéricos; categoria_comercio (6
+#     niveles) y es_compra_internacional deben volverse dummies ANTES.
+#  3. step_normalize: distancias comparables para SMOTE.
+#  4. step_smote(fraude): sintetiza la clase rara solo en el entrenamiento.
+# Usamos umbral alto en step_corr (0.9) para conservar ambos montos.
+receta_fraudes <- recipe(fraude ~ ., data = fraudes_entrenamiento) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_impute_mode(all_nominal_predictors()) %>%
+  step_corr(all_numeric_predictors(), threshold = 0.9) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_smote(fraude)
+```
+
+Verificamos que, tras `prep`/`bake`, el entrenamiento quede balanceado (50/50): esa es la señal de que SMOTE hizo su trabajo.
+
+```{r}
+receta_fraudes %>%
+  prep(training = fraudes_entrenamiento) %>%
+  bake(new_data = NULL) %>%
+  count(fraude) %>%
+  mutate(porcentaje = 100 * n / sum(n))
+```
+
+## 6. Especificación de los modelos
+
+El primer modelo es la **regresión logística**: no tiene hiperparámetros que ajustar. Modela el log-odds de fraude como combinación lineal de los predictores.
+
+```{r}
+modelo_logistico <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+```
+
+El segundo es **XGBoost**, donde ajustaremos varios hiperparámetros que controlan la complejidad del boosting.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es XGBoost (boosting)?
+**XGBoost** construye árboles en **secuencia**: cada árbol nuevo corrige los errores del conjunto anterior. El boosting reduce sobre todo el **sesgo** y suele dar el mejor desempeño predictivo, a costa de más hiperparámetros y mayor riesgo de sobreajuste. Se ajustan `tree_depth` (profundidad), `learn_rate` (cuánto aporta cada árbol) y `loss_reduction` (ganancia mínima para abrir un nodo).
+:::
+
+```{r}
+modelo_xgb <- boost_tree(
+    trees = 500,
+    tree_depth = tune(),
+    learn_rate = tune(),
+    loss_reduction = tune()
+  ) %>%
+  set_engine("xgboost") %>%
+  set_mode("classification")
+```
+
+Empaquetamos cada modelo con la misma receta en su `workflow`.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es un workflow?
+Un **workflow** empaqueta en un solo objeto la receta de preprocesamiento y el modelo. Al hacer `fit()` aplica internamente `prep` + `bake` + `fit`, y al `predict()` repite el mismo preprocesamiento sobre los datos nuevos. Es la pieza estándar para validación cruzada y tuning.
+:::
+
+```{r}
+workflow_logistico <- workflow() %>%
+  add_recipe(receta_fraudes) %>%
+  add_model(modelo_logistico)
+
+workflow_xgb <- workflow() %>%
+  add_recipe(receta_fraudes) %>%
+  add_model(modelo_xgb)
+```
+
+## 7. Validación cruzada y tuning de hiperparámetros
+
+Estratificamos también los folds por `fraude` para que cada partición de la validación cruzada conserve algunos positivos.
+
+::: {.callout-note collapse="true"}
+## ¿Qué es la validación cruzada (k-fold)?
+Partimos el entrenamiento en `v` partes (folds) del mismo tamaño. En cada ronda entrenamos con `v − 1` folds y validamos en el restante, rotando cuál se deja fuera; luego promediamos el desempeño. Así estimamos qué tan bien generaliza el modelo **usando solo el entrenamiento**, y reservamos la prueba para el final.
+:::
+
+```{r}
+set.seed(2026)
+folds_cv <- vfold_cv(fraudes_entrenamiento, v = 5, strata = fraude)
+```
+
+Definimos las métricas pensadas para desbalance. El `accuracy` se incluye solo como contraste, no como criterio de decisión.
+
+::: {.callout-note collapse="true"}
+## Recall, precision, F1 y PR-AUC (clases desbalanceadas)
+Cuando la clase de interés es rara, el *accuracy* engaña. Se usan: **recall** (cobertura: de los positivos reales, cuántos detectamos), **precision** (de las alertas, cuántas son correctas), **F1** (balance de ambas) y **PR-AUC** (área bajo la curva precision-recall, más informativa que la ROC cuando los positivos son escasos). El accuracy solo se reporta como contraste. Aquí la métrica de decisión es **PR-AUC**.
+:::
+
+```{r}
+metricas_desbalance <- metric_set(pr_auc, roc_auc, recall, precision,
+                                  f_meas, accuracy)
+```
+
+La logística no se tunea: estimamos su desempeño en CV con `fit_resamples()`.
+
+::: {.callout-note collapse="true"}
+## fit_resamples() vs. tune_grid()
+Cuando un modelo **no** tiene hiperparámetros que ajustar (regresión lineal o logística), `fit_resamples()` solo lo evalúa en cada fold. Cuando **sí** los tiene, `tune_grid()` prueba varias combinaciones de hiperparámetros en la validación cruzada y nos deja elegir la mejor.
+:::
+
+```{r}
+set.seed(2026)
+cv_logistico <- workflow_logistico %>%
+  fit_resamples(resamples = folds_cv, metrics = metricas_desbalance)
+
+collect_metrics(cv_logistico)
+```
+
+Para XGBoost dejamos que `tune_grid()` genere una grilla de 12 combinaciones de los tres hiperparámetros y corra la validación cruzada en cada una.
+
+```{r}
+set.seed(2026)
+tuning_xgb <- workflow_xgb %>%
+  tune_grid(resamples = folds_cv,
+            grid = 12,
+            metrics = metricas_desbalance)
+```
+
+La gráfica muestra el PR-AUC promedio de cada combinación de hiperparámetros: nos deja ver qué configuraciones de profundidad y tasa de aprendizaje detectan mejor el fraude.
+
+```{r}
+autoplot(tuning_xgb, metric = "pr_auc")
+```
+
+```{r}
+mejor_xgb <- tuning_xgb %>% select_best(metric = "pr_auc")
+mejor_xgb
+```
+
+## 8. Implementar el workflow final de cada modelo
+
+La logística ya está lista; al XGBoost le inyectamos los hiperparámetros ganadores con `finalize_workflow()`.
+
+```{r}
+workflow_xgb_final <- workflow_xgb %>%
+  finalize_workflow(mejor_xgb)
+```
+
+## 9. Entrenar y evaluar con last_fit() sobre la prueba
+
+::: {.callout-note collapse="true"}
+## ¿Qué hace last_fit()?
+`last_fit()` toma el split original, **reentrena** el modelo final sobre TODO el entrenamiento (aplicando SMOTE solo a ese entrenamiento) y lo evalúa **una sola vez** sobre la base de prueba reservada, que conserva el 96/4 real. Es el paso que da la estimación honesta del desempeño en datos que el modelo nunca vio.
+:::
+
+```{r}
+ajuste_logistico <- workflow_logistico %>%
+  last_fit(split = fraudes_split, metrics = metricas_desbalance)
+
+ajuste_xgb <- workflow_xgb_final %>%
+  last_fit(split = fraudes_split, metrics = metricas_desbalance)
+```
+
+## 10. Pruebas del modelo: métricas y comparación
+
+Reunimos las métricas de ambos modelos en la prueba en una sola tabla, ordenada por **PR-AUC** (nuestra métrica de decisión con clases desbalanceadas).
+
+```{r}
+metricas_comparacion <- bind_rows(
+    collect_metrics(ajuste_logistico) %>% mutate(modelo = "Regresión logística"),
+    collect_metrics(ajuste_xgb) %>% mutate(modelo = "XGBoost")
+  ) %>%
+  select(modelo, .metric, .estimate) %>%
+  pivot_wider(names_from = .metric, values_from = .estimate) %>%
+  arrange(desc(pr_auc))
+
+metricas_comparacion
+```
+
+```{r}
+preds_logistico <- collect_predictions(ajuste_logistico) %>%
+  mutate(modelo = "Regresión logística")
+preds_xgb <- collect_predictions(ajuste_xgb) %>%
+  mutate(modelo = "XGBoost")
+
+preds_ambos <- bind_rows(preds_logistico, preds_xgb)
+```
+
+La **curva precision-recall** es la gráfica clave de este ejercicio: con solo 4% de positivos, traza directamente el equilibrio entre cuánto fraude detectamos (recall) y qué tan limpias son nuestras alertas (precision). Entre más alta y a la derecha quede la curva, mejor. Es mucho más informativa que la ROC cuando los positivos son escasos.
+
+```{r}
+# Con 4% de positivos, la curva precision-recall es mucho más informativa que
+# la ROC, que tiende a verse optimista.
+preds_ambos %>%
+  group_by(modelo) %>%
+  pr_curve(truth = fraude, .pred_si) %>%
+  autoplot() +
+  labs(title = "Curvas precision-recall en la base de prueba") +
+  theme_minimal()
+```
+
+Incluimos también las **curvas ROC** para contraste. Ojo: con desbalance extremo, la ROC tiende a verse optimista porque el enorme número de verdaderos negativos infla la apariencia de buen desempeño; por eso no la usamos como criterio principal.
+
+```{r}
+preds_ambos %>%
+  group_by(modelo) %>%
+  roc_curve(truth = fraude, .pred_si) %>%
+  autoplot() +
+  labs(title = "Curvas ROC en la base de prueba") +
+  theme_minimal()
+```
+
+Las **matrices de confusión** muestran en qué se equivoca cada modelo. Aquí interesan especialmente los **falsos negativos** (fraudes que pasaron sin detectar), que son la celda más costosa por el costo asimétrico del problema.
+
+```{r}
+conf_mat(preds_logistico, truth = fraude, estimate = .pred_class) %>%
+  autoplot(type = "heatmap") +
+  labs(title = "Matriz de confusión — Regresión logística")
+```
+
+```{r}
+conf_mat(preds_xgb, truth = fraude, estimate = .pred_class) %>%
+  autoplot(type = "heatmap") +
+  labs(title = "Matriz de confusión — XGBoost")
+```
+
+La gráfica de **importancia de variables** (`vip`) del XGBoost ordena los predictores según cuánto contribuyen a las predicciones del modelo. Nos dice qué señales (monto inusual, hora, distancia, etc.) pesan más para delatar el fraude, lo que ayuda a interpretar un modelo que de otro modo sería una caja negra.
+
+```{r}
+ajuste_xgb %>%
+  extract_fit_parsnip() %>%
+  vip::vip(num_features = 12) +
+  labs(title = "Importancia de variables — XGBoost") +
+  theme_minimal()
+```
+
+## Veredicto: ¿cuál es el mejor modelo?
+
+Con clases desbalanceadas, la métrica de decisión es la **PR-AUC** (mayor es mejor), no el accuracy. Ordenamos la tabla por PR-AUC e identificamos al ganador.
+
+```{r}
+tabla_final <- metricas_comparacion %>%
+  mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  arrange(desc(pr_auc))
+
+ganador <- tabla_final %>% slice(1)
+perdedor <- tabla_final %>% slice(2)
+dif_pr <- round(ganador$pr_auc - perdedor$pr_auc, 3)
+```
+
+```{r}
+tabla_final
+```
+
+**Modelo recomendado: `r ganador$modelo`.** Obtiene la mayor PR-AUC en la base de prueba (`r ganador$pr_auc`), frente a `r perdedor$pr_auc` del otro modelo (diferencia de `r dif_pr`). Recuerda que el **accuracy NO es la métrica de decisión** aquí: con ~96% de transacciones legítimas, predecir "todo legítimo" daría ~96% de accuracy detectando cero fraudes.
+
+```{r}
+#| echo: false
+#| results: asis
+if (dif_pr < 0.02) {
+  cat("> **Matiz:** la diferencia de PR-AUC es pequeña (< 0.02), así que ambos modelos son prácticamente equivalentes. En ese caso conviene la **regresión logística** por su interpretabilidad (cada coeficiente explica el efecto de una variable sobre la probabilidad de fraude), salvo que el negocio valore el recall extra de XGBoost.")
+} else {
+  cat(paste0("> La ventaja de **", ganador$modelo, "** es clara (", dif_pr, " de PR-AUC), por lo que es la elección recomendada para este problema."))
+}
+```
+
+Más allá de la PR-AUC, en producción la decisión final depende del **costo asimétrico**: como un fraude no detectado (falso negativo) es mucho más caro que una falsa alarma (falso positivo), conviene mirar el **recall** de cada modelo en las matrices de confusión y, si hace falta, mover el umbral de decisión para capturar más fraude aun a costa de revisar de más algunas compras legítimas.

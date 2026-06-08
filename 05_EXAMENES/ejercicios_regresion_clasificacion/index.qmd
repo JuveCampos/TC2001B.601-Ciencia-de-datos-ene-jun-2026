@@ -1,0 +1,64 @@
+---
+title: "Banco de ejercicios de aprendizaje supervisado"
+subtitle: "TC2001B.601 — Ciencia de datos para la toma de decisiones I"
+toc: false
+---
+
+Colección de **12 ejercicios resueltos** de aprendizaje supervisado con
+`tidymodels`. Cada ejercicio toma un problema real (un dataset) y compara **dos
+modelos** sobre el mismo flujo de trabajo, con explicaciones paso a paso,
+gráficas, tablas comparativas y un veredicto claro sobre cuál modelo conviene.
+
+Usa la **barra lateral** para navegar entre ejercicios.
+
+## El flujo común (los 10 pasos)
+
+Todos los ejercicios siguen la misma estructura, para que el esquema se vuelva
+familiar:
+
+1. Cargar librerías
+2. Cargar los datos
+3. Explorar los datos (distribución, faltantes, colinealidad)
+4. Partición entrenamiento / prueba (`initial_split`, estratificada)
+5. Receta de preprocesamiento (`recipe` + `step_*`), compartida por ambos modelos
+6. Especificar los modelos (`parsnip`) + `workflow()`
+7. Validación cruzada (`vfold_cv`) y tuning de hiperparámetros (`tune_grid`)
+8. Implementar el workflow final (`finalize_workflow`)
+9. Entrenar y evaluar con `last_fit()` sobre la prueba
+10. Pruebas del modelo: métricas, tabla comparativa y visualizaciones
+
+Los **conceptos recurrentes** (validación cruzada, workflow, `last_fit`, AUC,
+recall, etc.) aparecen en cajas plegables que puedes abrir cuando necesites
+repasarlos.
+
+## Regresión
+
+| # | Ejercicio | Variable objetivo | Modelos comparados |
+|---|-----------|-------------------|--------------------|
+| 1 | [Consumo eléctrico residencial](regresion/01_energia_hogares/ejercicio.qmd) | `consumo_kwh` | Regresión lineal vs. árbol de regresión |
+| 2 | [Contaminación por PM2.5](regresion/02_calidad_aire/ejercicio.qmd) | `pm25_ug_m3` | Regresión lineal vs. random forest |
+| 3 | [Demanda de consultas respiratorias](regresion/03_clinicas_respiratorias/ejercicio.qmd) | `consultas_respiratorias` | Regresión lineal vs. XGBoost |
+| 4 | [Precio de viviendas](regresion/04_precio_viviendas/ejercicio.qmd) | `precio` | Regresión lineal vs. random forest |
+| 5 | [Costo médico anual (objetivo sesgada)](regresion/05_costo_medico/ejercicio.qmd) | `costo_anual_mxn` | Regresión lineal vs. XGBoost |
+
+## Clasificación
+
+| # | Ejercicio | Variable objetivo | Modelos comparados |
+|---|-----------|-------------------|--------------------|
+| 1 | [Deserción estudiantil](clasificacion/01_desercion_estudiantil/ejercicio.qmd) | `deserto` | Regresión logística vs. KNN |
+| 2 | [Cancelación de reservas](clasificacion/02_cancelacion_hoteles/ejercicio.qmd) | `cancelo` | Regresión logística vs. árbol de decisión |
+| 3 | [Aprobación de crédito](clasificacion/03_aprobacion_credito/ejercicio.qmd) | `aprobado` | Regresión logística vs. KNN |
+| 4 | [Potabilidad del agua](clasificacion/04_potabilidad_agua/ejercicio.qmd) | `potable` | Regresión logística vs. KNN |
+| 5 | [Aprobación de seguro de vida](clasificacion/05_aprobacion_seguro/ejercicio.qmd) | `aprobada` | Regresión logística vs. XGBoost |
+| 6 | [Clientes prometedores — casino (desbalance ~90/10)](clasificacion/06_clientes_casino/ejercicio.qmd) | `prometedor` | Regresión logística vs. random forest (SMOTE) |
+| 7 | [Fraude con tarjeta (desbalance ~96/4)](clasificacion/07_fraude_tarjetas/ejercicio.qmd) | `fraude` | Regresión logística vs. XGBoost (SMOTE) |
+
+---
+
+::: {.callout-tip}
+## Cómo leer cada ejercicio
+La **métrica de decisión** es el RMSE en regresión, el AUC en clasificación
+balanceada y la PR-AUC en los casos desbalanceados (casino y fraude). Al final
+de cada ejercicio, la sección **Veredicto** indica el modelo recomendado y
+discute si la diferencia es relevante o marginal.
+:::
